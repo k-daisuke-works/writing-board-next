@@ -1,77 +1,115 @@
 'use server'
 
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import bcrypt from 'bcryptjs'
 import { createServiceClient } from '@/lib/supabase/server'
-import { createSession, deleteSession } from '@/lib/session'
-import type { UserSession } from '@/types/database'
+import { createSession, deleteSession, createSetupToken } from '@/lib/session'
 
-/** ログイン */
+// ─── ログイン試行レート制限 ─────────────────────────────────
+// 注: Node.js モジュールスコープの Map のため、同一プロセス内でのみ有効。
+// 複数インスタンスにスケールアウトする本番環境では Upstash Redis への移行を推奨。
+// @upstash/ratelimit + @upstash/redis を middleware.ts に組み込むことで
+// インスタンス横断のレート制限が実現できる。
+const loginAttempts = new Map<string, { count: number; resetAt: number }>()
+
+const RATE_LIMIT = {
+  MAX:       10,                  // 同一キーで最大試行回数
+  WINDOW_MS: 15 * 60 * 1000,     // 15分ウィンドウ
+}
+
+function recordFailedAttempt(key: string): number {
+  const now  = Date.now()
+  const prev = loginAttempts.get(key)
+  if (!prev || now >= prev.resetAt) {
+    loginAttempts.set(key, { count: 1, resetAt: now + RATE_LIMIT.WINDOW_MS })
+    return 1
+  }
+  const next = { count: prev.count + 1, resetAt: prev.resetAt }
+  loginAttempts.set(key, next)
+  return next.count
+}
+
+function isRateLimited(key: string): boolean {
+  const entry = loginAttempts.get(key)
+  if (!entry) return false
+  if (Date.now() >= entry.resetAt) { loginAttempts.delete(key); return false }
+  return entry.count >= RATE_LIMIT.MAX
+}
+
+// ─── ログイン ───────────────────────────────────────────────
 export async function login(formData: FormData) {
-  const organizationId = formData.get('organizationId') as string
-  const userId        = formData.get('userId') as string
-  const password      = formData.get('password') as string
+  const organizationId = (formData.get('organizationId') as string)?.trim()
+  const userId         = (formData.get('userId') as string)?.trim()
+  const password       = formData.get('password') as string
+
+  if (!organizationId || !userId || !password) {
+    return { error: '必須項目を入力してください。' }
+  }
+
+  // IP + 団体ID でレート制限（ユーザーIDも含めると過度に細粒度になる）
+  const headerStore = await headers()
+  const ip  = headerStore.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  const key = `${ip}:${organizationId}`
+
+  if (isRateLimited(key)) {
+    return { error: 'ログイン試行が多すぎます。15分後に再度お試しください。' }
+  }
 
   const supabase = await createServiceClient()
 
-  // 組織を取得
   const { data: org } = await supabase
     .from('organization_data')
     .select('*')
     .eq('organization_id', organizationId)
     .single()
 
-  if (!org) return { error: 'ログインに失敗しました。' }
+  if (!org) {
+    recordFailedAttempt(key)
+    return { error: 'ログインに失敗しました。' }
+  }
 
-  // ユーザーを取得（部署・職種も JOIN）
   const { data: user } = await supabase
     .from('user_info')
-    .select(`
-      *,
-      department:department_data(department_id, department_name),
-      job:job_data(job_id, job_name)
-    `)
+    .select('user_key, user_id, admin_flag, password')
     .eq('user_id', userId)
     .eq('organization_key', org.organization_key)
     .single()
 
-  if (!user) return { error: 'ログインに失敗しました。' }
-
-  // パスワード照合
-  const isValid = await bcrypt.compare(password, user.password)
-  if (!isValid) return { error: 'ログインに失敗しました。' }
-
-  const session: UserSession = {
-    userKey:          user.user_key,
-    userId:           user.user_id,
-    userName:         user.user_name,
-    organizationKey:  org.organization_key,
-    organizationId:   org.organization_id,
-    organizationName: org.organization_name,
-    departmentId:     user.department?.department_id ?? 0,
-    departmentName:   user.department?.department_name ?? '',
-    jobId:            user.job?.job_id ?? 0,
-    jobName:          user.job?.job_name ?? '',
-    adminFlag:        user.admin_flag ?? false,
+  if (!user) {
+    recordFailedAttempt(key)
+    return { error: 'ログインに失敗しました。' }
   }
 
-  await createSession(session)
+  const isValid = await bcrypt.compare(password, user.password)
+  if (!isValid) {
+    recordFailedAttempt(key)
+    return { error: 'ログインに失敗しました。' }
+  }
+
+  // 成功: レート制限リセット、最小クレームでセッション発行
+  loginAttempts.delete(key)
+  await createSession({
+    userKey:         user.user_key,
+    organizationKey: org.organization_key,
+    adminFlag:       user.admin_flag ?? false,
+  })
   redirect('/home')
 }
 
-/** ログアウト */
+// ─── ログアウト ─────────────────────────────────────────────
 export async function logout() {
   await deleteSession()
   redirect('/login')
 }
 
-/** 団体登録 */
+// ─── 団体登録 ───────────────────────────────────────────────
 export async function registerOrganization(formData: FormData) {
   const organizationId       = (formData.get('organizationId') as string)?.trim()
   const organizationName     = (formData.get('organizationName') as string)?.trim()
   const organizationPassword = formData.get('organizationPassword') as string
 
-  // ── サーバーサイドバリデーション ────────────────────────
+  // サーバーサイドバリデーション
   if (!organizationId || !organizationName || !organizationPassword) {
     return { error: '必須項目を入力してください。' }
   }
@@ -85,19 +123,13 @@ export async function registerOrganization(formData: FormData) {
     return { error: 'パスワードは8文字以上で入力してください。' }
   }
 
-  // 環境変数チェック
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     console.error('[registerOrganization] SUPABASE_SERVICE_ROLE_KEY が未設定です')
-    return { error: 'サーバー設定エラー: SUPABASE_SERVICE_ROLE_KEY 未設定' }
-  }
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-    console.error('[registerOrganization] NEXT_PUBLIC_SUPABASE_URL が未設定です')
-    return { error: 'サーバー設定エラー: NEXT_PUBLIC_SUPABASE_URL 未設定' }
+    return { error: 'サーバー設定エラーが発生しました。' }
   }
 
   const supabase = await createServiceClient()
 
-  // 重複チェック
   const { data: existing } = await supabase
     .from('organization_data')
     .select('organization_key')
@@ -118,13 +150,12 @@ export async function registerOrganization(formData: FormData) {
     .select()
     .single()
 
-  if (error) {
-    // エラー詳細はサーバーログのみ（クライアントへの情報漏洩防止）
-    console.error('[registerOrganization] Supabase insert error:', JSON.stringify(error))
+  if (error || !org) {
+    console.error('[registerOrganization] insert error:', JSON.stringify(error))
     return { error: '登録に失敗しました。しばらくしてから再度お試しください。' }
   }
 
-  if (!org) return { error: '登録に失敗しました（データなし）。' }
-
-  return { success: true, organizationKey: org.organization_key }
+  // 生の organizationKey ではなく署名付きセットアップトークンを返す
+  const setupToken = await createSetupToken(org.organization_key)
+  return { success: true, setupToken }
 }

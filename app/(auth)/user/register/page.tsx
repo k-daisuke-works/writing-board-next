@@ -1,4 +1,5 @@
 import { getSession } from '@/lib/session'
+import { verifySetupToken } from '@/lib/session'
 import { createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { registerUser } from '@/actions/admin'
@@ -9,17 +10,29 @@ import { SetupStepper } from '../../SetupStepper'
 export default async function UserRegisterPage({
   searchParams,
 }: {
-  searchParams: Promise<{ orgKey?: string; initial?: string; success?: string; error?: string }>
+  searchParams: Promise<{
+    token?: string       // 初回セットアップ用（署名付きJWT）
+    success?: string
+    error?: string
+  }>
 }) {
-  const params      = await searchParams
-  const isInitial   = params.initial === 'true'
-  const orgKeyParam = params.orgKey ? Number(params.orgKey) : null
-  const session     = await getSession()
+  const params  = await searchParams
+  const session = await getSession()
 
-  const organizationKey = session?.organizationKey ?? orgKeyParam
-  const canAccess       = session?.adminFlag || (isInitial && orgKeyParam != null)
+  // ── アクセス権チェック ────────────────────────────────────
+  let organizationKey: number | null = null
+  let isInitial = false
 
-  if (!organizationKey || !canAccess) redirect('/login')
+  if (session?.adminFlag) {
+    // 管理者モード: セッションの組織を使用
+    organizationKey = session.organizationKey
+  } else if (params.token) {
+    // 初回セットアップモード: セットアップトークンを検証
+    organizationKey = await verifySetupToken(params.token)
+    if (organizationKey) isInitial = true
+  }
+
+  if (!organizationKey) redirect('/login')
 
   const supabase = await createServiceClient()
   const [{ data: departments }, { data: jobs }] = await Promise.all([
@@ -30,15 +43,18 @@ export default async function UserRegisterPage({
   const success  = params.success === 'true'
   const errorMsg = params.error ? decodeURIComponent(params.error) : null
 
+  // リダイレクト先 URL（トークンを引き継ぐ）
+  const errorBase  = isInitial
+    ? `/user/register?token=${params.token}`
+    : '/user/register'
+
   const inputCls = "w-full border border-gray-200 rounded-md px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
   const labelCls = "block text-sm font-medium text-gray-700 mb-1.5"
 
   return (
     <div className="anim-fade-in w-full max-w-sm">
-      {/* ウィザードモード：ステッパー */}
       {isInitial && <SetupStepper current={3} />}
 
-      {/* タイトル */}
       <div className="mb-6">
         {isInitial ? (
           <>
@@ -59,7 +75,6 @@ export default async function UserRegisterPage({
         )}
       </div>
 
-      {/* フィードバック */}
       {isInitial && (
         <div className="mb-5 flex items-start gap-2 bg-blue-50 border border-blue-200 text-blue-700 rounded-md px-4 py-3 text-sm">
           <Info className="w-4 h-4 shrink-0 mt-0.5" />
@@ -79,17 +94,14 @@ export default async function UserRegisterPage({
 
       <form action={async (formData: FormData) => {
         'use server'
-        if (isInitial && orgKeyParam) {
-          formData.set('organizationKey', String(orgKeyParam))
+        formData.append('organizationKey', String(organizationKey))
+        if (isInitial) {
           formData.set('isAdmin', 'true')
           formData.set('isInitialSetup', 'true')
         }
         const result = await registerUser(formData)
         if (result?.error) {
-          const url = isInitial
-            ? `/user/register?orgKey=${orgKeyParam}&initial=true&error=${encodeURIComponent(result.error)}`
-            : `/user/register?error=${encodeURIComponent(result.error)}`
-          redirect(url)
+          redirect(`${errorBase}&error=${encodeURIComponent(result.error)}`)
         }
         if (isInitial) redirect('/login')
         else redirect('/user/register?success=true')
@@ -106,8 +118,8 @@ export default async function UserRegisterPage({
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={labelCls}>部署 <span className="text-red-500">*</span></label>
-            <select name="departmentId" required className={inputCls}>
+            <label className={labelCls}>部署</label>
+            <select name="departmentId" className={inputCls}>
               <option value="">選択…</option>
               {departments?.map((d) => (
                 <option key={d.department_id} value={d.department_id}>{d.department_name}</option>
@@ -115,8 +127,8 @@ export default async function UserRegisterPage({
             </select>
           </div>
           <div>
-            <label className={labelCls}>職種 <span className="text-red-500">*</span></label>
-            <select name="jobId" required className={inputCls}>
+            <label className={labelCls}>職種</label>
+            <select name="jobId" className={inputCls}>
               <option value="">選択…</option>
               {jobs?.map((j) => (
                 <option key={j.job_id} value={j.job_id}>{j.job_name}</option>
@@ -145,7 +157,7 @@ export default async function UserRegisterPage({
 
       {isInitial && (
         <p className="text-center mt-5">
-          <Link href={`/departmentjob/register?orgKey=${orgKeyParam}&initial=true`}
+          <Link href={`/departmentjob/register?token=${params.token}`}
             className="flex items-center justify-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors">
             <ArrowLeft className="w-3 h-3" />部署・職種登録に戻る
           </Link>

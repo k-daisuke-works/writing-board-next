@@ -20,7 +20,8 @@ export default function RegisterPage() {
     setError('')
     const result = await registerOrganization(new FormData(e.currentTarget))
     if (result?.error) { setError(result.error); setLoading(false); return }
-    router.push(`/departmentjob/register?orgKey=${result.organizationKey}&initial=true`)
+    // 生の organizationKey の代わりに署名付きセットアップトークンを URL に使用
+    router.push(`/departmentjob/register?token=${result.setupToken}`)
   }
 
   return (

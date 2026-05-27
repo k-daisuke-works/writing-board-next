@@ -1,4 +1,5 @@
 import { getSession } from '@/lib/session'
+import { verifySetupToken } from '@/lib/session'
 import { createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { createDepartment, createJob } from '@/actions/admin'
@@ -9,18 +10,29 @@ import { SetupStepper } from '../../SetupStepper'
 export default async function DepartmentJobRegisterPage({
   searchParams,
 }: {
-  searchParams: Promise<{ orgKey?: string; initial?: string; success?: string; error?: string }>
+  searchParams: Promise<{
+    token?: string       // 初回セットアップ用（署名付きJWT）
+    success?: string
+    error?: string
+  }>
 }) {
-  const params      = await searchParams
-  const isInitial   = params.initial === 'true'
-  const orgKeyParam = params.orgKey ? Number(params.orgKey) : null
-  const session     = await getSession()
+  const params  = await searchParams
+  const session = await getSession()
 
-  const organizationKey = session?.organizationKey ?? orgKeyParam
-  const isAdmin         = session?.adminFlag ?? isInitial
+  // ── アクセス権チェック ────────────────────────────────────
+  let organizationKey: number | null = null
+  let isInitial = false
+
+  if (session?.adminFlag) {
+    // 管理者モード: セッションの組織を使用
+    organizationKey = session.organizationKey
+  } else if (params.token) {
+    // 初回セットアップモード: セットアップトークンを検証
+    organizationKey = await verifySetupToken(params.token)
+    if (organizationKey) isInitial = true
+  }
 
   if (!organizationKey) redirect('/login')
-  if (!isAdmin)         redirect('/home')
 
   const supabase = await createServiceClient()
   const [{ data: departments }, { data: jobs }] = await Promise.all([
@@ -28,23 +40,23 @@ export default async function DepartmentJobRegisterPage({
     supabase.from('job_data').select('*').eq('organization_key', organizationKey),
   ])
 
-  const success    = params.success === 'true'
-  const errorMsg   = params.error ? decodeURIComponent(params.error) : null
+  const success  = params.success === 'true'
+  const errorMsg = params.error ? decodeURIComponent(params.error) : null
+
+  // リダイレクト先 URL（トークンを引き継ぐ）
   const successUrl = isInitial
-    ? `/departmentjob/register?orgKey=${organizationKey}&initial=true&success=true`
+    ? `/departmentjob/register?token=${params.token}&success=true`
     : '/departmentjob/register?success=true'
   const errorBase  = isInitial
-    ? `/departmentjob/register?orgKey=${organizationKey}&initial=true`
+    ? `/departmentjob/register?token=${params.token}`
     : '/departmentjob/register'
 
   const inputCls = "flex-1 min-w-0 border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
 
   return (
     <div className="anim-fade-in w-full max-w-lg">
-      {/* ウィザードモード：ステッパー */}
       {isInitial && <SetupStepper current={2} />}
 
-      {/* タイトル */}
       <div className="mb-6">
         {isInitial ? (
           <>
@@ -62,7 +74,6 @@ export default async function DepartmentJobRegisterPage({
         )}
       </div>
 
-      {/* フィードバック */}
       {success && (
         <div className="mb-5 flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 rounded-md px-4 py-3 text-sm">
           <CheckCircle className="w-4 h-4 shrink-0" />登録しました。
@@ -81,9 +92,7 @@ export default async function DepartmentJobRegisterPage({
             <Building2 className="w-4 h-4 text-gray-400" strokeWidth={1.75} />
             <span className="text-sm font-semibold text-gray-800">部署</span>
             {departments && departments.length > 0 && (
-              <span className="ml-auto text-xs text-gray-400 bg-white border border-gray-200 px-1.5 py-0.5 rounded">
-                {departments.length}件
-              </span>
+              <span className="ml-auto text-xs text-gray-400 bg-white border border-gray-200 px-1.5 py-0.5 rounded">{departments.length}件</span>
             )}
           </div>
           <form action={async (formData: FormData) => {
@@ -94,23 +103,18 @@ export default async function DepartmentJobRegisterPage({
             redirect(successUrl)
           }} className="flex gap-2 mb-3">
             <input type="text" name="departmentName" required placeholder="例: 営業部" className={inputCls} />
-            <button type="submit"
-              className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
-              追加
-            </button>
+            <button type="submit" className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">追加</button>
           </form>
-          {departments && departments.length > 0 && (
+          {departments && departments.length > 0 ? (
             <ul className="space-y-1.5">
-              {departments.map((d) => (
+              {departments.map(d => (
                 <li key={d.department_id} className="flex items-center gap-2 text-sm text-gray-700 bg-white rounded px-2.5 py-1.5 border border-gray-100">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
-                  {d.department_name}
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />{d.department_name}
                 </li>
               ))}
             </ul>
-          )}
-          {(!departments || departments.length === 0) && (
-            <p className="text-xs text-gray-400 text-center py-3">まだ登録されていません</p>
+          ) : (
+            <p className="text-xs text-gray-400 text-center py-2">まだ登録されていません</p>
           )}
         </div>
 
@@ -120,9 +124,7 @@ export default async function DepartmentJobRegisterPage({
             <Briefcase className="w-4 h-4 text-gray-400" strokeWidth={1.75} />
             <span className="text-sm font-semibold text-gray-800">職種</span>
             {jobs && jobs.length > 0 && (
-              <span className="ml-auto text-xs text-gray-400 bg-white border border-gray-200 px-1.5 py-0.5 rounded">
-                {jobs.length}件
-              </span>
+              <span className="ml-auto text-xs text-gray-400 bg-white border border-gray-200 px-1.5 py-0.5 rounded">{jobs.length}件</span>
             )}
           </div>
           <form action={async (formData: FormData) => {
@@ -133,23 +135,18 @@ export default async function DepartmentJobRegisterPage({
             redirect(successUrl)
           }} className="flex gap-2 mb-3">
             <input type="text" name="jobName" required placeholder="例: エンジニア" className={inputCls} />
-            <button type="submit"
-              className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
-              追加
-            </button>
+            <button type="submit" className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">追加</button>
           </form>
-          {jobs && jobs.length > 0 && (
+          {jobs && jobs.length > 0 ? (
             <ul className="space-y-1.5">
-              {jobs.map((j) => (
+              {jobs.map(j => (
                 <li key={j.job_id} className="flex items-center gap-2 text-sm text-gray-700 bg-white rounded px-2.5 py-1.5 border border-gray-100">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
-                  {j.job_name}
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />{j.job_name}
                 </li>
               ))}
             </ul>
-          )}
-          {(!jobs || jobs.length === 0) && (
-            <p className="text-xs text-gray-400 text-center py-3">まだ登録されていません</p>
+          ) : (
+            <p className="text-xs text-gray-400 text-center py-2">まだ登録されていません</p>
           )}
         </div>
       </div>
@@ -157,7 +154,7 @@ export default async function DepartmentJobRegisterPage({
       {isInitial && (
         <div className="flex flex-col items-center gap-2">
           <Link
-            href={`/user/register?orgKey=${organizationKey}&initial=true`}
+            href={`/user/register?token=${params.token}`}
             className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-md text-sm font-semibold transition-colors"
           >
             次へ：管理者ユーザーを登録する

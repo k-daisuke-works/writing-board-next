@@ -102,8 +102,19 @@ export async function createDepartment(formData: FormData) {
   const departmentName = formData.get('departmentName') as string
 
   if (!departmentName?.trim()) return { error: '部署名を入力してください。' }
+  if (departmentName.trim().length > 100) return { error: '部署名は100文字以内で入力してください。' }
 
   const supabase = await createServiceClient()
+
+  // 初回セットアップ時の追加チェック:
+  // 既にユーザーが存在する組織への未認証アクセスを拒否（推測した orgKey での不正追加防止）
+  if (!session) {
+    const { count } = await supabase
+      .from('user_info')
+      .select('*', { count: 'exact', head: true })
+      .eq('organization_key', organizationKey)
+    if ((count ?? 0) > 0) return { error: '権限がありません。' }
+  }
 
   const { error } = await supabase.from('department_data').insert({
     department_name:  departmentName.trim(),
@@ -136,8 +147,18 @@ export async function createJob(formData: FormData) {
   const jobName = formData.get('jobName') as string
 
   if (!jobName?.trim()) return { error: '職種名を入力してください。' }
+  if (jobName.trim().length > 100) return { error: '職種名は100文字以内で入力してください。' }
 
   const supabase = await createServiceClient()
+
+  // 初回セットアップ時: ユーザーが既存の組織への未認証アクセスを拒否
+  if (!session) {
+    const { count } = await supabase
+      .from('user_info')
+      .select('*', { count: 'exact', head: true })
+      .eq('organization_key', organizationKey)
+    if ((count ?? 0) > 0) return { error: '権限がありません。' }
+  }
 
   const { error } = await supabase.from('job_data').insert({
     job_name:         jobName.trim(),
@@ -268,6 +289,16 @@ export async function registerUser(formData: FormData) {
   }
 
   const supabase = await createServiceClient()
+
+  // 初回セットアップ時: 既にユーザーがいる組織への未認証アクセスを拒否
+  // （第2ユーザー以降の不正作成を防止）
+  if (!session && isInitialSetup) {
+    const { count } = await supabase
+      .from('user_info')
+      .select('*', { count: 'exact', head: true })
+      .eq('organization_key', organizationKey)
+    if ((count ?? 0) > 0) return { error: '権限がありません。' }
+  }
 
   // 重複チェック
   const { data: existing } = await supabase
