@@ -138,9 +138,9 @@ export default function RealtimePosts({ initialPosts, departments, session }: Pr
                           <span>·</span>
                           <span>{post.job_name_stamp}</span>
                         </div>
-                        <p className="text-sm text-gray-700 line-clamp-3 leading-relaxed"
-                           dangerouslySetInnerHTML={{ __html: post.message.replace(/<[^>]*>/g, '') }}
-                        />
+                        <p className="text-sm text-gray-700 line-clamp-3 leading-relaxed">
+                          {post.message}
+                        </p>
                         <div className="flex items-center justify-between mt-3">
                           {post.pdf_url
                             ? <span className="flex items-center gap-1 text-xs text-gray-400"><Paperclip className="w-3 h-3"/>PDF添付</span>

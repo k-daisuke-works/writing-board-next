@@ -68,8 +68,9 @@ export default async function DepartmentHistoryPage({
 
               {/* 本文 */}
               <div className="px-5 py-4">
-                <div className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap"
-                     dangerouslySetInnerHTML={{ __html: post.message }} />
+                <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
+                  {post.message}
+                </p>
                 {post.pdf_url && <PdfDownloadButton pdfPath={post.pdf_url} />}
               </div>
 
@@ -83,7 +84,7 @@ export default async function DepartmentHistoryPage({
                   {/* 編集フォーム */}
                   <form action={toAction(updatePost)} className="space-y-2.5">
                     <input type="hidden" name="writingId" value={post.writing_id} />
-                    <textarea name="message" defaultValue={post.message.replace(/<[^>]*>/g, '')}
+                    <textarea name="message" defaultValue={post.message}
                       rows={3}
                       className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 resize-none transition-colors bg-white" />
                     <div className="flex gap-2 flex-wrap">

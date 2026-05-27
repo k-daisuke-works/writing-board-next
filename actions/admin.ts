@@ -257,6 +257,15 @@ export async function registerUser(formData: FormData) {
   if (!userId?.trim() || !userName?.trim() || !password) {
     return { error: '必須項目を入力してください。' }
   }
+  if (!/^[a-zA-Z0-9_-]{1,50}$/.test(userId.trim())) {
+    return { error: 'ユーザーIDは英数字・ハイフン・アンダースコアのみ、50文字以内で入力してください。' }
+  }
+  if (userName.trim().length > 50) {
+    return { error: 'ユーザー名は50文字以内で入力してください。' }
+  }
+  if (password.length < 8) {
+    return { error: 'パスワードは8文字以上で入力してください。' }
+  }
 
   const supabase = await createServiceClient()
 

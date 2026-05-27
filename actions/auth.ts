@@ -67,9 +67,23 @@ export async function logout() {
 
 /** 団体登録 */
 export async function registerOrganization(formData: FormData) {
-  const organizationId       = formData.get('organizationId') as string
-  const organizationName     = formData.get('organizationName') as string
+  const organizationId       = (formData.get('organizationId') as string)?.trim()
+  const organizationName     = (formData.get('organizationName') as string)?.trim()
   const organizationPassword = formData.get('organizationPassword') as string
+
+  // ── サーバーサイドバリデーション ────────────────────────
+  if (!organizationId || !organizationName || !organizationPassword) {
+    return { error: '必須項目を入力してください。' }
+  }
+  if (!/^[a-zA-Z0-9_-]{1,50}$/.test(organizationId)) {
+    return { error: '団体IDは英数字・ハイフン・アンダースコアのみ、50文字以内で入力してください。' }
+  }
+  if (organizationName.length > 100) {
+    return { error: '団体名は100文字以内で入力してください。' }
+  }
+  if (organizationPassword.length < 8) {
+    return { error: 'パスワードは8文字以上で入力してください。' }
+  }
 
   // 環境変数チェック
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -105,8 +119,9 @@ export async function registerOrganization(formData: FormData) {
     .single()
 
   if (error) {
+    // エラー詳細はサーバーログのみ（クライアントへの情報漏洩防止）
     console.error('[registerOrganization] Supabase insert error:', JSON.stringify(error))
-    return { error: `DB エラー: ${error.message}` }
+    return { error: '登録に失敗しました。しばらくしてから再度お試しください。' }
   }
 
   if (!org) return { error: '登録に失敗しました（データなし）。' }
