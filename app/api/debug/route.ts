@@ -6,12 +6,13 @@ import { createServiceClient } from '@/lib/supabase/server'
  * https://writing-board-next.vercel.app/api/debug にアクセスして確認
  */
 export async function GET() {
-  // 環境変数の存在チェック（値は出力しない）
+  // 環境変数チェック（URLは最初の40文字まで表示してタイポ確認、キーは存在確認のみ）
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
   const envChecks = {
-    NEXT_PUBLIC_SUPABASE_URL:    !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_URL:      url ? url.slice(0, 50) : '未設定',
     NEXT_PUBLIC_SUPABASE_ANON_KEY: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    SUPABASE_SERVICE_ROLE_KEY:   !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-    JWT_SECRET:                  !!process.env.JWT_SECRET,
+    SUPABASE_SERVICE_ROLE_KEY:     !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    JWT_SECRET:                    !!process.env.JWT_SECRET,
   }
 
   // Supabase 接続テスト
