@@ -12,7 +12,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <div className="min-h-screen flex flex-col bg-gray-100">
       {/* トップバー */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-screen-xl mx-auto px-6 h-14 flex items-center gap-6">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-6">
 
           {/* ロゴ */}
           <Link href="/home" className="flex items-center gap-2.5 shrink-0 group">
@@ -69,7 +69,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </header>
 
       {/* ページコンテンツ */}
-      <main className="flex-1 max-w-screen-xl w-full mx-auto px-6 py-7">
+      <main className="flex-1 max-w-screen-xl w-full mx-auto px-4 sm:px-6 py-5 sm:py-7">
         {children}
       </main>
     </div>

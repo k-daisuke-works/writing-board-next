@@ -10,26 +10,33 @@ export default async function PostsPage() {
 
   const supabase = await createServiceClient()
 
-  // 部署一覧
+  // ① 部署一覧を取得（小テーブルなので高速）
   const { data: departments } = await supabase
     .from('department_data')
     .select('*')
     .eq('organization_key', session.organizationKey)
     .order('department_id')
 
-  // 全投稿（組織内）
-  const { data: writings } = await supabase
-    .from('writing_data')
-    .select('*')
-    .eq('organization_key', session.organizationKey)
-    .order('writing_time', { ascending: false })
+  // ② 部署ごとに最新1件だけを並列取得
+  //    以前: 全投稿を一括取得→JSでフィルタ（投稿数が増えるほど遅い）
+  //    現在: 1件×N部署 を Promise.all で並列実行（常に高速）
+  const deptPostResults = await Promise.all(
+    (departments ?? []).map((dept) =>
+      supabase
+        .from('writing_data')
+        .select('*')
+        .eq('department_id', dept.department_id)
+        .eq('organization_key', session.organizationKey)
+        .order('writing_time', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    )
+  )
 
-  // 部署ごとの最新投稿を作成
+  // ③ 結果を Record<department_id, WritingData> に変換
   const latestPosts: Record<number, WritingData> = {}
-  for (const post of writings ?? []) {
-    if (!latestPosts[post.department_id]) {
-      latestPosts[post.department_id] = post
-    }
+  for (const { data } of deptPostResults) {
+    if (data) latestPosts[data.department_id] = data
   }
 
   return (

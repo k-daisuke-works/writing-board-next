@@ -50,24 +50,24 @@ export default async function DepartmentHistoryPage({
           {writings.map((post) => (
             <div key={post.writing_id} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
               {/* 投稿ヘッダー */}
-              <div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100">
+              <div className="flex items-center gap-3 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-gray-100">
                 <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
                   {post.user_name_stamp.slice(0, 1)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-medium text-gray-900">{post.user_name_stamp}</span>
                     <span className="text-xs text-gray-400">{post.job_name_stamp}</span>
                   </div>
-                </div>
-                <div className="flex items-center gap-1 text-xs text-gray-400 shrink-0">
-                  <Clock className="w-3 h-3" />
-                  {fmt(post.writing_time)}
+                  <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5">
+                    <Clock className="w-3 h-3" />
+                    {fmt(post.writing_time)}
+                  </div>
                 </div>
               </div>
 
               {/* 本文 */}
-              <div className="px-5 py-4">
+              <div className="px-4 sm:px-5 py-4">
                 <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
                   {post.message}
                 </p>
@@ -80,7 +80,7 @@ export default async function DepartmentHistoryPage({
                   <ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform" />
                   編集 / 削除
                 </summary>
-                <div className="bg-gray-50 px-5 py-4 space-y-3 border-t border-gray-100">
+                <div className="bg-gray-50 px-4 sm:px-5 py-4 space-y-3 border-t border-gray-100">
                   {/* 編集フォーム */}
                   <form action={toAction(updatePost)} className="space-y-2.5">
                     <input type="hidden" name="writingId" value={post.writing_id} />

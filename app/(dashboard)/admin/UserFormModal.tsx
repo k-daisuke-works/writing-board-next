@@ -14,11 +14,11 @@ type Props = {
   onSuccess: () => void
 }
 
-const inp = "w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+const inp = "w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
 const lbl = "block text-xs font-medium text-gray-700 mb-1.5"
 
 export default function UserFormModal({ mode, user, departments, jobs, onClose, onSuccess }: Props) {
-  const [error, setError]     = useState('')
+  const [error, setError]         = useState('')
   const [adminFlag, setAdminFlag] = useState(user?.admin_flag ?? false)
   const [isPending, startTransition] = useTransition()
 
@@ -35,15 +35,20 @@ export default function UserFormModal({ mode, user, departments, jobs, onClose, 
   }
 
   return (
+    /* オーバーレイ: モバイルは下揃え、sm以上は中央 */
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.4)' }}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 anim-overlay"
+      style={{ background: 'rgba(0,0,0,0.45)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden anim-slide-down">
+      {/* モーダル本体: モバイルは画面下から、sm以上はカード */}
+      <div className="bg-white rounded-t-2xl sm:rounded-lg shadow-2xl w-full sm:max-w-md flex flex-col max-h-[92dvh] sm:max-h-[90vh] anim-slide-down">
+
         {/* ヘッダー */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-          <h2 className="text-sm font-semibold text-gray-900">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 shrink-0">
+          {/* モバイル用ドラッグハンドル */}
+          <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-gray-300 rounded-full sm:hidden" />
+          <h2 className="text-sm font-semibold text-gray-900 mt-1 sm:mt-0">
             {mode === 'add' ? 'ユーザーを追加' : 'ユーザーを編集'}
           </h2>
           <button
@@ -54,7 +59,8 @@ export default function UserFormModal({ mode, user, departments, jobs, onClose, 
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        {/* スクロール可能なフォーム領域 */}
+        <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto">
           {mode === 'edit' && (
             <input type="hidden" name="userKey" value={user?.user_key} />
           )}
@@ -120,7 +126,7 @@ export default function UserFormModal({ mode, user, departments, jobs, onClose, 
             />
           </div>
 
-          <label className="flex items-center gap-2.5 cursor-pointer select-none">
+          <label className="flex items-center gap-2.5 cursor-pointer select-none py-1">
             <input
               type="checkbox"
               checked={adminFlag}
@@ -130,16 +136,16 @@ export default function UserFormModal({ mode, user, departments, jobs, onClose, 
             <span className="text-sm text-gray-700">管理者権限を付与する</span>
           </label>
 
-          <div className="flex gap-2.5 pt-1">
+          <div className="flex gap-2.5 pt-1 pb-safe">
             <button
               type="button" onClick={onClose}
-              className="flex-1 border border-gray-300 text-gray-700 text-sm font-medium py-2 rounded-md hover:bg-gray-50 transition-colors"
+              className="flex-1 border border-gray-300 text-gray-700 text-sm font-medium py-2.5 rounded-md hover:bg-gray-50 transition-colors"
             >
               キャンセル
             </button>
             <button
               type="submit" disabled={isPending}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-medium py-2 rounded-md transition-colors flex items-center justify-center gap-2"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-medium py-2.5 rounded-md transition-colors flex items-center justify-center gap-2"
             >
               {isPending
                 ? <><Loader2 className="w-4 h-4 animate-spin" />保存中…</>

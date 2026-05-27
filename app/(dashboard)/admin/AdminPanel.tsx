@@ -204,7 +204,54 @@ export default function AdminPanel({
             </button>
           </div>
 
-          <table className="w-full text-sm">
+          {/* ── モバイル: カードリスト ─────────────────── */}
+          <div className="sm:hidden divide-y divide-gray-100">
+            {users.map(user => (
+              <div key={user.user_key} className="flex items-center gap-3 px-4 py-3">
+                <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
+                  {user.user_name.slice(0, 1)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-medium text-gray-900">{user.user_name}</span>
+                    {user.admin_flag
+                      ? <span className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded font-medium">管理者</span>
+                      : null}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-0.5 truncate">
+                    {user.user_id}
+                    {user.department?.department_name && ` · ${user.department.department_name}`}
+                    {user.job?.job_name && ` · ${user.job.job_name}`}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => setUserModal({ open: true, mode: 'edit', user })}
+                    className="p-2 rounded text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  {user.user_key !== currentUserKey ? (
+                    <button
+                      onClick={() => handleDeleteUser(user.user_key, user.user_name)}
+                      disabled={isPending}
+                      className="p-2 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  ) : (
+                    <span className="text-xs text-gray-300 px-2">自分</span>
+                  )}
+                </div>
+              </div>
+            ))}
+            {users.length === 0 && (
+              <p className="px-4 py-8 text-center text-sm text-gray-400">ユーザーがいません</p>
+            )}
+          </div>
+
+          {/* ── デスクトップ: テーブル ───────────────── */}
+          <table className="hidden sm:table w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
                 {['名前', '部署', '職種', '権限', ''].map(h => (
