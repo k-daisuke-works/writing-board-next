@@ -5,6 +5,9 @@ import { deletePost, updatePost, getPdfSignedUrl } from '@/actions/posts'
 import { DeletePostButton } from './DeletePostButton'
 import Link from 'next/link'
 
+type SA = (fd: FormData) => Promise<void>
+const toAction = (fn: (fd: FormData) => unknown) => fn as unknown as SA
+
 export default async function DepartmentHistoryPage({
   params,
 }: {
@@ -82,7 +85,7 @@ export default async function DepartmentHistoryPage({
                 </summary>
                 <div className="mt-3 p-4 bg-gray-50 rounded-xl space-y-3">
                   {/* 編集 */}
-                  <form action={updatePost as (fd: FormData) => Promise<void>} className="space-y-2">
+                  <form action={toAction(updatePost)} className="space-y-2">
                     <input type="hidden" name="writingId" value={post.writing_id} />
                     <textarea
                       name="message"
