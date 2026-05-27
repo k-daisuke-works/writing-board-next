@@ -23,9 +23,17 @@ export default async function DashboardLayout({
             <span className="opacity-90">
               👤 <strong>{session.userName}</strong>
             </span>
-            <span className="opacity-75">
+            <span className="opacity-75 hidden sm:inline">
               🏢 {session.organizationName}
             </span>
+            <Link href="/posts" className="opacity-80 hover:opacity-100 transition">
+              📋 連絡
+            </Link>
+            {session.adminFlag && (
+              <Link href="/admin" className="opacity-80 hover:opacity-100 transition">
+                🔧 管理
+              </Link>
+            )}
             <form action={logout}>
               <button
                 type="submit"

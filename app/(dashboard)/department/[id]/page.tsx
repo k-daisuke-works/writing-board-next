@@ -2,9 +2,7 @@ import { getSession } from '@/lib/session'
 import { createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { deletePost, updatePost, getPdfSignedUrl } from '@/actions/posts'
-
-type SA = (fd: FormData) => Promise<void>
-const toAction = (fn: (fd: FormData) => unknown) => fn as unknown as SA
+import { DeletePostButton } from './DeletePostButton'
 import Link from 'next/link'
 
 export default async function DepartmentHistoryPage({
@@ -84,7 +82,7 @@ export default async function DepartmentHistoryPage({
                 </summary>
                 <div className="mt-3 p-4 bg-gray-50 rounded-xl space-y-3">
                   {/* 編集 */}
-                  <form action={toAction(updatePost)} className="space-y-2">
+                  <form action={updatePost as (fd: FormData) => Promise<void>} className="space-y-2">
                     <input type="hidden" name="writingId" value={post.writing_id} />
                     <textarea
                       name="message"
@@ -115,24 +113,10 @@ export default async function DepartmentHistoryPage({
                   </form>
 
                   {/* 削除 */}
-                  <form action={toAction(deletePost)} className="flex gap-2 items-center">
-                    <input type="hidden" name="writingId" value={post.writing_id} />
-                    <input
-                      type="password"
-                      name="pin"
-                      placeholder="PIN（設定している場合）"
-                      className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
-                    />
-                    <button
-                      type="submit"
-                      className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition"
-                      onClick={(e) => {
-                        if (!confirm('本当に削除しますか？')) e.preventDefault()
-                      }}
-                    >
-                      削除
-                    </button>
-                  </form>
+                  <DeletePostButton
+                    action={deletePost}
+                    writingId={post.writing_id}
+                  />
                 </div>
               </details>
             </div>

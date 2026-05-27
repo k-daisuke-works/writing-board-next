@@ -2,10 +2,7 @@ import { getSession } from '@/lib/session'
 import { createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { deleteUser, deleteDepartment, deleteJob } from '@/actions/admin'
-
-// Server Action の戻り値型を form の action 型に合わせるユーティリティ
-type SA = (fd: FormData) => Promise<void>
-const toAction = (fn: (fd: FormData) => unknown) => fn as unknown as SA
+import { DeleteForm } from './DeleteForm'
 import Link from 'next/link'
 
 export default async function AdminPage() {
@@ -36,7 +33,7 @@ export default async function AdminPage() {
   const jobUserCount: Record<number, number> = {}
   for (const u of users ?? []) {
     if (u.department_id) deptUserCount[u.department_id] = (deptUserCount[u.department_id] ?? 0) + 1
-    if (u.job_id) jobUserCount[u.job_id] = (jobUserCount[u.job_id] ?? 0) + 1
+    if (u.job_id)        jobUserCount[u.job_id]         = (jobUserCount[u.job_id]         ?? 0) + 1
   }
 
   return (
@@ -67,8 +64,8 @@ export default async function AdminPage() {
                 {users?.map((user) => (
                   <tr key={user.user_key} className="hover:bg-gray-50">
                     <td className="py-2 font-medium">{user.user_name}</td>
-                    <td className="py-2 text-gray-600">{user.department?.department_name}</td>
-                    <td className="py-2 text-gray-600">{user.job?.job_name}</td>
+                    <td className="py-2 text-gray-600">{user.department?.department_name ?? '—'}</td>
+                    <td className="py-2 text-gray-600">{user.job?.job_name ?? '—'}</td>
                     <td className="py-2">
                       {user.admin_flag ? (
                         <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">管理者</span>
@@ -78,16 +75,11 @@ export default async function AdminPage() {
                     </td>
                     <td className="py-2">
                       {user.user_key !== session.userKey ? (
-                        <form action={toAction(deleteUser)}>
-                          <input type="hidden" name="userKey" value={user.user_key} />
-                          <button
-                            type="submit"
-                            className="text-xs text-red-500 hover:text-red-700"
-                            onClick={(e) => { if (!confirm('削除しますか？')) e.preventDefault() }}
-                          >
-                            削除
-                          </button>
-                        </form>
+                        <DeleteForm
+                          action={deleteUser}
+                          fields={{ userKey: user.user_key }}
+                          confirmText={`${user.user_name} を削除しますか？`}
+                        />
                       ) : (
                         <span className="text-xs text-gray-400">（自分）</span>
                       )}
@@ -115,17 +107,13 @@ export default async function AdminPage() {
                   <span className="text-sm">{dept.department_name}</span>
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-gray-400">{count}人</span>
-                    <form action={toAction(deleteDepartment)}>
-                      <input type="hidden" name="departmentId" value={dept.department_id} />
-                      <button
-                        type="submit"
-                        disabled={count > 0}
-                        className="text-xs text-red-500 hover:text-red-700 disabled:text-gray-300 disabled:cursor-not-allowed"
-                        onClick={(e) => { if (count === 0 && !confirm('削除しますか？')) e.preventDefault() }}
-                      >
-                        削除
-                      </button>
-                    </form>
+                    <DeleteForm
+                      action={deleteDepartment}
+                      fields={{ departmentId: dept.department_id }}
+                      confirmText={`${dept.department_name} を削除しますか？`}
+                      disabled={count > 0}
+                      disabledReason="所属ユーザーがいるため削除できません"
+                    />
                   </div>
                 </div>
               )
@@ -149,17 +137,13 @@ export default async function AdminPage() {
                   <span className="text-sm">{job.job_name}</span>
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-gray-400">{count}人</span>
-                    <form action={toAction(deleteJob)}>
-                      <input type="hidden" name="jobId" value={job.job_id} />
-                      <button
-                        type="submit"
-                        disabled={count > 0}
-                        className="text-xs text-red-500 hover:text-red-700 disabled:text-gray-300 disabled:cursor-not-allowed"
-                        onClick={(e) => { if (count === 0 && !confirm('削除しますか？')) e.preventDefault() }}
-                      >
-                        削除
-                      </button>
-                    </form>
+                    <DeleteForm
+                      action={deleteJob}
+                      fields={{ jobId: job.job_id }}
+                      confirmText={`${job.job_name} を削除しますか？`}
+                      disabled={count > 0}
+                      disabledReason="所属ユーザーがいるため削除できません"
+                    />
                   </div>
                 </div>
               )
