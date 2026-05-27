@@ -71,6 +71,16 @@ export async function registerOrganization(formData: FormData) {
   const organizationName     = formData.get('organizationName') as string
   const organizationPassword = formData.get('organizationPassword') as string
 
+  // 環境変数チェック
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error('[registerOrganization] SUPABASE_SERVICE_ROLE_KEY が未設定です')
+    return { error: 'サーバー設定エラー: SUPABASE_SERVICE_ROLE_KEY 未設定' }
+  }
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    console.error('[registerOrganization] NEXT_PUBLIC_SUPABASE_URL が未設定です')
+    return { error: 'サーバー設定エラー: NEXT_PUBLIC_SUPABASE_URL 未設定' }
+  }
+
   const supabase = await createServiceClient()
 
   // 重複チェック
@@ -96,9 +106,10 @@ export async function registerOrganization(formData: FormData) {
 
   if (error) {
     console.error('[registerOrganization] Supabase insert error:', JSON.stringify(error))
+    return { error: `DB エラー: ${error.message}` }
   }
 
-  if (error || !org) return { error: '登録に失敗しました。' }
+  if (!org) return { error: '登録に失敗しました（データなし）。' }
 
   return { success: true, organizationKey: org.organization_key }
 }
