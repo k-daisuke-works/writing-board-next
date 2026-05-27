@@ -22,7 +22,7 @@ export default function SetupLayout({ children }: { children: React.ReactNode })
       </header>
 
       {/* メインコンテンツ */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 py-12 overflow-y-auto">
+      <main className="flex-1 flex flex-col items-center justify-start lg:justify-center px-6 py-10 lg:py-12 overflow-y-auto">
         {children}
       </main>
     </div>

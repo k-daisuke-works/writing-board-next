@@ -33,7 +33,7 @@ export default function LoginLayout({ children }: { children: React.ReactNode })
       </div>
 
       {/* 右パネル：フォームエリア */}
-      <div className="flex-1 flex flex-col items-center justify-center px-8 py-12 bg-gray-50">
+      <div className="flex-1 flex flex-col items-center justify-start lg:justify-center px-6 py-10 lg:px-8 lg:py-12 bg-gray-50 overflow-y-auto">
         {/* モバイル用ロゴ */}
         <div className="flex items-center gap-2.5 mb-8 lg:hidden w-full max-w-md">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
