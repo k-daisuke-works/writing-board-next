@@ -18,24 +18,19 @@ export default async function DepartmentHistoryPage({
 
   const { id } = await params
   const departmentId = Number(id)
-
   const supabase = await createServiceClient()
 
   const { data: department } = await supabase
-    .from('department_data')
-    .select('*')
-    .eq('department_id', departmentId)
-    .single()
+    .from('department_data').select('*').eq('department_id', departmentId).single()
 
   const { data: writings } = await supabase
-    .from('writing_data')
-    .select('*')
+    .from('writing_data').select('*')
     .eq('department_id', departmentId)
     .eq('organization_key', session.organizationKey)
     .order('writing_time', { ascending: false })
 
-  function formatDate(timeStr: string) {
-    return new Date(timeStr).toLocaleString('ja-JP', {
+  function formatDate(t: string) {
+    return new Date(t).toLocaleString('ja-JP', {
       year: 'numeric', month: '2-digit', day: '2-digit',
       hour: '2-digit', minute: '2-digit',
     })
@@ -43,47 +38,52 @@ export default async function DepartmentHistoryPage({
 
   return (
     <div>
+      {/* ヘッダー */}
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/posts" className="text-blue-500 hover:underline text-sm">
-          ← 最新投稿に戻る
+        <Link
+          href="/posts"
+          className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-indigo-500 transition-colors"
+        >
+          ← 連絡ボードに戻る
         </Link>
-        <h1 className="text-2xl font-bold text-gray-800">
-          🏢 {department?.department_name} の投稿履歴
+        <span className="text-slate-200">/</span>
+        <h1 className="text-lg font-bold text-slate-800 tracking-tight">
+          {department?.department_name}
         </h1>
       </div>
 
       {writings && writings.length > 0 ? (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {writings.map((post) => (
-            <div
-              key={post.writing_id}
-              className="bg-white rounded-2xl shadow p-5"
-            >
-              <div className="flex justify-between items-start gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-                    <span>👤 {post.user_name_stamp}</span>
-                    <span>💼 {post.job_name_stamp}</span>
-                    <span className="ml-auto text-xs">
-                      🕐 {formatDate(post.writing_time)}
-                    </span>
-                  </div>
-                  <div
-                    className="text-gray-800 text-sm leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: post.message }}
-                  />
-                  {post.pdf_url && (
-                    <PdfDownloadButton pdfPath={post.pdf_url} />
-                  )}
+            <div key={post.writing_id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+              {/* 投稿ヘッダー */}
+              <div className="flex items-center gap-3 px-5 pt-4 pb-3 border-b border-slate-50">
+                <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-600 shrink-0">
+                  {post.user_name_stamp.slice(0, 1)}
                 </div>
+                <div className="flex-1 min-w-0">
+                  <span className="font-medium text-sm text-slate-700">{post.user_name_stamp}</span>
+                  <span className="text-xs text-slate-400 ml-2">{post.job_name_stamp}</span>
+                </div>
+                <span className="text-xs text-slate-300 shrink-0">{formatDate(post.writing_time)}</span>
               </div>
 
-              {/* 編集・削除フォーム */}
-              <details className="mt-3">
-                <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600">
+              {/* 本文 */}
+              <div className="px-5 py-4">
+                <div
+                  className="text-sm text-slate-700 leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: post.message }}
+                />
+                {post.pdf_url && <PdfDownloadButton pdfPath={post.pdf_url} />}
+              </div>
+
+              {/* 編集・削除（折りたたみ） */}
+              <details className="border-t border-slate-50 group">
+                <summary className="flex items-center gap-1.5 px-5 py-2.5 text-xs text-slate-300 cursor-pointer hover:text-slate-500 transition-colors list-none select-none">
+                  <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
                   編集 / 削除
                 </summary>
-                <div className="mt-3 p-4 bg-gray-50 rounded-xl space-y-3">
+                <div className="px-5 pb-5 pt-3 bg-slate-50/50 space-y-3">
                   {/* 編集 */}
                   <form action={toAction(updatePost)} className="space-y-2">
                     <input type="hidden" name="writingId" value={post.writing_id} />
@@ -91,24 +91,18 @@ export default async function DepartmentHistoryPage({
                       name="message"
                       defaultValue={post.message.replace(/<[^>]*>/g, '')}
                       rows={3}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-none"
+                      className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400 resize-none transition"
                     />
                     <div className="flex gap-2">
                       <input
-                        type="text"
-                        name="pin"
+                        type="text" name="pin"
                         placeholder="PIN（設定している場合）"
-                        className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                        className="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400 transition"
                       />
-                      <input
-                        type="file"
-                        name="pdfFile"
-                        accept=".pdf"
-                        className="text-xs text-gray-500"
-                      />
+                      <input type="file" name="pdfFile" accept=".pdf" className="text-xs text-slate-400 self-center" />
                       <button
                         type="submit"
-                        className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-4 py-1.5 rounded-lg text-sm font-medium transition"
+                        className="bg-amber-400 hover:bg-amber-500 text-amber-900 px-4 py-2 rounded-xl text-xs font-semibold transition-colors"
                       >
                         更新
                       </button>
@@ -116,35 +110,29 @@ export default async function DepartmentHistoryPage({
                   </form>
 
                   {/* 削除 */}
-                  <DeletePostButton
-                    action={deletePost}
-                    writingId={post.writing_id}
-                  />
+                  <DeletePostButton action={deletePost} writingId={post.writing_id} />
                 </div>
               </details>
             </div>
           ))}
         </div>
       ) : (
-        <div className="text-center text-gray-400 py-16">
-          この部署にはまだ投稿がありません
+        <div className="text-center py-20">
+          <div className="text-4xl mb-3">📭</div>
+          <p className="text-sm text-slate-300">この部署にはまだ投稿がありません</p>
         </div>
       )}
     </div>
   )
 }
 
-/** PDF 署名付き URL を取得してダウンロードリンクを表示 */
 async function PdfDownloadButton({ pdfPath }: { pdfPath: string }) {
   const url = await getPdfSignedUrl(pdfPath)
   if (!url) return null
-
   return (
     <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="mt-2 inline-block text-xs text-red-500 hover:underline"
+      href={url} target="_blank" rel="noopener noreferrer"
+      className="mt-3 inline-flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-600 transition-colors"
     >
       📎 PDFを開く
     </a>

@@ -1,73 +1,82 @@
 import { getSession } from '@/lib/session'
 import Link from 'next/link'
 
-const cards = [
+const CARDS = [
   {
     href: '/posts',
     icon: '📋',
-    title: '業務連絡',
-    desc: '各部署の最新投稿を確認する',
-    color: 'from-blue-500 to-indigo-500',
+    title: '連絡ボード',
+    desc: '各部署の最新業務連絡を確認',
+    gradient: 'from-blue-500 to-indigo-600',
     adminOnly: false,
   },
   {
     href: '/user/register',
     icon: '👤',
-    title: 'ユーザー登録',
-    desc: '新しいユーザーを追加する',
-    color: 'from-green-500 to-teal-500',
+    title: 'ユーザー管理',
+    desc: '新しいメンバーを招待・追加',
+    gradient: 'from-emerald-500 to-teal-600',
     adminOnly: true,
   },
   {
     href: '/departmentjob/register',
     icon: '🏢',
-    title: '部署・職種登録',
-    desc: '部署や職種を追加する',
-    color: 'from-purple-500 to-pink-500',
+    title: '部署・職種',
+    desc: '組織構造を設定・管理する',
+    gradient: 'from-violet-500 to-purple-600',
     adminOnly: true,
   },
   {
     href: '/admin',
-    icon: '🗑️',
-    title: '管理（削除）',
-    desc: 'ユーザー・部署・職種を削除する',
-    color: 'from-red-500 to-orange-500',
+    icon: '⚙️',
+    title: '管理設定',
+    desc: 'ユーザーや組織情報の削除',
+    gradient: 'from-rose-500 to-red-600',
     adminOnly: true,
   },
 ]
 
 export default async function HomePage() {
   const session = await getSession()
+  const visibleCards = CARDS.filter((c) => !c.adminOnly || session?.adminFlag)
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">
-        ホーム
-        <span className="ml-3 text-base font-normal text-gray-500">
-          {session?.departmentName} / {session?.jobName}
-        </span>
-      </h1>
+      {/* あいさつ */}
+      <div className="mb-8">
+        <p className="text-sm text-slate-400 mb-1">ようこそ</p>
+        <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
+          {session?.userName}<span className="font-normal text-slate-400 text-xl"> さん 👋</span>
+        </h1>
+        {(session?.departmentName || session?.jobName) && (
+          <p className="text-sm text-slate-400 mt-1">
+            {[session.departmentName, session.jobName].filter(Boolean).join(' · ')}
+          </p>
+        )}
+      </div>
 
+      {/* メニューカード */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {cards
-          .filter((c) => !c.adminOnly || session?.adminFlag)
-          .map((card) => (
-            <Link key={card.href} href={card.href}>
-              <div className="bg-white rounded-2xl shadow hover:shadow-md transition-shadow p-6 flex items-start gap-4 cursor-pointer group">
-                <div
-                  className={`w-12 h-12 rounded-xl bg-gradient-to-br ${card.color} flex items-center justify-center text-2xl flex-shrink-0`}
-                >
-                  {card.icon}
-                </div>
-                <div>
-                  <h2 className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
-                    {card.title}
-                  </h2>
-                  <p className="text-sm text-gray-500 mt-1">{card.desc}</p>
-                </div>
+        {visibleCards.map((card) => (
+          <Link key={card.href} href={card.href} className="group">
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 p-6 flex items-start gap-4 hover:-translate-y-0.5">
+              <div
+                className={`w-11 h-11 rounded-xl bg-gradient-to-br ${card.gradient} flex items-center justify-center text-xl shadow-sm flex-shrink-0`}
+              >
+                {card.icon}
               </div>
-            </Link>
-          ))}
+              <div className="min-w-0">
+                <h2 className="font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors leading-tight">
+                  {card.title}
+                </h2>
+                <p className="text-sm text-slate-400 mt-1 leading-snug">{card.desc}</p>
+              </div>
+              <div className="ml-auto text-slate-300 group-hover:text-indigo-400 transition-colors text-lg self-center">
+                →
+              </div>
+            </div>
+          </Link>
+        ))}
       </div>
     </div>
   )
