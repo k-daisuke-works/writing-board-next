@@ -23,7 +23,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="anim-fade-in">
+    <div className="anim-fade-in w-full max-w-md">
       <h1 className="text-2xl font-bold text-gray-900 mb-1">団体を新規登録</h1>
       <p className="text-sm text-gray-500 mb-8">組織情報を入力してアカウントを作成します</p>
 
