@@ -1,78 +1,80 @@
 import { getSession } from '@/lib/session'
 import Link from 'next/link'
+import { MessageSquare, Users, Building2, Settings, ChevronRight } from 'lucide-react'
 
 const CARDS = [
   {
     href: '/posts',
-    icon: '📋',
+    Icon: MessageSquare,
     title: '連絡ボード',
-    desc: '各部署の最新業務連絡を確認',
-    gradient: 'from-blue-500 to-indigo-600',
+    desc: '各部署の最新業務連絡を確認する',
+    iconBg: 'bg-blue-50',
+    iconColor: 'text-blue-600',
     adminOnly: false,
   },
   {
     href: '/user/register',
-    icon: '👤',
+    Icon: Users,
     title: 'ユーザー管理',
-    desc: '新しいメンバーを招待・追加',
-    gradient: 'from-emerald-500 to-teal-600',
+    desc: '新しいメンバーを招待・追加する',
+    iconBg: 'bg-green-50',
+    iconColor: 'text-green-600',
     adminOnly: true,
   },
   {
     href: '/departmentjob/register',
-    icon: '🏢',
-    title: '部署・職種',
-    desc: '組織構造を設定・管理する',
-    gradient: 'from-violet-500 to-purple-600',
+    Icon: Building2,
+    title: '部署・職種登録',
+    desc: '組織の部署や職種を設定する',
+    iconBg: 'bg-purple-50',
+    iconColor: 'text-purple-600',
     adminOnly: true,
   },
   {
     href: '/admin',
-    icon: '⚙️',
+    Icon: Settings,
     title: '管理設定',
-    desc: 'ユーザーや組織情報の削除',
-    gradient: 'from-rose-500 to-red-600',
+    desc: 'ユーザーや組織情報を管理・削除する',
+    iconBg: 'bg-gray-50',
+    iconColor: 'text-gray-600',
     adminOnly: true,
   },
 ]
 
 export default async function HomePage() {
   const session = await getSession()
-  const visibleCards = CARDS.filter((c) => !c.adminOnly || session?.adminFlag)
+  const cards   = CARDS.filter((c) => !c.adminOnly || session?.adminFlag)
 
   return (
-    <div>
-      {/* あいさつ */}
-      <div className="mb-8">
-        <p className="text-sm text-slate-400 mb-1">ようこそ</p>
-        <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
-          {session?.userName}<span className="font-normal text-slate-400 text-xl"> さん 👋</span>
+    <div className="anim-fade-in">
+      {/* ページヘッダー */}
+      <div className="mb-7">
+        <h1 className="text-xl font-semibold text-gray-900">
+          おはようございます、{session?.userName}さん
         </h1>
-        {(session?.departmentName || session?.jobName) && (
-          <p className="text-sm text-slate-400 mt-1">
-            {[session.departmentName, session.jobName].filter(Boolean).join(' · ')}
-          </p>
-        )}
+        <p className="text-sm text-gray-500 mt-1">
+          {session?.organizationName}
+          {session?.departmentName && ` · ${session.departmentName}`}
+          {session?.jobName && ` · ${session.jobName}`}
+        </p>
       </div>
 
       {/* メニューカード */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {visibleCards.map((card) => (
-          <Link key={card.href} href={card.href} className="group">
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 p-6 flex items-start gap-4 hover:-translate-y-0.5">
-              <div
-                className={`w-11 h-11 rounded-xl bg-gradient-to-br ${card.gradient} flex items-center justify-center text-xl shadow-sm flex-shrink-0`}
-              >
-                {card.icon}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        {cards.map(({ href, Icon, title, desc, iconBg, iconColor }) => (
+          <Link key={href} href={href} className="group">
+            <div className="bg-white border border-gray-200 rounded-lg p-5 hover:border-blue-300 hover:shadow-sm transition-all duration-150 flex flex-col gap-4 h-full">
+              <div className={`w-10 h-10 ${iconBg} rounded-lg flex items-center justify-center`}>
+                <Icon className={`w-5 h-5 ${iconColor}`} strokeWidth={1.75} />
               </div>
-              <div className="min-w-0">
-                <h2 className="font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors leading-tight">
-                  {card.title}
+              <div className="flex-1">
+                <h2 className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                  {title}
                 </h2>
-                <p className="text-sm text-slate-400 mt-1 leading-snug">{card.desc}</p>
+                <p className="text-xs text-gray-500 mt-1 leading-relaxed">{desc}</p>
               </div>
-              <div className="ml-auto text-slate-300 group-hover:text-indigo-400 transition-colors text-lg self-center">
-                →
+              <div className="flex items-center text-xs text-gray-400 group-hover:text-blue-500 transition-colors">
+                開く <ChevronRight className="w-3.5 h-3.5 ml-0.5 group-hover:translate-x-0.5 transition-transform" />
               </div>
             </div>
           </Link>

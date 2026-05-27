@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { deletePost, updatePost, getPdfSignedUrl } from '@/actions/posts'
 import { DeletePostButton } from './DeletePostButton'
 import Link from 'next/link'
+import { ArrowLeft, Clock, Paperclip, User, ChevronDown } from 'lucide-react'
 
 type SA = (fd: FormData) => Promise<void>
 const toAction = (fn: (fd: FormData) => unknown) => fn as unknown as SA
@@ -17,19 +18,15 @@ export default async function DepartmentHistoryPage({
   if (!session) redirect('/login')
 
   const { id } = await params
-  const departmentId = Number(id)
+  const deptId  = Number(id)
   const supabase = await createServiceClient()
 
-  const { data: department } = await supabase
-    .from('department_data').select('*').eq('department_id', departmentId).single()
-
-  const { data: writings } = await supabase
-    .from('writing_data').select('*')
-    .eq('department_id', departmentId)
-    .eq('organization_key', session.organizationKey)
+  const { data: department } = await supabase.from('department_data').select('*').eq('department_id', deptId).single()
+  const { data: writings }   = await supabase.from('writing_data').select('*')
+    .eq('department_id', deptId).eq('organization_key', session.organizationKey)
     .order('writing_time', { ascending: false })
 
-  function formatDate(t: string) {
+  function fmt(t: string) {
     return new Date(t).toLocaleString('ja-JP', {
       year: 'numeric', month: '2-digit', day: '2-digit',
       hour: '2-digit', minute: '2-digit',
@@ -37,79 +34,71 @@ export default async function DepartmentHistoryPage({
   }
 
   return (
-    <div>
-      {/* ヘッダー */}
-      <div className="flex items-center gap-3 mb-6">
-        <Link
-          href="/posts"
-          className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-indigo-500 transition-colors"
-        >
-          ← 連絡ボードに戻る
+    <div className="anim-fade-in max-w-3xl">
+      {/* パンくず + タイトル */}
+      <div className="mb-6">
+        <Link href="/posts" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition-colors mb-3 w-fit">
+          <ArrowLeft className="w-4 h-4" />
+          連絡ボードに戻る
         </Link>
-        <span className="text-slate-200">/</span>
-        <h1 className="text-lg font-bold text-slate-800 tracking-tight">
-          {department?.department_name}
-        </h1>
+        <h1 className="text-xl font-semibold text-gray-900">{department?.department_name}</h1>
+        <p className="text-sm text-gray-400 mt-0.5">{writings?.length ?? 0}件の投稿</p>
       </div>
 
       {writings && writings.length > 0 ? (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {writings.map((post) => (
-            <div key={post.writing_id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div key={post.writing_id} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
               {/* 投稿ヘッダー */}
-              <div className="flex items-center gap-3 px-5 pt-4 pb-3 border-b border-slate-50">
-                <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-600 shrink-0">
+              <div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100">
+                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
                   {post.user_name_stamp.slice(0, 1)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <span className="font-medium text-sm text-slate-700">{post.user_name_stamp}</span>
-                  <span className="text-xs text-slate-400 ml-2">{post.job_name_stamp}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-900">{post.user_name_stamp}</span>
+                    <span className="text-xs text-gray-400">{post.job_name_stamp}</span>
+                  </div>
                 </div>
-                <span className="text-xs text-slate-300 shrink-0">{formatDate(post.writing_time)}</span>
+                <div className="flex items-center gap-1 text-xs text-gray-400 shrink-0">
+                  <Clock className="w-3 h-3" />
+                  {fmt(post.writing_time)}
+                </div>
               </div>
 
               {/* 本文 */}
               <div className="px-5 py-4">
-                <div
-                  className="text-sm text-slate-700 leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: post.message }}
-                />
+                <div className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap"
+                     dangerouslySetInnerHTML={{ __html: post.message }} />
                 {post.pdf_url && <PdfDownloadButton pdfPath={post.pdf_url} />}
               </div>
 
               {/* 編集・削除（折りたたみ） */}
-              <details className="border-t border-slate-50 group">
-                <summary className="flex items-center gap-1.5 px-5 py-2.5 text-xs text-slate-300 cursor-pointer hover:text-slate-500 transition-colors list-none select-none">
-                  <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
+              <details className="border-t border-gray-100">
+                <summary className="flex items-center gap-1.5 px-5 py-2.5 text-xs text-gray-400 cursor-pointer hover:bg-gray-50 hover:text-gray-600 transition-colors list-none select-none group">
+                  <ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform" />
                   編集 / 削除
                 </summary>
-                <div className="px-5 pb-5 pt-3 bg-slate-50/50 space-y-3">
-                  {/* 編集 */}
-                  <form action={toAction(updatePost)} className="space-y-2">
+                <div className="bg-gray-50 px-5 py-4 space-y-3 border-t border-gray-100">
+                  {/* 編集フォーム */}
+                  <form action={toAction(updatePost)} className="space-y-2.5">
                     <input type="hidden" name="writingId" value={post.writing_id} />
-                    <textarea
-                      name="message"
-                      defaultValue={post.message.replace(/<[^>]*>/g, '')}
+                    <textarea name="message" defaultValue={post.message.replace(/<[^>]*>/g, '')}
                       rows={3}
-                      className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400 resize-none transition"
-                    />
-                    <div className="flex gap-2">
-                      <input
-                        type="text" name="pin"
-                        placeholder="PIN（設定している場合）"
-                        className="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400 transition"
-                      />
-                      <input type="file" name="pdfFile" accept=".pdf" className="text-xs text-slate-400 self-center" />
-                      <button
-                        type="submit"
-                        className="bg-amber-400 hover:bg-amber-500 text-amber-900 px-4 py-2 rounded-xl text-xs font-semibold transition-colors"
-                      >
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 resize-none transition-colors bg-white" />
+                    <div className="flex gap-2 flex-wrap">
+                      <input type="text" name="pin" placeholder="PIN"
+                        className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors bg-white w-32" />
+                      <label className="flex items-center gap-1.5 border border-gray-300 rounded-md px-3 py-1.5 cursor-pointer hover:bg-white transition-colors text-sm text-gray-500">
+                        <Paperclip className="w-3.5 h-3.5" />PDF
+                        <input type="file" name="pdfFile" accept=".pdf" className="sr-only" />
+                      </label>
+                      <button type="submit"
+                        className="bg-yellow-400 hover:bg-yellow-500 text-yellow-900 px-4 py-1.5 rounded-md text-xs font-semibold transition-colors">
                         更新
                       </button>
                     </div>
                   </form>
-
-                  {/* 削除 */}
                   <DeletePostButton action={deletePost} writingId={post.writing_id} />
                 </div>
               </details>
@@ -117,9 +106,9 @@ export default async function DepartmentHistoryPage({
           ))}
         </div>
       ) : (
-        <div className="text-center py-20">
-          <div className="text-4xl mb-3">📭</div>
-          <p className="text-sm text-slate-300">この部署にはまだ投稿がありません</p>
+        <div className="text-center py-20 bg-white rounded-lg border border-gray-200">
+          <User className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+          <p className="text-sm text-gray-400">この部署にはまだ投稿がありません</p>
         </div>
       )}
     </div>
@@ -130,11 +119,9 @@ async function PdfDownloadButton({ pdfPath }: { pdfPath: string }) {
   const url = await getPdfSignedUrl(pdfPath)
   if (!url) return null
   return (
-    <a
-      href={url} target="_blank" rel="noopener noreferrer"
-      className="mt-3 inline-flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-600 transition-colors"
-    >
-      📎 PDFを開く
+    <a href={url} target="_blank" rel="noopener noreferrer"
+       className="mt-3 inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 transition-colors">
+      <Paperclip className="w-3.5 h-3.5" />PDF を開く
     </a>
   )
 }

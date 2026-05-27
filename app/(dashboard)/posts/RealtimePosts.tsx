@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Department, WritingData, UserSession } from '@/types/database'
 import PostModal from './PostModal'
 import Link from 'next/link'
+import { Plus, Clock, Paperclip, Building2, ChevronRight, Wifi } from 'lucide-react'
 
 type Props = {
   initialPosts: Record<number, WritingData>
@@ -12,44 +13,29 @@ type Props = {
   session: UserSession
 }
 
-// 部署ごとのアクセントカラー（静的クラスで Tailwind に認識させる）
-const ACCENTS = [
-  { border: 'border-l-indigo-500',  dot: 'bg-indigo-500',  badge: 'bg-indigo-100 text-indigo-700'  },
-  { border: 'border-l-violet-500',  dot: 'bg-violet-500',  badge: 'bg-violet-100 text-violet-700'  },
-  { border: 'border-l-blue-500',    dot: 'bg-blue-500',    badge: 'bg-blue-100 text-blue-700'      },
-  { border: 'border-l-emerald-500', dot: 'bg-emerald-500', badge: 'bg-emerald-100 text-emerald-700'},
-  { border: 'border-l-amber-500',   dot: 'bg-amber-500',   badge: 'bg-amber-100 text-amber-700'   },
-  { border: 'border-l-rose-500',    dot: 'bg-rose-500',    badge: 'bg-rose-100 text-rose-700'     },
-  { border: 'border-l-cyan-500',    dot: 'bg-cyan-500',    badge: 'bg-cyan-100 text-cyan-700'     },
-  { border: 'border-l-pink-500',    dot: 'bg-pink-500',    badge: 'bg-pink-100 text-pink-700'     },
-]
-
-function isRecent(t: string | null) {
-  if (!t) return false
-  return (Date.now() - new Date(t).getTime()) < 7 * 864e5
+function relativeTime(t: string) {
+  const m = Math.floor((Date.now() - new Date(t).getTime()) / 60000)
+  if (m < 1)  return 'たった今'
+  if (m < 60) return `${m}分前`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}時間前`
+  const d = Math.floor(h / 24)
+  if (d < 7)  return `${d}日前`
+  return new Date(t).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })
 }
 
-function relativeTime(t: string): string {
-  const diffMin = Math.floor((Date.now() - new Date(t).getTime()) / 60000)
-  if (diffMin < 1)  return 'たった今'
-  if (diffMin < 60) return `${diffMin}分前`
-  const diffH = Math.floor(diffMin / 60)
-  if (diffH < 24)   return `${diffH}時間前`
-  const diffD = Math.floor(diffH / 24)
-  if (diffD < 7)    return `${diffD}日前`
-  return new Date(t).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })
+function isRecent(t: string | null) {
+  return !!t && Date.now() - new Date(t).getTime() < 7 * 864e5
 }
 
 export default function RealtimePosts({ initialPosts, departments, session }: Props) {
   const [latestPosts, setLatestPosts] = useState(initialPosts)
   const [showModal, setShowModal]     = useState(false)
   const [toast, setToast]             = useState<string | null>(null)
-
   const supabase = createClient()
 
   useEffect(() => {
-    const ch = supabase
-      .channel('writing_data_realtime')
+    const ch = supabase.channel('wr')
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'writing_data',
         filter: `organization_key=eq.${session.organizationKey}`,
@@ -58,138 +44,123 @@ export default function RealtimePosts({ initialPosts, departments, session }: Pr
           const p = payload.new as WritingData
           setLatestPosts((prev) => {
             const cur = prev[p.department_id!]
-            if (!cur || p.writing_time > cur.writing_time)
-              return { ...prev, [p.department_id!]: p }
-            return prev
+            return (!cur || p.writing_time > cur.writing_time)
+              ? { ...prev, [p.department_id!]: p }
+              : prev
           })
-          setToast(`💬 ${p.department_name_stamp} に新しい連絡があります`)
+          setToast(`${p.department_name_stamp}に新しい連絡があります`)
           setTimeout(() => setToast(null), 4000)
         }
         if (payload.eventType === 'DELETE') {
           const d = payload.old as WritingData
           setLatestPosts((prev) => {
-            if (prev[d.department_id!]?.writing_id === d.writing_id) {
-              const next = { ...prev }
-              delete next[d.department_id!]
-              return next
-            }
-            return prev
+            if (prev[d.department_id!]?.writing_id !== d.writing_id) return prev
+            const next = { ...prev }; delete next[d.department_id!]; return next
           })
         }
-      })
-      .subscribe()
+      }).subscribe()
     return () => { supabase.removeChannel(ch) }
   }, [session.organizationKey])
 
-  const newCount = departments.filter(
-    (d) => isRecent(latestPosts[d.department_id]?.writing_time ?? null)
-  ).length
+  const newCount = departments.filter((d) => isRecent(latestPosts[d.department_id]?.writing_time ?? null)).length
 
   return (
     <>
       {/* トースト */}
       {toast && (
-        <div className="fixed top-4 right-4 z-50 toast-enter">
-          <div className="bg-slate-800 text-white px-4 py-3 rounded-xl shadow-xl text-sm flex items-center gap-2.5 max-w-xs">
-            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse flex-shrink-0" />
+        <div className="fixed top-4 right-4 z-50 anim-slide-down">
+          <div className="bg-gray-900 text-white text-sm px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2.5">
+            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse shrink-0" />
             {toast}
           </div>
         </div>
       )}
 
-      {/* ヘッダー */}
-      <div className="flex items-center justify-between mb-6">
+      {/* ページヘッダー */}
+      <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-xl font-bold text-slate-800 tracking-tight">連絡ボード</h1>
-          <p className="text-sm text-slate-400 mt-0.5">
-            {departments.length} 部署
-            {newCount > 0 && (
-              <span className="ml-2 text-indigo-500 font-medium">· {newCount} 件の新着</span>
-            )}
-            <span className="ml-2 inline-flex items-center gap-1">
-              <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-              リアルタイム更新中
+          <h1 className="text-xl font-semibold text-gray-900">連絡ボード</h1>
+          <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-2">
+            {departments.length}部署
+            {newCount > 0 && <span className="text-blue-600 font-medium">· {newCount}件の新着</span>}
+            <span className="flex items-center gap-1 text-green-600">
+              <Wifi className="w-3 h-3" />
+              <span className="text-xs">リアルタイム</span>
             </span>
           </p>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors shadow-sm"
+          className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors"
         >
-          <span>✏️</span>
-          <span className="hidden sm:inline">投稿する</span>
+          <Plus className="w-4 h-4" />
+          <span>投稿する</span>
         </button>
       </div>
 
-      {/* 部署カード */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {departments.map((dept, i) => {
-          const accent = ACCENTS[i % ACCENTS.length]
-          const post   = latestPosts[dept.department_id]
-          const recent = isRecent(post?.writing_time ?? null)
+      {/* 部署カードグリッド */}
+      {departments.length === 0 ? (
+        <div className="text-center py-20 bg-white rounded-lg border border-gray-200">
+          <Building2 className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+          <p className="text-sm text-gray-400">部署が登録されていません</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {departments.map((dept) => {
+            const post   = latestPosts[dept.department_id]
+            const recent = isRecent(post?.writing_time ?? null)
 
-          return (
-            <Link
-              key={dept.department_id}
-              href={`/department/${dept.department_id}`}
-              className="group bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col hover:-translate-y-0.5"
-            >
-              {/* カードヘッダー */}
-              <div className={`border-l-4 ${accent.border} px-4 pt-4 pb-3 flex items-center justify-between`}>
-                <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${accent.dot}`} />
-                  <span className="font-semibold text-sm text-slate-700 group-hover:text-slate-900 transition-colors">
-                    {dept.department_name}
-                  </span>
-                </div>
-                {recent && (
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${accent.badge}`}>
-                    NEW
-                  </span>
-                )}
-              </div>
-
-              {/* カード本文 */}
-              <div className={`flex-1 border-l-4 ${accent.border} px-4 pb-4`}>
-                {post ? (
-                  <>
-                    <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
-                      <span>{post.user_name_stamp}</span>
-                      <span>·</span>
-                      <span>{post.job_name_stamp}</span>
+            return (
+              <Link key={dept.department_id} href={`/department/${dept.department_id}`} className="group">
+                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:border-blue-300 hover:shadow-sm transition-all duration-150 h-full flex flex-col">
+                  {/* カードヘッダー */}
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-gray-400" strokeWidth={1.75} />
+                      <span className="text-sm font-medium text-gray-800">{dept.department_name}</span>
                     </div>
-                    <div
-                      className="text-sm text-slate-600 line-clamp-3 leading-relaxed"
-                      dangerouslySetInnerHTML={{ __html: post.message }}
-                    />
-                    <div className="flex items-center justify-between mt-3">
-                      {post.pdf_url && (
-                        <span className="text-xs text-rose-400 flex items-center gap-1">
-                          📎 PDF
+                    <div className="flex items-center gap-2">
+                      {recent && (
+                        <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                          NEW
                         </span>
                       )}
-                      <span className="text-xs text-slate-300 ml-auto">
-                        {relativeTime(post.writing_time)}
-                      </span>
+                      <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-blue-400 transition-colors" />
                     </div>
-                  </>
-                ) : (
-                  <p className="text-sm text-slate-300 italic py-4 text-center">
-                    まだ投稿がありません
-                  </p>
-                )}
-              </div>
-            </Link>
-          )
-        })}
+                  </div>
 
-        {departments.length === 0 && (
-          <div className="col-span-full text-center py-16 text-slate-300">
-            <div className="text-4xl mb-3">🏢</div>
-            <p className="text-sm">部署が登録されていません</p>
-          </div>
-        )}
-      </div>
+                  {/* カード本文 */}
+                  <div className="flex-1 px-4 py-3">
+                    {post ? (
+                      <>
+                        <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
+                          <span className="font-medium text-gray-600">{post.user_name_stamp}</span>
+                          <span>·</span>
+                          <span>{post.job_name_stamp}</span>
+                        </div>
+                        <p className="text-sm text-gray-700 line-clamp-3 leading-relaxed"
+                           dangerouslySetInnerHTML={{ __html: post.message.replace(/<[^>]*>/g, '') }}
+                        />
+                        <div className="flex items-center justify-between mt-3">
+                          {post.pdf_url
+                            ? <span className="flex items-center gap-1 text-xs text-gray-400"><Paperclip className="w-3 h-3"/>PDF添付</span>
+                            : <span />
+                          }
+                          <span className="flex items-center gap-1 text-xs text-gray-400">
+                            <Clock className="w-3 h-3" />{relativeTime(post.writing_time)}
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <p className="text-sm text-gray-400 py-3">まだ投稿がありません</p>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      )}
 
       {showModal && <PostModal session={session} onClose={() => setShowModal(false)} />}
     </>

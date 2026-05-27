@@ -3,6 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { registerUser } from '@/actions/admin'
 import Link from 'next/link'
+import { Users, ArrowLeft, CheckCircle, AlertCircle, Info, Check } from 'lucide-react'
 
 export default async function UserRegisterPage({
   searchParams,
@@ -28,44 +29,67 @@ export default async function UserRegisterPage({
   const success  = params.success === 'true'
   const errorMsg = params.error ? decodeURIComponent(params.error) : null
 
-  const inputClass = "w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition"
+  const inputCls = "w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+  const labelCls = "block text-xs font-medium text-gray-700 mb-1.5"
 
   return (
     <div className="w-full max-w-md">
       {/* ヘッダー */}
-      {isInitial ? (
-        <div className="mb-6 text-center">
-          <div className="inline-flex items-center justify-center w-12 h-12 bg-indigo-100 rounded-2xl text-2xl mb-3">👤</div>
-          <h1 className="text-xl font-bold text-slate-800 tracking-tight">管理者ユーザーを作成</h1>
-          <p className="text-sm text-slate-400 mt-1">最初のユーザーは管理者として登録されます</p>
-        </div>
-      ) : (
-        <div className="flex items-center gap-3 mb-6">
-          <Link href="/admin" className="text-sm text-slate-400 hover:text-indigo-500 transition-colors">← 管理に戻る</Link>
-          <span className="text-slate-200">/</span>
-          <h1 className="text-xl font-bold text-slate-800">ユーザー登録</h1>
-        </div>
-      )}
+      <div className="mb-6">
+        {isInitial ? (
+          <>
+            <div className="flex items-center gap-2 text-xs text-gray-400 mb-3">
+              <span className="flex items-center gap-1 text-blue-600 font-medium">
+                <Check className="w-3 h-3" />団体登録
+              </span>
+              <span>→</span>
+              <span className="flex items-center gap-1 text-blue-600 font-medium">
+                <Check className="w-3 h-3" />部署・職種登録
+              </span>
+              <span>→</span>
+              <span className="font-medium text-gray-700">ユーザー登録</span>
+            </div>
+            <h1 className="text-xl font-semibold text-gray-900">管理者ユーザーを作成</h1>
+            <p className="text-sm text-gray-500 mt-0.5">最初のユーザーは管理者として登録されます</p>
+          </>
+        ) : (
+          <>
+            <Link href="/admin" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition-colors mb-3 w-fit">
+              <ArrowLeft className="w-4 h-4" />管理設定に戻る
+            </Link>
+            <div className="flex items-center gap-2.5">
+              <Users className="w-5 h-5 text-gray-400" strokeWidth={1.75} />
+              <h1 className="text-xl font-semibold text-gray-900">ユーザー登録</h1>
+            </div>
+            <p className="text-sm text-gray-400 mt-0.5">新しいメンバーをチームに追加します</p>
+          </>
+        )}
+      </div>
 
       {/* フィードバック */}
       {isInitial && (
-        <div className="mb-4 flex items-start gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-xl px-4 py-3 text-sm">
-          ℹ️ 登録後、このIDとパスワードでログインできます
+        <div className="mb-4 flex items-start gap-2 bg-blue-50 border border-blue-200 text-blue-700 rounded-md px-4 py-3 text-sm">
+          <Info className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>登録後、このIDとパスワードでログインできます</span>
         </div>
       )}
       {success && (
-        <div className="mb-4 flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-4 py-3 text-sm">
-          ✅ ユーザーを登録しました。
+        <div className="mb-4 flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 rounded-md px-4 py-3 text-sm">
+          <CheckCircle className="w-4 h-4 shrink-0" />ユーザーを登録しました。
         </div>
       )}
       {errorMsg && (
-        <div className="mb-4 flex items-start gap-2 bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm">
-          ⚠️ {errorMsg}
+        <div className="mb-4 flex items-start gap-2 bg-red-50 border border-red-200 text-red-600 rounded-md px-4 py-3 text-sm">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />{errorMsg}
         </div>
       )}
 
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="h-1 bg-gradient-to-r from-indigo-500 to-blue-500" />
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-gray-100">
+          <span className="text-sm font-semibold text-gray-900">
+            {isInitial ? '管理者アカウント情報' : 'ユーザー情報'}
+          </span>
+        </div>
         <form action={async (formData: FormData) => {
           'use server'
           if (isInitial && orgKeyParam) {
@@ -82,54 +106,61 @@ export default async function UserRegisterPage({
           }
           if (isInitial) redirect('/login')
           else redirect('/user/register?success=true')
-        }} className="p-6 space-y-4">
+        }} className="p-5 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">ユーザーID</label>
-              <input type="text" name="userId" required placeholder="例: USER001" className={inputClass} />
+              <label className={labelCls}>ユーザーID <span className="text-red-500">*</span></label>
+              <input type="text" name="userId" required placeholder="例: USER001" className={inputCls} />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">ユーザー名</label>
-              <input type="text" name="userName" required placeholder="例: 山田太郎" className={inputClass} />
+              <label className={labelCls}>ユーザー名 <span className="text-red-500">*</span></label>
+              <input type="text" name="userName" required placeholder="例: 山田太郎" className={inputCls} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">部署</label>
-              <select name="departmentId" required className={inputClass}>
+              <label className={labelCls}>部署 <span className="text-red-500">*</span></label>
+              <select name="departmentId" required className={inputCls}>
                 <option value="">選択…</option>
-                {departments?.map((d) => <option key={d.department_id} value={d.department_id}>{d.department_name}</option>)}
+                {departments?.map((d) => (
+                  <option key={d.department_id} value={d.department_id}>{d.department_name}</option>
+                ))}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">職種</label>
-              <select name="jobId" required className={inputClass}>
+              <label className={labelCls}>職種 <span className="text-red-500">*</span></label>
+              <select name="jobId" required className={inputCls}>
                 <option value="">選択…</option>
-                {jobs?.map((j) => <option key={j.job_id} value={j.job_id}>{j.job_name}</option>)}
+                {jobs?.map((j) => (
+                  <option key={j.job_id} value={j.job_id}>{j.job_name}</option>
+                ))}
               </select>
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">パスワード</label>
-            <input type="password" name="password" required minLength={8} placeholder="8文字以上" className={inputClass} />
+            <label className={labelCls}>パスワード <span className="text-red-500">*</span></label>
+            <input type="password" name="password" required minLength={8} placeholder="8文字以上" className={inputCls} />
           </div>
           {!isInitial && (
-            <label className="flex items-center gap-2.5 cursor-pointer">
-              <input type="checkbox" name="isAdmin" value="true" className="w-4 h-4 rounded accent-indigo-600" />
-              <span className="text-sm text-slate-600">管理者権限を付与する</span>
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <input type="checkbox" name="isAdmin" value="true"
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+              <span className="text-sm text-gray-700">管理者権限を付与する</span>
             </label>
           )}
           <button type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl transition-colors text-sm mt-2">
-            {isInitial ? 'ユーザーを作成してログインへ →' : '登録する'}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2.5 rounded-md transition-colors flex items-center justify-center gap-2">
+            {isInitial ? 'ユーザーを作成してログインへ' : '登録する'}
+            {isInitial && <Check className="w-4 h-4" />}
           </button>
         </form>
       </div>
 
       {isInitial && (
         <p className="text-center mt-4">
-          <Link href={`/departmentjob/register?orgKey=${orgKeyParam}&initial=true`} className="text-xs text-slate-400 hover:text-slate-600 transition-colors">
-            ← 部署・職種登録に戻る
+          <Link href={`/departmentjob/register?orgKey=${orgKeyParam}&initial=true`}
+            className="flex items-center justify-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors">
+            <ArrowLeft className="w-3 h-3" />部署・職種登録に戻る
           </Link>
         </p>
       )}
