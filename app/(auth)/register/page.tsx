@@ -4,8 +4,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { registerOrganization } from '@/actions/auth'
+import { SetupStepper } from '../SetupStepper'
 
-const inputCls = "w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+const inputCls = "w-full border border-gray-200 rounded-md px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
 const labelCls = "block text-sm font-medium text-gray-700 mb-1.5"
 
 export default function RegisterPage() {
@@ -23,9 +24,17 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="anim-fade-in w-full max-w-md">
-      <h1 className="text-2xl font-bold text-gray-900 mb-1">団体を新規登録</h1>
-      <p className="text-sm text-gray-500 mb-8">組織情報を入力してアカウントを作成します</p>
+    <div className="anim-fade-in w-full max-w-sm">
+      {/* ステッパー */}
+      <SetupStepper current={1} />
+
+      {/* タイトル */}
+      <div className="mb-7">
+        <h1 className="text-2xl font-bold text-gray-900 mb-1.5">団体を登録</h1>
+        <p className="text-sm text-gray-500">
+          あなたの組織のアカウントを作成します
+        </p>
+      </div>
 
       {error && (
         <div className="mb-5 flex items-start gap-2.5 bg-red-50 border border-red-200 text-red-700 rounded-md px-4 py-3 text-sm">
@@ -36,9 +45,12 @@ export default function RegisterPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className={labelCls}>団体ID <span className="text-gray-400 font-normal text-xs">（英数字、変更不可）</span></label>
+          <label className={labelCls}>
+            団体ID
+            <span className="ml-1.5 text-xs text-gray-400 font-normal">英数字・ハイフン（変更不可）</span>
+          </label>
           <input type="text" name="organizationId" required placeholder="例: acme-corp" className={inputCls} />
         </div>
         <div>
@@ -50,17 +62,19 @@ export default function RegisterPage() {
           <input type="password" name="organizationPassword" required minLength={8} placeholder="8文字以上" className={inputCls} />
         </div>
 
-        <button
-          type="submit" disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-medium py-2.5 rounded-md text-sm transition-colors flex items-center justify-center gap-2"
-        >
-          {loading
-            ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />登録中…</>
-            : '登録して次へ'}
-        </button>
+        <div className="pt-1">
+          <button
+            type="submit" disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-medium py-2.5 rounded-md text-sm transition-colors flex items-center justify-center gap-2"
+          >
+            {loading
+              ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />登録中…</>
+              : '次へ：部署・職種の登録'}
+          </button>
+        </div>
       </form>
 
-      <p className="mt-6 text-center text-sm text-gray-500">
+      <p className="mt-6 text-center text-sm text-gray-400">
         すでにアカウントをお持ちの方は{' '}
         <Link href="/login" className="text-blue-600 hover:text-blue-800 font-medium">ログイン</Link>
       </p>
