@@ -94,6 +94,10 @@ export async function registerOrganization(formData: FormData) {
     .select()
     .single()
 
+  if (error) {
+    console.error('[registerOrganization] Supabase insert error:', JSON.stringify(error))
+  }
+
   if (error || !org) return { error: '登録に失敗しました。' }
 
   return { success: true, organizationKey: org.organization_key }

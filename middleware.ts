@@ -5,7 +5,12 @@ import { jwtVerify } from 'jose'
 const SECRET = new TextEncoder().encode(process.env.JWT_SECRET!)
 
 // 認証なしでアクセスできるパス
-const PUBLIC_PATHS = ['/login', '/register']
+const PUBLIC_PATHS = [
+  '/login',
+  '/register',
+  '/departmentjob/register',  // 初回セットアップ時（orgKey付き）も使用
+  '/user/register',            // 初回セットアップ時（isInitial付き）も使用
+]
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl

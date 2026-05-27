@@ -84,57 +84,103 @@ export async function deleteJob(formData: FormData) {
   return { success: true }
 }
 
-/** 部署登録 */
+/** 部署登録
+ *  - 通常: セッションの adminFlag を確認
+ *  - 初回セットアップ: セッションなし + フォームの organizationKey を使用
+ */
 export async function createDepartment(formData: FormData) {
   const session = await getSession()
-  if (!session?.adminFlag) return { error: '管理者権限が必要です。' }
 
+  // フォームから organizationKey を取得（初回セットアップ時に使用）
+  const orgKeyFromForm = Number(formData.get('organizationKey') || 0)
+
+  // 権限チェック
+  if (session && !session.adminFlag) return { error: '管理者権限が必要です。' }
+  if (!session && !orgKeyFromForm) return { error: '権限がありません。' }
+
+  const organizationKey = session?.organizationKey ?? orgKeyFromForm
   const departmentName = formData.get('departmentName') as string
+
+  if (!departmentName?.trim()) return { error: '部署名を入力してください。' }
+
   const supabase = await createServiceClient()
 
   const { error } = await supabase.from('department_data').insert({
-    department_name:  departmentName,
-    organization_key: session.organizationKey,
+    department_name:  departmentName.trim(),
+    organization_key: organizationKey,
   })
 
-  if (error) return { error: '登録に失敗しました。' }
+  if (error) {
+    console.error('[createDepartment] error:', error)
+    return { error: '登録に失敗しました。' }
+  }
 
   revalidatePath('/admin')
   revalidatePath('/departmentjob/register')
   return { success: true }
 }
 
-/** 職種登録 */
+/** 職種登録
+ *  - 通常: セッションの adminFlag を確認
+ *  - 初回セットアップ: セッションなし + フォームの organizationKey を使用
+ */
 export async function createJob(formData: FormData) {
   const session = await getSession()
-  if (!session?.adminFlag) return { error: '管理者権限が必要です。' }
 
-  const jobName  = formData.get('jobName') as string
+  const orgKeyFromForm = Number(formData.get('organizationKey') || 0)
+
+  if (session && !session.adminFlag) return { error: '管理者権限が必要です。' }
+  if (!session && !orgKeyFromForm) return { error: '権限がありません。' }
+
+  const organizationKey = session?.organizationKey ?? orgKeyFromForm
+  const jobName = formData.get('jobName') as string
+
+  if (!jobName?.trim()) return { error: '職種名を入力してください。' }
+
   const supabase = await createServiceClient()
 
   const { error } = await supabase.from('job_data').insert({
-    job_name:         jobName,
-    organization_key: session.organizationKey,
+    job_name:         jobName.trim(),
+    organization_key: organizationKey,
   })
 
-  if (error) return { error: '登録に失敗しました。' }
+  if (error) {
+    console.error('[createJob] error:', error)
+    return { error: '登録に失敗しました。' }
+  }
 
   revalidatePath('/admin')
   revalidatePath('/departmentjob/register')
   return { success: true }
 }
 
-/** ユーザー登録（管理者が行う） */
+/** ユーザー登録
+ *  - 通常: セッションの adminFlag を確認
+ *  - 初回セットアップ: セッションなし + フォームの organizationKey + isInitialSetup=true
+ */
 export async function registerUser(formData: FormData) {
   const session = await getSession()
-  if (!session?.adminFlag) return { error: '管理者権限が必要です。' }
+
+  const orgKeyFromForm = Number(formData.get('organizationKey') || 0)
+  const isInitialSetup = formData.get('isInitialSetup') === 'true'
+
+  // 権限チェック
+  if (session && !session.adminFlag) return { error: '管理者権限が必要です。' }
+  if (!session && !(isInitialSetup && orgKeyFromForm)) return { error: '権限がありません。' }
+
+  const organizationKey = session?.organizationKey ?? orgKeyFromForm
 
   const userId       = formData.get('userId') as string
   const userName     = formData.get('userName') as string
   const departmentId = Number(formData.get('departmentId'))
   const jobId        = Number(formData.get('jobId'))
   const password     = formData.get('password') as string
-  const isAdmin      = formData.get('isAdmin') === 'true'
+  // 初回セットアップ時は必ず管理者に
+  const isAdmin      = isInitialSetup ? true : (formData.get('isAdmin') === 'true')
+
+  if (!userId?.trim() || !userName?.trim() || !password) {
+    return { error: '必須項目を入力してください。' }
+  }
 
   const supabase = await createServiceClient()
 
@@ -143,7 +189,7 @@ export async function registerUser(formData: FormData) {
     .from('user_info')
     .select('user_key')
     .eq('user_id', userId)
-    .eq('organization_key', session.organizationKey)
+    .eq('organization_key', organizationKey)
     .single()
 
   if (existing) return { error: 'このユーザーIDはすでに登録されています。' }
@@ -151,16 +197,19 @@ export async function registerUser(formData: FormData) {
   const hashed = await bcrypt.hash(password, 10)
 
   const { error } = await supabase.from('user_info').insert({
-    user_id:          userId,
-    user_name:        userName,
+    user_id:          userId.trim(),
+    user_name:        userName.trim(),
     department_id:    departmentId,
     job_id:           jobId,
     admin_flag:       isAdmin,
-    organization_key: session.organizationKey,
+    organization_key: organizationKey,
     password:         hashed,
   })
 
-  if (error) return { error: '登録に失敗しました。' }
+  if (error) {
+    console.error('[registerUser] error:', error)
+    return { error: '登録に失敗しました。' }
+  }
 
   revalidatePath('/admin')
   return { success: true }

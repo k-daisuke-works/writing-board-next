@@ -7,17 +7,17 @@ import Link from 'next/link'
 export default async function DepartmentJobRegisterPage({
   searchParams,
 }: {
-  searchParams: Promise<{ orgKey?: string; initial?: string; success?: string }>
+  searchParams: Promise<{ orgKey?: string; initial?: string; success?: string; error?: string }>
 }) {
   const params = await searchParams
   const isInitial = params.initial === 'true'
-  const orgKey = params.orgKey ? Number(params.orgKey) : null
+  const orgKeyParam = params.orgKey ? Number(params.orgKey) : null
 
   // 通常アクセス（ログイン済み）
   const session = await getSession()
 
   // 初回登録フロー（orgKey あり）か通常フロー（session あり）か判定
-  const organizationKey = session?.organizationKey ?? orgKey
+  const organizationKey = session?.organizationKey ?? orgKeyParam
   const isAdmin = session?.adminFlag ?? isInitial
 
   if (!organizationKey) redirect('/login')
@@ -31,9 +31,17 @@ export default async function DepartmentJobRegisterPage({
   ])
 
   const success = params.success === 'true'
+  const error = params.error ? decodeURIComponent(params.error) : null
+
+  const successUrl = isInitial
+    ? `/departmentjob/register?orgKey=${organizationKey}&initial=true&success=true`
+    : '/departmentjob/register?success=true'
+  const errorBase = isInitial
+    ? `/departmentjob/register?orgKey=${organizationKey}&initial=true`
+    : '/departmentjob/register'
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="w-full max-w-2xl">
       {!isInitial && (
         <div className="flex items-center gap-3 mb-6">
           <Link href="/admin" className="text-blue-500 hover:underline text-sm">← 管理ページに戻る</Link>
@@ -53,6 +61,11 @@ export default async function DepartmentJobRegisterPage({
           ✅ 登録しました。
         </div>
       )}
+      {error && (
+        <div className="mb-4 bg-red-50 border border-red-300 text-red-700 rounded-lg px-4 py-3 text-sm">
+          ❌ {error}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         {/* 部署登録 */}
@@ -60,13 +73,13 @@ export default async function DepartmentJobRegisterPage({
           <h2 className="font-semibold text-gray-700 mb-4">🏢 部署を追加</h2>
           <form action={async (formData: FormData) => {
             'use server'
-            formData.append('_orgKey', String(organizationKey))
-            await createDepartment(formData)
-            redirect(isInitial
-              ? `/departmentjob/register?orgKey=${organizationKey}&initial=true&success=true`
-              : '/departmentjob/register?success=true')
+            formData.append('organizationKey', String(organizationKey))
+            const result = await createDepartment(formData)
+            if (result?.error) {
+              redirect(`${errorBase}&error=${encodeURIComponent(result.error)}`)
+            }
+            redirect(successUrl)
           }} className="space-y-3">
-            <input type="hidden" name="organizationKey" value={organizationKey} />
             <input type="text" name="departmentName" required placeholder="例: 営業部"
               className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400" />
             <button type="submit"
@@ -92,12 +105,13 @@ export default async function DepartmentJobRegisterPage({
           <h2 className="font-semibold text-gray-700 mb-4">💼 職種を追加</h2>
           <form action={async (formData: FormData) => {
             'use server'
-            await createJob(formData)
-            redirect(isInitial
-              ? `/departmentjob/register?orgKey=${organizationKey}&initial=true&success=true`
-              : '/departmentjob/register?success=true')
+            formData.append('organizationKey', String(organizationKey))
+            const result = await createJob(formData)
+            if (result?.error) {
+              redirect(`${errorBase}&error=${encodeURIComponent(result.error)}`)
+            }
+            redirect(successUrl)
           }} className="space-y-3">
-            <input type="hidden" name="organizationKey" value={organizationKey} />
             <input type="text" name="jobName" required placeholder="例: エンジニア"
               className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400" />
             <button type="submit"
@@ -122,7 +136,7 @@ export default async function DepartmentJobRegisterPage({
       {isInitial && (
         <div className="mt-6 text-center">
           <Link
-            href={`/user/register`}
+            href={`/user/register?orgKey=${organizationKey}&initial=true`}
             className="inline-block bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition text-sm font-medium"
           >
             次へ：ユーザーを登録する →
