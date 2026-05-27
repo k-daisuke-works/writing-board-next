@@ -154,6 +154,82 @@ export async function createJob(formData: FormData) {
   return { success: true }
 }
 
+/** 部署名更新 */
+export async function updateDepartment(formData: FormData) {
+  const session = await getSession()
+  if (!session?.adminFlag) return { error: '管理者権限が必要です。' }
+
+  const departmentId   = Number(formData.get('departmentId'))
+  const departmentName = (formData.get('departmentName') as string)?.trim()
+  if (!departmentName) return { error: '部署名を入力してください。' }
+
+  const supabase = await createServiceClient()
+  const { error } = await supabase
+    .from('department_data')
+    .update({ department_name: departmentName })
+    .eq('department_id', departmentId)
+    .eq('organization_key', session.organizationKey)
+
+  if (error) return { error: '更新に失敗しました。' }
+  revalidatePath('/admin')
+  return { success: true }
+}
+
+/** 職種名更新 */
+export async function updateJob(formData: FormData) {
+  const session = await getSession()
+  if (!session?.adminFlag) return { error: '管理者権限が必要です。' }
+
+  const jobId   = Number(formData.get('jobId'))
+  const jobName = (formData.get('jobName') as string)?.trim()
+  if (!jobName) return { error: '職種名を入力してください。' }
+
+  const supabase = await createServiceClient()
+  const { error } = await supabase
+    .from('job_data')
+    .update({ job_name: jobName })
+    .eq('job_id', jobId)
+    .eq('organization_key', session.organizationKey)
+
+  if (error) return { error: '更新に失敗しました。' }
+  revalidatePath('/admin')
+  return { success: true }
+}
+
+/** ユーザー情報更新 */
+export async function updateUser(formData: FormData) {
+  const session = await getSession()
+  if (!session?.adminFlag) return { error: '管理者権限が必要です。' }
+
+  const userKey      = Number(formData.get('userKey'))
+  const userName     = (formData.get('userName') as string)?.trim()
+  const departmentId = Number(formData.get('departmentId')) || null
+  const jobId        = Number(formData.get('jobId'))        || null
+  const isAdmin      = formData.get('isAdmin') === 'true'
+  const newPassword  = (formData.get('password') as string)?.trim()
+
+  if (!userName) return { error: 'ユーザー名を入力してください。' }
+
+  const supabase = await createServiceClient()
+  const updates: Record<string, unknown> = {
+    user_name:     userName,
+    department_id: departmentId,
+    job_id:        jobId,
+    admin_flag:    isAdmin,
+  }
+  if (newPassword) updates.password = await bcrypt.hash(newPassword, 10)
+
+  const { error } = await supabase
+    .from('user_info')
+    .update(updates)
+    .eq('user_key', userKey)
+    .eq('organization_key', session.organizationKey)
+
+  if (error) return { error: '更新に失敗しました。' }
+  revalidatePath('/admin')
+  return { success: true }
+}
+
 /** ユーザー登録
  *  - 通常: セッションの adminFlag を確認
  *  - 初回セットアップ: セッションなし + フォームの organizationKey + isInitialSetup=true
