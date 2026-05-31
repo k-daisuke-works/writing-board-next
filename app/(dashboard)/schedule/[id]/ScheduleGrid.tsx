@@ -40,8 +40,8 @@ export default function ScheduleGrid({ event, dates, responses, rows, session }:
     }
     return m
   })
-  const [isPending, startTransition] = useTransition()
-  const [closing,   setClosing]      = useState(false)
+  const [, startTransition] = useTransition()
+  const [closing, setClosing] = useState(false)
 
   const myType = event.scope === 'all_departments' ? 'department' : 'user'
   const myId   = event.scope === 'all_departments' ? session.departmentId : session.userKey
@@ -142,7 +142,7 @@ export default function ScheduleGrid({ event, dates, responses, rows, session }:
                           <button
                             type="button"
                             onClick={() => handleCell(d.date_id, row)}
-                            disabled={!editable || isPending}
+                            disabled={!editable}
                             title={editable ? 'クリックして変更' : undefined}
                             className={`w-10 h-8 rounded border text-sm font-bold transition-all ${
                               disp

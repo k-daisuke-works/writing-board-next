@@ -78,7 +78,7 @@ export default function CreateEventModal({ departments, onClose }: Props) {
       fd.set('targetDeptId',   String(targetDept.department_id))
       fd.set('targetDeptName', targetDept.department_name)
     }
-    validDates.forEach(d => fd.append('dates', d))
+    validDates.forEach(d => fd.append('dates', new Date(d).toISOString()))
 
     startTransition(async () => {
       const result = await createScheduleEvent(fd)

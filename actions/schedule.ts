@@ -41,7 +41,7 @@ export async function createScheduleEvent(formData: FormData) {
 
   const dateRows = validDates.map((d, i) => ({
     event_id: event.event_id,
-    candidate_dt: new Date(d).toISOString(),
+    candidate_dt: d,
     sort_order: i,
   }))
 
@@ -85,7 +85,6 @@ export async function upsertScheduleResponse(formData: FormData) {
 
   if (error) return { error: '回答の保存に失敗しました。' }
 
-  revalidatePath(`/schedule/${eventId}`)
   return { success: true }
 }
 
