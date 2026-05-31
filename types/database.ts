@@ -54,6 +54,39 @@ export type UserInfo = {
   job?: Job
 }
 
+export type ScheduleEvent = {
+  event_id: number
+  organization_key: number
+  created_by: number
+  created_by_name: string
+  title: string
+  description: string | null
+  scope: 'all_departments' | 'department'
+  target_department_id: number | null
+  target_department_name: string | null
+  status: 'open' | 'closed'
+  created_at: string
+}
+
+export type ScheduleDate = {
+  date_id: number
+  event_id: number
+  candidate_dt: string
+  sort_order: number
+}
+
+export type ScheduleResponse = {
+  response_id: number
+  event_id: number
+  date_id: number
+  respondent_type: 'department' | 'user'
+  respondent_id: number
+  respondent_name: string
+  answer: 'ok' | 'maybe' | 'ng'
+  answered_by: number
+  answered_at: string
+}
+
 export type WritingData = {
   writing_id: number
   user_key: number | null

@@ -2,7 +2,7 @@ import { getSession } from '@/lib/session'
 import { redirect } from 'next/navigation'
 import { logout } from '@/actions/auth'
 import Link from 'next/link'
-import { LayoutGrid, MessageSquare, Settings, LogOut } from 'lucide-react'
+import { LayoutGrid, MessageSquare, Calendar, Settings, LogOut } from 'lucide-react'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
@@ -38,6 +38,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
               className="flex items-center gap-1.5 px-3 py-1.5 rounded text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors">
               <MessageSquare className="w-4 h-4" />
               <span className="hidden sm:inline">連絡ボード</span>
+            </Link>
+            <Link href="/schedule"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors">
+              <Calendar className="w-4 h-4" />
+              <span className="hidden sm:inline">日程調整</span>
             </Link>
             {session.adminFlag && (
               <Link href="/admin"
