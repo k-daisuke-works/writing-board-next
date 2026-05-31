@@ -25,68 +25,73 @@ export default async function HomePage() {
   if (!session) redirect('/login')
 
   const supabase = await createServiceClient()
+  const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString()
+  const hasDept = session.departmentId > 0
 
-  // 1. 部署一覧 + 各部署の最新投稿
-  const { data: departments } = await supabase
-    .from('department_data')
-    .select('*')
-    .eq('organization_key', session.organizationKey)
-    .order('department_id')
+  // 4クエリを同時並列実行
+  const [
+    { data: departments },
+    { data: membersRaw },
+    { data: allOrgPosts },
+    { data: teamRecentPosts },
+  ] = await Promise.all([
+    // 1. 部署一覧
+    supabase
+      .from('department_data')
+      .select('*')
+      .eq('organization_key', session.organizationKey)
+      .order('department_id'),
 
-  const deptPostResults = await Promise.all(
-    (departments ?? []).map((dept) =>
-      supabase
-        .from('writing_data')
-        .select('*')
-        .eq('department_id', dept.department_id)
-        .eq('organization_key', session.organizationKey)
-        .order('writing_time', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-    )
-  )
+    // 2. チームメンバー（部署未設定なら空）
+    hasDept
+      ? supabase
+          .from('user_info')
+          .select('user_key, user_name')
+          .eq('department_id', session.departmentId)
+          .eq('organization_key', session.organizationKey)
+          .order('user_name')
+      : Promise.resolve({ data: [] as { user_key: number; user_name: string }[], error: null }),
 
+    // 3. 全部署の投稿を1クエリ取得 → JSで部署ごとに最新1件をdedup
+    supabase
+      .from('writing_data')
+      .select('*')
+      .eq('organization_key', session.organizationKey)
+      .order('writing_time', { ascending: false })
+      .limit(200),
+
+    // 4. チームの7日以内投稿（department_idで絞るのでメンバーリスト不要）
+    hasDept
+      ? supabase
+          .from('writing_data')
+          .select('*')
+          .eq('department_id', session.departmentId)
+          .eq('organization_key', session.organizationKey)
+          .gte('writing_time', sevenDaysAgo)
+          .order('writing_time', { ascending: false })
+      : Promise.resolve({ data: [] as WritingData[], error: null }),
+  ])
+
+  // 部署ごとに最新1件をJS dedup（投稿時刻降順なので先勝ち）
   const deptLatest: Record<number, WritingData> = {}
-  for (const { data } of deptPostResults) {
-    if (data) deptLatest[data.department_id] = data
+  for (const post of allOrgPosts ?? []) {
+    if (post.department_id && !deptLatest[post.department_id]) {
+      deptLatest[post.department_id] = post
+    }
   }
 
-  // 2. チームメンバー + 7日以内の最新投稿
-  let teamMembers: { user_key: number; user_name: string }[] = []
+  // メンバーごとに最新1件をJS dedup
+  const teamMembers = membersRaw ?? []
   const memberLatest: Record<number, WritingData | null> = {}
-
-  if (session.departmentId > 0) {
-    const { data: members } = await supabase
-      .from('user_info')
-      .select('user_key, user_name')
-      .eq('department_id', session.departmentId)
-      .eq('organization_key', session.organizationKey)
-      .order('user_name')
-
-    teamMembers = members ?? []
-
-    if (teamMembers.length > 0) {
-      const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString()
-      const memberKeys = teamMembers.map((m) => m.user_key)
-
-      const { data: recentPosts } = await supabase
-        .from('writing_data')
-        .select('*')
-        .in('user_key', memberKeys)
-        .gte('writing_time', sevenDaysAgo)
-        .order('writing_time', { ascending: false })
-
-      const seen = new Set<number>()
-      for (const post of recentPosts ?? []) {
-        if (post.user_key != null && !seen.has(post.user_key)) {
-          seen.add(post.user_key)
-          memberLatest[post.user_key] = post
-        }
-      }
-      for (const m of teamMembers) {
-        if (!(m.user_key in memberLatest)) memberLatest[m.user_key] = null
-      }
+  const seen = new Set<number>()
+  for (const post of teamRecentPosts ?? []) {
+    if (post.user_key != null && !seen.has(post.user_key)) {
+      seen.add(post.user_key)
+      memberLatest[post.user_key] = post
     }
+  }
+  for (const m of teamMembers) {
+    if (!(m.user_key in memberLatest)) memberLatest[m.user_key] = null
   }
 
   return (
