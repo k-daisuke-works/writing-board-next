@@ -1,85 +1,203 @@
 import { getSession } from '@/lib/session'
+import { createServiceClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { MessageSquare, Users, Building2, Settings, ChevronRight } from 'lucide-react'
+import { Building2, ChevronRight } from 'lucide-react'
+import type { WritingData } from '@/types/database'
+import HomeMenuDropdown from './HomeMenuDropdown'
 
-const CARDS = [
-  {
-    href: '/posts',
-    Icon: MessageSquare,
-    title: '連絡ボード',
-    desc: '各部署の最新業務連絡を確認する',
-    iconBg: 'bg-blue-50',
-    iconColor: 'text-blue-600',
-    adminOnly: false,
-  },
-  {
-    href: '/user/register',
-    Icon: Users,
-    title: 'ユーザー管理',
-    desc: '新しいメンバーを招待・追加する',
-    iconBg: 'bg-green-50',
-    iconColor: 'text-green-600',
-    adminOnly: true,
-  },
-  {
-    href: '/departmentjob/register',
-    Icon: Building2,
-    title: '部署・職種登録',
-    desc: '組織の部署や職種を設定する',
-    iconBg: 'bg-purple-50',
-    iconColor: 'text-purple-600',
-    adminOnly: true,
-  },
-  {
-    href: '/admin',
-    Icon: Settings,
-    title: '管理設定',
-    desc: 'ユーザーや組織情報を管理・削除する',
-    iconBg: 'bg-gray-50',
-    iconColor: 'text-gray-600',
-    adminOnly: true,
-  },
-]
+function relativeTime(t: string) {
+  const m = Math.floor((Date.now() - new Date(t).getTime()) / 60000)
+  if (m < 1) return 'たった今'
+  if (m < 60) return `${m}分前`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}時間前`
+  const d = Math.floor(h / 24)
+  return `${d}日前`
+}
+
+function truncate(s: string, n = 60) {
+  return s.length > n ? s.slice(0, n) + '…' : s
+}
 
 export default async function HomePage() {
   const session = await getSession()
-  const cards   = CARDS.filter((c) => !c.adminOnly || session?.adminFlag)
+  if (!session) redirect('/login')
+
+  const supabase = await createServiceClient()
+
+  // 1. 部署一覧 + 各部署の最新投稿
+  const { data: departments } = await supabase
+    .from('department_data')
+    .select('*')
+    .eq('organization_key', session.organizationKey)
+    .order('department_id')
+
+  const deptPostResults = await Promise.all(
+    (departments ?? []).map((dept) =>
+      supabase
+        .from('writing_data')
+        .select('*')
+        .eq('department_id', dept.department_id)
+        .eq('organization_key', session.organizationKey)
+        .order('writing_time', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    )
+  )
+
+  const deptLatest: Record<number, WritingData> = {}
+  for (const { data } of deptPostResults) {
+    if (data) deptLatest[data.department_id] = data
+  }
+
+  // 2. チームメンバー + 7日以内の最新投稿
+  let teamMembers: { user_key: number; user_name: string }[] = []
+  const memberLatest: Record<number, WritingData | null> = {}
+
+  if (session.departmentId > 0) {
+    const { data: members } = await supabase
+      .from('user_info')
+      .select('user_key, user_name')
+      .eq('department_id', session.departmentId)
+      .eq('organization_key', session.organizationKey)
+      .order('user_name')
+
+    teamMembers = members ?? []
+
+    if (teamMembers.length > 0) {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString()
+      const memberKeys = teamMembers.map((m) => m.user_key)
+
+      const { data: recentPosts } = await supabase
+        .from('writing_data')
+        .select('*')
+        .in('user_key', memberKeys)
+        .gte('writing_time', sevenDaysAgo)
+        .order('writing_time', { ascending: false })
+
+      const seen = new Set<number>()
+      for (const post of recentPosts ?? []) {
+        if (post.user_key != null && !seen.has(post.user_key)) {
+          seen.add(post.user_key)
+          memberLatest[post.user_key] = post
+        }
+      }
+      for (const m of teamMembers) {
+        if (!(m.user_key in memberLatest)) memberLatest[m.user_key] = null
+      }
+    }
+  }
 
   return (
-    <div className="anim-fade-in">
+    <div className="anim-fade-in space-y-6">
       {/* ページヘッダー */}
-      <div className="mb-7">
-        <h1 className="text-xl font-semibold text-gray-900">
-          おはようございます、{session?.userName}さん
-        </h1>
-        <p className="text-sm text-gray-500 mt-1">
-          {session?.organizationName}
-          {session?.departmentName && ` · ${session.departmentName}`}
-          {session?.jobName && ` · ${session.jobName}`}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold text-gray-900">
+            おはようございます、{session.userName}さん
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {session.organizationName}
+            {session.departmentName && ` · ${session.departmentName}`}
+            {session.jobName && ` · ${session.jobName}`}
+          </p>
+        </div>
+        <HomeMenuDropdown adminFlag={session.adminFlag} />
       </div>
 
-      {/* メニューカード */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-        {cards.map(({ href, Icon, title, desc, iconBg, iconColor }) => (
-          <Link key={href} href={href} className="group">
-            <div className="bg-white border border-gray-200 rounded-lg p-5 hover:border-blue-300 hover:shadow-sm transition-all duration-150 flex flex-col gap-4 h-full">
-              <div className={`w-10 h-10 ${iconBg} rounded-lg flex items-center justify-center`}>
-                <Icon className={`w-5 h-5 ${iconColor}`} strokeWidth={1.75} />
-              </div>
-              <div className="flex-1">
-                <h2 className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                  {title}
-                </h2>
-                <p className="text-xs text-gray-500 mt-1 leading-relaxed">{desc}</p>
-              </div>
-              <div className="flex items-center text-xs text-gray-400 group-hover:text-blue-500 transition-colors">
-                開く <ChevronRight className="w-3.5 h-3.5 ml-0.5 group-hover:translate-x-0.5 transition-transform" />
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
+      {/* 部署からのお知らせ */}
+      {departments && departments.length > 0 && (
+        <section>
+          <h2 className="text-sm font-semibold text-gray-600 mb-2">各部署からのお知らせ</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+            {departments.map((dept) => {
+              const post = deptLatest[dept.department_id]
+              return (
+                <Link
+                  key={dept.department_id}
+                  href={`/department/${dept.department_id}`}
+                  className="group"
+                >
+                  <div className="bg-white border border-gray-200 rounded-lg px-3 py-2.5 hover:border-blue-300 hover:shadow-sm transition-all flex items-center gap-2 min-w-0">
+                    <Building2 className="w-3.5 h-3.5 text-gray-400 shrink-0" strokeWidth={1.75} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-gray-700 truncate">{dept.department_name}</p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {post ? truncate(post.message) : '投稿なし'}
+                      </p>
+                    </div>
+                    {post && (
+                      <span className="text-xs text-gray-400 shrink-0">{relativeTime(post.writing_time)}</span>
+                    )}
+                    <ChevronRight className="w-3 h-3 text-gray-300 group-hover:text-blue-400 shrink-0 transition-colors" />
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* チームのメッセージ */}
+      <section>
+        <h2 className="text-sm font-semibold text-gray-600 mb-2">
+          チームのメッセージ
+          {session.departmentName && (
+            <span className="font-normal text-gray-400 ml-1.5">· {session.departmentName}</span>
+          )}
+        </h2>
+
+        {session.departmentId <= 0 ? (
+          <div className="bg-white border border-gray-200 rounded-lg px-4 py-6 text-center">
+            <p className="text-sm text-gray-400">所属部署が設定されていません</p>
+          </div>
+        ) : teamMembers.length === 0 ? (
+          <div className="bg-white border border-gray-200 rounded-lg px-4 py-6 text-center">
+            <p className="text-sm text-gray-400">チームメンバーが見つかりません</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+            {teamMembers.map((member) => {
+              const post = memberLatest[member.user_key]
+              const isMe = member.user_key === session.userKey
+
+              return (
+                <div
+                  key={member.user_key}
+                  className={`rounded-lg px-3 py-2.5 flex items-center gap-2.5 min-w-0 border ${
+                    isMe
+                      ? 'bg-blue-50 border-blue-200'
+                      : 'bg-white border-gray-200'
+                  }`}
+                >
+                  {/* アバター */}
+                  <div
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                      isMe ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'
+                    }`}
+                  >
+                    {member.user_name.slice(0, 1)}
+                  </div>
+
+                  {/* 名前 + メッセージ */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-800 truncate">{member.user_name}</p>
+                    <p className={`text-xs truncate ${post ? 'text-gray-500' : 'text-gray-300'}`}>
+                      {post ? truncate(post.message) : 'まだ投稿がありません'}
+                    </p>
+                  </div>
+
+                  {/* 投稿時刻 */}
+                  {post && (
+                    <span className="text-xs text-gray-400 shrink-0">{relativeTime(post.writing_time)}</span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </section>
     </div>
   )
 }
