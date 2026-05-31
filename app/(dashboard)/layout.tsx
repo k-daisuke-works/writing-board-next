@@ -2,7 +2,8 @@ import { getSession } from '@/lib/session'
 import { redirect } from 'next/navigation'
 import { logout } from '@/actions/auth'
 import Link from 'next/link'
-import { LayoutGrid, MessageSquare, Calendar, Newspaper, Settings, LogOut, Receipt } from 'lucide-react'
+import { LayoutGrid, MessageSquare, Calendar, Newspaper, Settings, LogOut } from 'lucide-react'
+import HamburgerMenu from './components/HamburgerMenu'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
@@ -49,11 +50,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <Newspaper className="w-4 h-4" />
               <span className="hidden sm:inline">福祉情報</span>
             </Link>
-            <Link href="/expenses"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors">
-              <Receipt className="w-4 h-4" />
-              <span className="hidden sm:inline">活動費請求</span>
-            </Link>
             {session.adminFlag && (
               <Link href="/admin"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors">
@@ -62,6 +58,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
               </Link>
             )}
           </nav>
+
+          {/* ハンバーガーメニュー */}
+          <HamburgerMenu />
 
           {/* ユーザーエリア */}
           <div className="flex items-center gap-3 shrink-0">
