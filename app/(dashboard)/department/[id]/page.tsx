@@ -3,6 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { deletePost, updatePost, getPdfSignedUrl } from '@/actions/posts'
 import { getPublicMediaUrl } from '@/lib/storage'
+import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
 import { DeletePostButton } from './DeletePostButton'
 import Link from 'next/link'
 import { ArrowLeft, Clock, Paperclip, User, ChevronDown } from 'lucide-react'
@@ -70,9 +71,7 @@ export default async function DepartmentHistoryPage({
 
               {/* 本文 */}
               <div className="px-4 sm:px-5 py-4 space-y-3">
-                <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
-                  {post.message}
-                </p>
+                <ExpandableText text={post.message} className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap" />
 
                 {/* 画像 */}
                 {post.image_url && (
