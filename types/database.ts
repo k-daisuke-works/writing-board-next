@@ -68,6 +68,6 @@ export type WritingData = {
   pdf_url: string | null
   image_url: string | null
   video_url: string | null
-  post_type: 'board' | 'team'
+  post_type: 'board' | 'team' | 'notice'
   writing_time: string
 }

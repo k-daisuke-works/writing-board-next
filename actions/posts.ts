@@ -46,7 +46,8 @@ export async function createPost(formData: FormData) {
 
   const rawMessage = formData.get('message') as string
   const pin        = formData.get('pin') as string | null
-  const postType   = (formData.get('postType') as string) === 'team' ? 'team' : 'board'
+  const rawType    = formData.get('postType') as string
+  const postType   = rawType === 'team' ? 'team' : rawType === 'notice' ? 'notice' : 'board'
   const pdfFile    = formData.get('pdfFile')   as File | null
   const imageFile  = formData.get('imageFile') as File | null
   const videoFile  = formData.get('videoFile') as File | null
@@ -112,7 +113,7 @@ export async function createPost(formData: FormData) {
 
   if (error) return { error: '投稿に失敗しました。' }
 
-  if (postType === 'team') {
+  if (postType === 'team' || postType === 'notice') {
     revalidatePath('/home')
   } else {
     revalidatePath('/posts')

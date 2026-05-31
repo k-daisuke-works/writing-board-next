@@ -7,7 +7,7 @@ import { X, Paperclip, Image, Video, XCircle } from 'lucide-react'
 
 type Props = {
   session: UserSession
-  postType?: 'board' | 'team'
+  postType?: 'board' | 'team' | 'notice'
   onClose: () => void
 }
 
@@ -54,7 +54,7 @@ export default function PostModal({ session, postType = 'board', onClose }: Prop
     onClose()
   }
 
-  const title = postType === 'team' ? 'チームにメッセージ' : '新規投稿'
+  const title = postType === 'team' ? 'チームにメッセージ' : postType === 'notice' ? 'お知らせを投稿' : '新規投稿'
 
   return (
     <div
@@ -92,7 +92,7 @@ export default function PostModal({ session, postType = 'board', onClose }: Prop
             </label>
             <textarea
               value={message} onChange={(e) => setMessage(e.target.value)}
-              rows={5} placeholder={postType === 'team' ? 'チームへのメッセージを入力…' : '業務連絡の内容を入力してください…'}
+              rows={5} placeholder={postType === 'team' ? 'チームへのメッセージを入力…' : postType === 'notice' ? 'お知らせの内容を入力してください…' : '業務連絡の内容を入力してください…'}
               className="w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
             />
             <p className="text-right text-xs text-gray-400 mt-1">{message.length}文字</p>

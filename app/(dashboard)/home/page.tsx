@@ -33,12 +33,12 @@ export default async function HomePage() {
           .order('user_name')
       : Promise.resolve({ data: [] as { user_key: number; user_name: string }[], error: null }),
 
-    // post_type='team' の最新投稿を部署ごとにdedup
+    // post_type='notice' の最新投稿を部署ごとにdedup（各部署からのお知らせ用）
     supabase
       .from('writing_data')
       .select('*')
       .eq('organization_key', session.organizationKey)
-      .eq('post_type', 'team')
+      .eq('post_type', 'notice')
       .order('writing_time', { ascending: false })
       .limit(200),
 
