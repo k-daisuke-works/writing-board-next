@@ -140,7 +140,7 @@ export async function updatePost(formData: FormData) {
 
   const { data: post } = await supabase
     .from('writing_data')
-    .select('pin, department_id, pdf_url, post_type')
+    .select('pin, department_id, user_key, pdf_url, post_type')
     .eq('writing_id', writingId)
     .eq('organization_key', session.organizationKey)
     .single()
@@ -172,8 +172,13 @@ export async function updatePost(formData: FormData) {
 
   if (error) return { error: '更新に失敗しました。' }
 
-  revalidatePath('/posts')
-  revalidatePath(`/department/${post.department_id}`)
+  if (post.post_type === 'team' || post.post_type === 'notice') {
+    revalidatePath('/home')
+    if (post.user_key) revalidatePath(`/member/${post.user_key}`)
+  } else {
+    revalidatePath('/posts')
+    revalidatePath(`/department/${post.department_id}`)
+  }
   return { success: true }
 }
 
@@ -190,7 +195,7 @@ export async function deletePost(formData: FormData) {
 
   const { data: post } = await supabase
     .from('writing_data')
-    .select('pin, department_id')
+    .select('pin, department_id, user_key, post_type')
     .eq('writing_id', writingId)
     .eq('organization_key', session.organizationKey)
     .single()
@@ -210,8 +215,13 @@ export async function deletePost(formData: FormData) {
 
   if (error) return { error: '削除に失敗しました。' }
 
-  revalidatePath('/posts')
-  revalidatePath(`/department/${post.department_id}`)
+  if (post.post_type === 'team' || post.post_type === 'notice') {
+    revalidatePath('/home')
+    if (post.user_key) revalidatePath(`/member/${post.user_key}`)
+  } else {
+    revalidatePath('/posts')
+    revalidatePath(`/department/${post.department_id}`)
+  }
   return { success: true }
 }
 

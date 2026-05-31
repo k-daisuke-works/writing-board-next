@@ -20,7 +20,7 @@ export function ExpandableText({ text, className = '' }: Props) {
 
   return (
     <div>
-      <p ref={ref} className={`${className} ${!expanded ? 'line-clamp-8' : ''}`}>
+      <p ref={ref} className={`${className} break-words ${!expanded ? 'line-clamp-8' : ''}`}>
         {text}
       </p>
       {(isClamped || expanded) && (

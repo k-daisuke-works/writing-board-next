@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Building2, Plus, Video, Paperclip, Clock } from 'lucide-react'
+import { Building2, Plus, Video, Paperclip, Clock, ChevronRight } from 'lucide-react'
+import Link from 'next/link'
 import { getPublicMediaUrl } from '@/lib/storage'
 import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
 import type { Department, WritingData, UserSession } from '@/types/database'
@@ -91,8 +92,8 @@ function TeamCard({ member, post, isMe }: {
 }) {
   return (
     <div className={`rounded-lg overflow-hidden border ${isMe ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}`}>
-      {/* ヘッダー */}
-      <div className={`flex items-center justify-between px-4 py-3 border-b ${isMe ? 'border-blue-100' : 'border-gray-100'}`}>
+      {/* ヘッダー（メンバー投稿履歴へのリンク） */}
+      <Link href={`/member/${member.user_key}`} className={`flex items-center justify-between px-4 py-3 border-b hover:bg-opacity-80 transition-colors group ${isMe ? 'border-blue-100 hover:bg-blue-100' : 'border-gray-100 hover:bg-gray-50'}`}>
         <div className="flex items-center gap-2">
           <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
             isMe ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'
@@ -102,10 +103,13 @@ function TeamCard({ member, post, isMe }: {
           <span className="text-sm font-medium text-gray-800">{member.user_name}</span>
           {isMe && <span className="text-xs text-blue-500 font-medium">（自分）</span>}
         </div>
-        {post && isRecent(post.writing_time) && (
-          <span className="text-xs font-semibold text-blue-600 bg-blue-100 px-2 py-0.5 rounded">NEW</span>
-        )}
-      </div>
+        <div className="flex items-center gap-2">
+          {post && isRecent(post.writing_time) && (
+            <span className="text-xs font-semibold text-blue-600 bg-blue-100 px-2 py-0.5 rounded">NEW</span>
+          )}
+          <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-blue-400 transition-colors" />
+        </div>
+      </Link>
       {/* 本文 */}
       <div className="px-4 py-3">
         {post ? (
