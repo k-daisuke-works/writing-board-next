@@ -53,8 +53,14 @@ export async function confirmScheduleEvent(formData: FormData) {
   const supabase = await createServiceClient()
 
   const [{ data: event }, { data: date }] = await Promise.all([
-    supabase.from('schedule_events').select('*').eq('event_id', eventId).single(),
-    supabase.from('schedule_dates').select('*').eq('date_id', dateId).single(),
+    supabase.from('schedule_events').select('*')
+      .eq('event_id', eventId)
+      .eq('organization_key', session.organizationKey)
+      .single(),
+    supabase.from('schedule_dates').select('*')
+      .eq('date_id', dateId)
+      .eq('event_id', eventId)
+      .single(),
   ])
 
   if (!event || !date) throw new Error('Not found')
