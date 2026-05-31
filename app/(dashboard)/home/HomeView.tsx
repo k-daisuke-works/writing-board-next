@@ -153,7 +153,7 @@ export default function HomeView({ session, departments, deptLatest, teamMembers
             {session.jobName && ` · ${session.jobName}`}
           </p>
         </div>
-        <HomeMenuDropdown adminFlag={session.adminFlag} />
+        <HomeMenuDropdown adminFlag={session.adminFlag} userKey={session.userKey} />
       </div>
 
       {/* 各部署からのお知らせ */}

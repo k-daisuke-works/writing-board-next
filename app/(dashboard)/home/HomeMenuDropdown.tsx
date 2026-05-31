@@ -2,9 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { MessageSquare, Users, Building2, Settings, Menu, X, Receipt } from 'lucide-react'
+import { MessageSquare, Users, Building2, Settings, Menu, X, Receipt, UserCircle } from 'lucide-react'
 
-const MENU_CARDS = [
+const STATIC_CARDS = [
   {
     href: '/posts',
     Icon: MessageSquare,
@@ -61,7 +61,7 @@ const MENU_CARDS = [
   },
 ]
 
-export default function HomeMenuDropdown({ adminFlag }: { adminFlag: boolean }) {
+export default function HomeMenuDropdown({ adminFlag, userKey }: { adminFlag: boolean; userKey: number }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -75,7 +75,17 @@ export default function HomeMenuDropdown({ adminFlag }: { adminFlag: boolean }) 
     return () => document.removeEventListener('mousedown', onClickOutside)
   }, [open])
 
-  const cards = MENU_CARDS.filter((c) => !c.adminOnly || adminFlag)
+  const cards = [
+    ...STATIC_CARDS.filter((c) => !c.adminOnly || adminFlag),
+    {
+      href: `/member/${userKey}`,
+      Icon: UserCircle,
+      title: 'プロフィール編集',
+      desc: '自己紹介やアイコンを設定する',
+      iconBg: 'bg-indigo-50',
+      iconColor: 'text-indigo-600',
+    },
+  ]
 
   return (
     <div ref={ref} className="relative shrink-0">
