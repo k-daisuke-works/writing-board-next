@@ -21,6 +21,7 @@ export async function deleteUser(formData: FormData) {
     .from('user_info')
     .delete()
     .eq('user_key', userKey)
+    .eq('organization_key', session.organizationKey)
 
   if (error) return { error: '削除に失敗しました。' }
 
@@ -40,6 +41,7 @@ export async function deleteDepartment(formData: FormData) {
     .from('user_info')
     .select('*', { count: 'exact', head: true })
     .eq('department_id', departmentId)
+    .eq('organization_key', session.organizationKey)
 
   if ((count ?? 0) > 0) {
     return { error: 'この部署には所属ユーザーがいるため削除できません。' }
@@ -49,6 +51,7 @@ export async function deleteDepartment(formData: FormData) {
     .from('department_data')
     .delete()
     .eq('department_id', departmentId)
+    .eq('organization_key', session.organizationKey)
 
   if (error) return { error: '削除に失敗しました。' }
 
@@ -68,6 +71,7 @@ export async function deleteJob(formData: FormData) {
     .from('user_info')
     .select('*', { count: 'exact', head: true })
     .eq('job_id', jobId)
+    .eq('organization_key', session.organizationKey)
 
   if ((count ?? 0) > 0) {
     return { error: 'この職種には所属ユーザーがいるため削除できません。' }
@@ -77,6 +81,7 @@ export async function deleteJob(formData: FormData) {
     .from('job_data')
     .delete()
     .eq('job_id', jobId)
+    .eq('organization_key', session.organizationKey)
 
   if (error) return { error: '削除に失敗しました。' }
 

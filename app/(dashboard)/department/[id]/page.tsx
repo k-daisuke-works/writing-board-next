@@ -23,7 +23,12 @@ export default async function DepartmentHistoryPage({
   const deptId   = Number(id)
   const supabase = await createServiceClient()
 
-  const { data: department } = await supabase.from('department_data').select('*').eq('department_id', deptId).single()
+  const { data: department } = await supabase.from('department_data').select('*')
+    .eq('department_id', deptId)
+    .eq('organization_key', session.organizationKey)
+    .single()
+
+  if (!department) redirect('/posts')
   const { data: writings }   = await supabase.from('writing_data').select('*')
     .eq('department_id', deptId)
     .eq('organization_key', session.organizationKey)

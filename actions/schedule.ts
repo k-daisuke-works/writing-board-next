@@ -69,6 +69,15 @@ export async function upsertScheduleResponse(formData: FormData) {
 
   const supabase = await createServiceClient()
 
+  const { data: event } = await supabase
+    .from('schedule_events')
+    .select('event_id')
+    .eq('event_id', eventId)
+    .eq('organization_key', session.organizationKey)
+    .single()
+
+  if (!event) return { error: 'イベントが見つかりません。' }
+
   const { error } = await supabase.from('schedule_responses').upsert(
     {
       event_id:        eventId,
@@ -113,6 +122,8 @@ export async function closeScheduleEvent(eventId: number) {
   if (error) return { error: '更新に失敗しました。' }
 
   revalidatePath('/schedule')
+  revalidatePath('/schedule/calendar')
+  revalidatePath('/schedule/department')
   revalidatePath(`/schedule/${eventId}`)
   return { success: true }
 }
