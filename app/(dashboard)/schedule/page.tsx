@@ -15,7 +15,7 @@ export default async function SchedulePage() {
       .eq('organization_key', session.organizationKey)
       .order('created_at', { ascending: false }),
     supabase.from('department_data')
-      .select('department_id, department_name')
+      .select('department_id, department_name, organization_key')
       .eq('organization_key', session.organizationKey)
       .order('department_name'),
   ])
