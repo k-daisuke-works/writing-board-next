@@ -102,7 +102,7 @@ export default function ScheduleGrid({ event, dates, responses, rows, session }:
           <table className="border-collapse w-full">
             <thead>
               <tr>
-                <th className="sticky left-0 z-10 bg-gray-50 border-b border-r border-gray-200 px-4 py-3 text-left text-xs font-semibold text-gray-500 min-w-[130px] whitespace-nowrap">
+                <th className="sticky left-0 z-10 bg-gray-50 border-b border-r border-gray-200 px-4 py-3 text-left text-xs font-semibold text-gray-500 whitespace-nowrap">
                   {event.scope === 'all_departments' ? '部署' : 'メンバー'}
                 </th>
                 {dates.map(d => {

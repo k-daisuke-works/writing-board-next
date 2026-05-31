@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { X, Plus, Trash2 } from 'lucide-react'
+import { X, Plus, Trash2, CalendarRange } from 'lucide-react'
 import { createScheduleEvent } from '@/actions/schedule'
 import type { Department } from '@/types/database'
 
@@ -23,11 +23,45 @@ export default function CreateEventModal({ departments, onClose }: Props) {
   const [isPending,   startTransition] = useTransition()
   const router = useRouter()
 
+  // 範囲追加
+  const [showRange,        setShowRange]        = useState(false)
+  const [rangeStart,       setRangeStart]       = useState('')
+  const [rangeEnd,         setRangeEnd]         = useState('')
+  const [rangeTime,        setRangeTime]        = useState('09:00')
+  const [excludeWeekends,  setExcludeWeekends]  = useState(false)
+
   const targetDept = departments.find(d => d.department_id === Number(targetDeptId))
 
   function addDate()               { setDates(prev => [...prev, '']) }
   function removeDate(i: number)   { setDates(prev => prev.filter((_, j) => j !== i)) }
   function updateDate(i: number, v: string) { setDates(prev => prev.map((d, j) => j === i ? v : d)) }
+
+  function addRange() {
+    if (!rangeStart || !rangeEnd || !rangeTime) return
+    const start = new Date(rangeStart + 'T00:00')
+    const end   = new Date(rangeEnd   + 'T00:00')
+    if (start > end) return
+
+    const generated: string[] = []
+    const cur = new Date(start)
+    while (cur <= end) {
+      const dow = cur.getDay()
+      if (!excludeWeekends || (dow !== 0 && dow !== 6)) {
+        const y = cur.getFullYear()
+        const m = String(cur.getMonth() + 1).padStart(2, '0')
+        const d = String(cur.getDate()).padStart(2, '0')
+        generated.push(`${y}-${m}-${d}T${rangeTime}`)
+      }
+      cur.setDate(cur.getDate() + 1)
+    }
+
+    setDates(prev => {
+      const existing = prev.filter(d => d.trim())
+      const merged = [...existing, ...generated]
+      return merged.length ? merged : ['']
+    })
+    setShowRange(false)
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -128,11 +162,54 @@ export default function CreateEventModal({ departments, onClose }: Props) {
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-xs font-medium text-gray-700">候補日時 <span className="text-red-500">*</span></label>
-              <button type="button" onClick={addDate}
-                className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 transition-colors">
-                <Plus className="w-3.5 h-3.5" />追加
-              </button>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => setShowRange(v => !v)}
+                  className={`flex items-center gap-1 text-xs font-medium transition-colors ${showRange ? 'text-blue-700' : 'text-gray-500 hover:text-blue-600'}`}>
+                  <CalendarRange className="w-3.5 h-3.5" />範囲で追加
+                </button>
+                <span className="text-gray-200">|</span>
+                <button type="button" onClick={addDate}
+                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 transition-colors">
+                  <Plus className="w-3.5 h-3.5" />個別追加
+                </button>
+              </div>
             </div>
+
+            {/* 範囲追加パネル */}
+            {showRange && (
+              <div className="mb-3 bg-blue-50 border border-blue-100 rounded-lg p-3 space-y-2.5">
+                <p className="text-xs font-medium text-blue-700">範囲で一括追加</p>
+                <div className="flex items-center gap-2">
+                  <input type="date" value={rangeStart} onChange={e => setRangeStart(e.target.value)}
+                    className="flex-1 border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" />
+                  <span className="text-xs text-gray-400 shrink-0">〜</span>
+                  <input type="date" value={rangeEnd} onChange={e => setRangeEnd(e.target.value)}
+                    className="flex-1 border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-600 shrink-0">時刻</span>
+                  <input type="time" value={rangeTime} onChange={e => setRangeTime(e.target.value)}
+                    className="border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" />
+                  <label className="flex items-center gap-1.5 ml-auto cursor-pointer">
+                    <input type="checkbox" checked={excludeWeekends} onChange={e => setExcludeWeekends(e.target.checked)}
+                      className="rounded border-gray-300 text-blue-600" />
+                    <span className="text-xs text-gray-600">土日除く</span>
+                  </label>
+                </div>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => setShowRange(false)}
+                    className="flex-1 border border-gray-300 text-gray-600 text-xs font-medium py-1.5 rounded-md hover:bg-white transition-colors">
+                    キャンセル
+                  </button>
+                  <button type="button" onClick={addRange}
+                    disabled={!rangeStart || !rangeEnd}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-xs font-medium py-1.5 rounded-md transition-colors">
+                    一括追加
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               {dates.map((d, i) => (
                 <div key={i} className="flex gap-2 items-center">
@@ -142,7 +219,7 @@ export default function CreateEventModal({ departments, onClose }: Props) {
                     onChange={e => updateDate(i, e.target.value)}
                     className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                   />
-                  {dates.length > 1 && (
+                  {dates.filter(x => x.trim()).length > 0 && (
                     <button type="button" onClick={() => removeDate(i)}
                       className="text-gray-400 hover:text-red-500 transition-colors shrink-0">
                       <Trash2 className="w-4 h-4" />
