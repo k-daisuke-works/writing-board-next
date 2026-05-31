@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { MessageSquare, Users, Building2, Settings, Menu, X } from 'lucide-react'
+import { MessageSquare, Users, Building2, Settings, Menu, X, Receipt } from 'lucide-react'
 
 const MENU_CARDS = [
   {
@@ -12,6 +12,24 @@ const MENU_CARDS = [
     desc: '各部署の最新業務連絡を確認する',
     iconBg: 'bg-blue-50',
     iconColor: 'text-blue-600',
+    adminOnly: false,
+  },
+  {
+    href: '/members',
+    Icon: Users,
+    title: 'メンバー一覧',
+    desc: 'メンバーのプロフィールを確認する',
+    iconBg: 'bg-teal-50',
+    iconColor: 'text-teal-600',
+    adminOnly: false,
+  },
+  {
+    href: '/expenses',
+    Icon: Receipt,
+    title: '活動費請求',
+    desc: '活動費の請求フォームを開く',
+    iconBg: 'bg-orange-50',
+    iconColor: 'text-orange-600',
     adminOnly: false,
   },
   {

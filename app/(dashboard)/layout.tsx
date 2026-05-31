@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 import { logout } from '@/actions/auth'
 import Link from 'next/link'
 import { LayoutGrid, MessageSquare, Calendar, Newspaper, Settings, LogOut } from 'lucide-react'
-import HamburgerMenu from './components/HamburgerMenu'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
@@ -58,9 +57,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
               </Link>
             )}
           </nav>
-
-          {/* ハンバーガーメニュー */}
-          <HamburgerMenu />
 
           {/* ユーザーエリア */}
           <div className="flex items-center gap-3 shrink-0">
