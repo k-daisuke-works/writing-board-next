@@ -87,6 +87,20 @@ export type ScheduleResponse = {
   answered_at: string
 }
 
+export type CalendarEvent = {
+  id: number
+  organization_key: number
+  title: string
+  event_date: string
+  note: string | null
+  location: string | null
+  scope: 'all' | 'department'
+  department_id: number | null
+  source_schedule_id: number | null
+  created_by: string
+  created_at: string
+}
+
 export type WritingData = {
   writing_id: number
   user_key: number | null

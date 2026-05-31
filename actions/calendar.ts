@@ -1,0 +1,76 @@
+'use server'
+
+import { getSession } from '@/lib/session'
+import { createServiceClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
+
+export async function createCalendarEvent(formData: FormData) {
+  const session = await getSession()
+  if (!session) throw new Error('Unauthorized')
+
+  const supabase = await createServiceClient()
+
+  await supabase.from('calendar_events').insert({
+    organization_key: session.organizationKey,
+    title:            formData.get('title') as string,
+    event_date:       formData.get('event_date') as string,
+    location:         (formData.get('location') as string) || null,
+    note:             (formData.get('note') as string) || null,
+    scope:            formData.get('scope') as 'all' | 'department',
+    department_id:    formData.get('department_id') ? Number(formData.get('department_id')) : null,
+    source_schedule_id: null,
+    created_by:       String(session.userKey),
+  })
+
+  revalidatePath('/schedule/calendar')
+  revalidatePath('/schedule/department')
+}
+
+export async function deleteCalendarEvent(id: number) {
+  const session = await getSession()
+  if (!session) throw new Error('Unauthorized')
+
+  const supabase = await createServiceClient()
+
+  await supabase.from('calendar_events')
+    .delete()
+    .eq('id', id)
+    .eq('organization_key', session.organizationKey)
+
+  revalidatePath('/schedule/calendar')
+  revalidatePath('/schedule/department')
+}
+
+export async function confirmScheduleEvent(formData: FormData) {
+  const session = await getSession()
+  if (!session) throw new Error('Unauthorized')
+
+  const eventId = Number(formData.get('event_id'))
+  const dateId  = Number(formData.get('date_id'))
+  const location = (formData.get('location') as string) || null
+  const note     = (formData.get('note') as string) || null
+
+  const supabase = await createServiceClient()
+
+  const [{ data: event }, { data: date }] = await Promise.all([
+    supabase.from('schedule_events').select('*').eq('event_id', eventId).single(),
+    supabase.from('schedule_dates').select('*').eq('date_id', dateId).single(),
+  ])
+
+  if (!event || !date) throw new Error('Not found')
+
+  await supabase.from('calendar_events').insert({
+    organization_key:   session.organizationKey,
+    title:              event.title,
+    event_date:         (date.candidate_dt as string).split('T')[0],
+    location,
+    note,
+    scope:              event.scope === 'all_departments' ? 'all' : 'department',
+    department_id:      event.target_department_id ?? null,
+    source_schedule_id: eventId,
+    created_by:         String(session.userKey),
+  })
+
+  revalidatePath('/schedule/calendar')
+  revalidatePath('/schedule/department')
+}

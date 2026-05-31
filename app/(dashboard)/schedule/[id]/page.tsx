@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Building2, Users } from 'lucide-react'
 import ScheduleGrid from './ScheduleGrid'
+import ConfirmScheduleButton from './ConfirmScheduleButton'
 
 type Row = { id: number; name: string; type: 'department' | 'user' }
 
@@ -84,6 +85,10 @@ export default async function ScheduleEventPage({
         rows={rows}
         session={session}
       />
+
+      {(session.userKey === event.created_by || session.adminFlag) && event.status === 'open' && (
+        <ConfirmScheduleButton eventId={eventId} dates={dates ?? []} />
+      )}
     </div>
   )
 }

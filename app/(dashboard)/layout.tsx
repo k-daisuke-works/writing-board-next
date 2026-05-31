@@ -39,10 +39,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <MessageSquare className="w-4 h-4" />
               <span className="hidden sm:inline">連絡ボード</span>
             </Link>
-            <Link href="/schedule"
+            <Link href="/schedule/calendar"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors">
               <Calendar className="w-4 h-4" />
-              <span className="hidden sm:inline">日程調整</span>
+              <span className="hidden sm:inline">スケジュール</span>
             </Link>
             <Link href="/welfare"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors">
