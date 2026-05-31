@@ -11,24 +11,16 @@ export type RssSource = {
 
 export const WELFARE_SOURCES: RssSource[] = [
   {
-    name: '厚生労働省（報道・広報）',
-    feedUrl: 'https://www.mhlw.go.jp/rss/new_01.rss',
+    name: '福祉新聞Web',
+    feedUrl: 'https://fukushishimbun.com/feed',
   },
   {
-    name: '厚生労働省（介護・高齢者福祉）',
-    feedUrl: 'https://www.mhlw.go.jp/rss/care.rss',
+    name: '介護ニュースJoint',
+    feedUrl: 'https://www.joint-kaigo.com/rss',
   },
   {
-    name: '厚生労働省（障害者福祉）',
-    feedUrl: 'https://www.mhlw.go.jp/rss/disabled.rss',
-  },
-  {
-    name: '厚生労働省（子ども・家庭）',
-    feedUrl: 'https://www.mhlw.go.jp/rss/child.rss',
-  },
-  {
-    name: 'WAM NET（福祉・介護情報）',
-    feedUrl: 'https://www.wam.go.jp/wamnet/wamrss/rss.xml',
+    name: 'かいごナビ',
+    feedUrl: 'https://www.kaigonavi.net/feed',
   },
 ]
 
