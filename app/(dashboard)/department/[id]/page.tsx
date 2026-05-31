@@ -2,6 +2,7 @@ import { getSession } from '@/lib/session'
 import { createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { deletePost, updatePost, getPdfSignedUrl } from '@/actions/posts'
+import { getPublicMediaUrl } from '@/lib/storage'
 import { DeletePostButton } from './DeletePostButton'
 import Link from 'next/link'
 import { ArrowLeft, Clock, Paperclip, User, ChevronDown } from 'lucide-react'
@@ -18,12 +19,14 @@ export default async function DepartmentHistoryPage({
   if (!session) redirect('/login')
 
   const { id } = await params
-  const deptId  = Number(id)
+  const deptId   = Number(id)
   const supabase = await createServiceClient()
 
   const { data: department } = await supabase.from('department_data').select('*').eq('department_id', deptId).single()
   const { data: writings }   = await supabase.from('writing_data').select('*')
-    .eq('department_id', deptId).eq('organization_key', session.organizationKey)
+    .eq('department_id', deptId)
+    .eq('organization_key', session.organizationKey)
+    .eq('post_type', 'board')
     .order('writing_time', { ascending: false })
 
   function fmt(t: string) {
@@ -35,7 +38,6 @@ export default async function DepartmentHistoryPage({
 
   return (
     <div className="anim-fade-in max-w-3xl">
-      {/* パンくず + タイトル */}
       <div className="mb-6">
         <Link href="/posts" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition-colors mb-3 w-fit">
           <ArrowLeft className="w-4 h-4" />
@@ -67,21 +69,40 @@ export default async function DepartmentHistoryPage({
               </div>
 
               {/* 本文 */}
-              <div className="px-4 sm:px-5 py-4">
+              <div className="px-4 sm:px-5 py-4 space-y-3">
                 <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
                   {post.message}
                 </p>
+
+                {/* 画像 */}
+                {post.image_url && (
+                  <img
+                    src={getPublicMediaUrl('images', post.image_url)}
+                    alt=""
+                    className="rounded-lg max-w-sm w-full border border-gray-100"
+                  />
+                )}
+
+                {/* 動画 */}
+                {post.video_url && (
+                  <video
+                    src={getPublicMediaUrl('videos', post.video_url)}
+                    controls
+                    className="rounded-lg max-w-sm w-full"
+                  />
+                )}
+
+                {/* PDF */}
                 {post.pdf_url && <PdfDownloadButton pdfPath={post.pdf_url} />}
               </div>
 
-              {/* 編集・削除（折りたたみ） */}
+              {/* 編集・削除 */}
               <details className="border-t border-gray-100">
                 <summary className="flex items-center gap-1.5 px-5 py-2.5 text-xs text-gray-400 cursor-pointer hover:bg-gray-50 hover:text-gray-600 transition-colors list-none select-none group">
                   <ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform" />
                   編集 / 削除
                 </summary>
                 <div className="bg-gray-50 px-4 sm:px-5 py-4 space-y-3 border-t border-gray-100">
-                  {/* 編集フォーム */}
                   <form action={toAction(updatePost)} className="space-y-2.5">
                     <input type="hidden" name="writingId" value={post.writing_id} />
                     <textarea name="message" defaultValue={post.message}
@@ -121,8 +142,8 @@ async function PdfDownloadButton({ pdfPath }: { pdfPath: string }) {
   if (!url) return null
   return (
     <a href={url} target="_blank" rel="noopener noreferrer"
-       className="mt-3 inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 transition-colors">
-      <Paperclip className="w-3.5 h-3.5" />PDF を開く
+       className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 transition-colors">
+      <Paperclip className="w-3.5 h-3.5" />PDFを開く
     </a>
   )
 }

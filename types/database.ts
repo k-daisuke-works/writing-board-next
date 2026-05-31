@@ -66,5 +66,8 @@ export type WritingData = {
   pin: string | null
   message: string
   pdf_url: string | null
+  image_url: string | null
+  video_url: string | null
+  post_type: 'board' | 'team'
   writing_time: string
 }

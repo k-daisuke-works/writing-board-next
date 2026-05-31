@@ -27,6 +27,7 @@ export default async function PostsPage() {
         .select('*')
         .eq('department_id', dept.department_id)
         .eq('organization_key', session.organizationKey)
+        .eq('post_type', 'board')
         .order('writing_time', { ascending: false })
         .limit(1)
         .maybeSingle()
