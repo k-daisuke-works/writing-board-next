@@ -51,7 +51,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <Link href="/home" className="flex items-center gap-2.5 shrink-0 group">
             <div className="w-7 h-7 bg-blue-600 rounded flex items-center justify-center group-hover:bg-blue-700 transition-colors">
               <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="7" cy="14" r="4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="17" cy="14" r="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M11 14h2M7 10V8h3m4 0h3V10" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
             <span className="text-sm font-semibold text-gray-900 hidden sm:block">RoScope</span>
