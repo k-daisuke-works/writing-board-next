@@ -61,13 +61,12 @@ export default function UnisonPlazaAvailability() {
       </div>
 
       {/* iframe */}
-      <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+      <div className="border border-gray-200 rounded-lg overflow-x-auto bg-white">
         <iframe
           key={src}
           src={src}
           title="ユニゾンプラザ空き状況"
-          className="w-full"
-          style={{ height: '640px', border: 'none' }}
+          style={{ height: '640px', border: 'none', minWidth: '900px', width: '100%' }}
         />
       </div>
       <p className="text-xs text-gray-400 mt-1.5">

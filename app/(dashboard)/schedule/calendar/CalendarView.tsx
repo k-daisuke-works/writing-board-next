@@ -114,7 +114,8 @@ export default function CalendarView({ events, session, mode }: Props) {
       </div>
 
       {/* カレンダーグリッド */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="overflow-x-auto scrollbar-none">
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden min-w-[350px]">
         {/* 曜日ヘッダー */}
         <div className="grid grid-cols-7 border-b border-gray-100">
           {WEEKDAYS.map((w, i) => (
@@ -135,7 +136,7 @@ export default function CalendarView({ events, session, mode }: Props) {
               <div
                 key={i}
                 onClick={() => day && openAdd(day)}
-                className={`min-h-[90px] border-r border-b border-gray-100 p-1 ${
+                className={`min-h-[70px] sm:min-h-[90px] border-r border-b border-gray-100 p-1 ${
                   col === 6 ? 'border-r-0' : ''
                 } ${day ? 'cursor-pointer hover:bg-gray-50' : 'bg-gray-50/40'} transition-colors`}
               >
@@ -176,6 +177,7 @@ export default function CalendarView({ events, session, mode }: Props) {
             )
           })}
         </div>
+      </div>
       </div>
 
       {/* 追加モーダル */}
