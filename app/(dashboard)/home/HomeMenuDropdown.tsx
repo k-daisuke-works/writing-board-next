@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Menu, X } from 'lucide-react'
 import { buildCards } from '@/app/(dashboard)/components/menuItems'
 
-export default function HomeMenuDropdown({ adminFlag, userKey }: { adminFlag: boolean; userKey: number }) {
+export default function HomeMenuDropdown({ role, userKey }: { role: string; userKey: number }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -17,7 +17,7 @@ export default function HomeMenuDropdown({ adminFlag, userKey }: { adminFlag: bo
     return () => document.removeEventListener('mousedown', onClickOutside)
   }, [open])
 
-  const cards = buildCards(adminFlag, userKey)
+  const cards = buildCards(role, userKey)
 
   return (
     <div ref={ref} className="relative shrink-0">

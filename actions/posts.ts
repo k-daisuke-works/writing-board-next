@@ -48,7 +48,8 @@ export async function createPost(formData: FormData) {
   const pin         = formData.get('pin') as string | null
   const rawType     = formData.get('postType') as string
   const postType    = rawType === 'team' ? 'team' : rawType === 'notice' ? 'notice' : 'board'
-  const isImportant = formData.get('isImportant') === '1'
+  const isImportant = formData.get('isImportant') === '1' &&
+    (session.role === 'admin' || session.role === 'leader')
   const pdfFile    = formData.get('pdfFile')   as File | null
   const imageFile  = formData.get('imageFile') as File | null
   const videoFile  = formData.get('videoFile') as File | null
@@ -222,6 +223,16 @@ export async function deletePost(formData: FormData) {
     .single()
 
   if (!post) return { error: '投稿が見つかりません。' }
+
+  const canDelete =
+    session.role === 'admin' ||
+    (session.role === 'leader' && (
+      post.department_id === session.departmentId ||
+      post.user_key === session.userKey
+    )) ||
+    post.user_key === session.userKey
+
+  if (!canDelete) return { error: '削除権限がありません。' }
 
   if (post.pin) {
     const ok = await bcrypt.compare(pin?.trim() ?? '', post.pin)

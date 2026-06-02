@@ -8,7 +8,7 @@ import {
   createDepartment, createJob,
   updateDepartment, updateJob,
 } from '@/actions/admin'
-import type { UserInfo, Department, Job } from '@/types/database'
+import type { UserInfo, Department, Job, UserRole } from '@/types/database'
 import UserFormModal from './UserFormModal'
 import {
   ArrowLeft, Users, Building2, Briefcase,
@@ -17,13 +17,14 @@ import {
 
 // ─── 型 ──────────────────────────────────────────────────
 type Props = {
-  users:          UserInfo[]
-  departments:    Department[]
-  jobs:           Job[]
-  currentUserKey: number
-  deptCnt:        Record<number, number>
-  jobCnt:         Record<number, number>
-  orgName:        string
+  users:           UserInfo[]
+  departments:     Department[]
+  jobs:            Job[]
+  currentUserKey:  number
+  currentUserRole: UserRole
+  deptCnt:         Record<number, number>
+  jobCnt:          Record<number, number>
+  orgName:         string
 }
 
 type UserModalState =
@@ -69,7 +70,7 @@ function InlineEdit({
 
 // ─── メインコンポーネント ────────────────────────────────
 export default function AdminPanel({
-  users, departments, jobs, currentUserKey, deptCnt, jobCnt, orgName,
+  users, departments, jobs, currentUserKey, currentUserRole, deptCnt, jobCnt, orgName,
 }: Props) {
   const [isPending, startTransition] = useTransition()
   const [userModal, setUserModal]    = useState<UserModalState>({ open: false })
@@ -216,8 +217,10 @@ export default function AdminPanel({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-medium text-gray-900">{user.user_name}</span>
-                    {user.admin_flag
+                    {user.role === 'admin'
                       ? <span className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded font-medium">管理者</span>
+                      : user.role === 'leader'
+                      ? <span className="text-xs bg-purple-50 text-purple-700 border border-purple-200 px-1.5 py-0.5 rounded font-medium">リーダー</span>
                       : null}
                   </div>
                   <div className="text-xs text-gray-400 mt-0.5 truncate">
@@ -278,9 +281,11 @@ export default function AdminPanel({
                   <td className="px-5 py-3 text-gray-500">{user.department?.department_name ?? '—'}</td>
                   <td className="px-5 py-3 text-gray-500">{user.job?.job_name ?? '—'}</td>
                   <td className="px-5 py-3">
-                    {user.admin_flag
+                    {user.role === 'admin'
                       ? <span className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded font-medium">管理者</span>
-                      : <span className="text-xs text-gray-400">一般</span>}
+                      : user.role === 'leader'
+                      ? <span className="text-xs bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded font-medium">リーダー</span>
+                      : <span className="text-xs text-gray-400">メンバー</span>}
                   </td>
                   <td className="px-5 py-3">
                     <div className="flex items-center justify-end gap-0.5">
@@ -318,8 +323,8 @@ export default function AdminPanel({
           </table>
         </section>
 
-        {/* ── 部署 + 職種グリッド ─────────────────────────── */}
-        <div className="grid sm:grid-cols-2 gap-5">
+        {/* ── 部署 + 職種グリッド（管理者のみ） ─────────────── */}
+        {currentUserRole === 'admin' && <div className="grid sm:grid-cols-2 gap-5">
 
           {/* 部署 */}
           <section className="bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col">
@@ -457,7 +462,7 @@ export default function AdminPanel({
             </form>
           </section>
 
-        </div>
+        </div>}
       </div>
 
       {/* ユーザーモーダル */}
@@ -467,6 +472,7 @@ export default function AdminPanel({
           user={userModal.mode === 'edit' ? userModal.user : undefined}
           departments={departments}
           jobs={jobs}
+          currentUserRole={currentUserRole}
           onClose={() => setUserModal({ open: false })}
           onSuccess={() => {
             setUserModal({ open: false })

@@ -50,9 +50,9 @@ export const STATIC_CARDS = [
   },
 ] as const
 
-export function buildCards(adminFlag: boolean, userKey: number) {
+export function buildCards(role: string, userKey: number) {
   return [
-    ...STATIC_CARDS.filter(c => !c.adminOnly || adminFlag),
+    ...STATIC_CARDS.filter(c => !c.adminOnly || role !== 'member'),
     {
       href: `/member/${userKey}`,
       Icon: UserCircle,

@@ -218,7 +218,7 @@ export default function HomeView({
         </div>
         <div className="flex items-center gap-2">
           <PushNotificationButton />
-          <HomeMenuDropdown adminFlag={session.adminFlag} userKey={session.userKey} />
+          <HomeMenuDropdown role={session.role} userKey={session.userKey} />
         </div>
       </div>
 

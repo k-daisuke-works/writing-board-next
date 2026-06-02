@@ -25,7 +25,7 @@ export default function UserMenu({ session }: { session: UserSession }) {
     return () => document.removeEventListener('mousedown', onOutside)
   }, [open])
 
-  const items = MENU_ITEMS.filter(item => !item.adminOnly || session.adminFlag)
+  const items = MENU_ITEMS.filter(item => !item.adminOnly || session.role !== 'member')
 
   return (
     <div ref={ref} className="relative shrink-0">

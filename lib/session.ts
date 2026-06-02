@@ -2,7 +2,7 @@ import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 import { cache } from 'react'
 import { createServiceClient } from '@/lib/supabase/server'
-import type { UserSession } from '@/types/database'
+import type { UserSession, UserRole } from '@/types/database'
 
 const SECRET      = new TextEncoder().encode(process.env.JWT_SECRET!)
 const COOKIE_NAME = 'wb_session'
@@ -13,7 +13,7 @@ const COOKIE_NAME = 'wb_session'
 type SessionClaims = {
   userKey:         number
   organizationKey: number
-  adminFlag:       boolean
+  role:            UserRole
 }
 
 // ─── セッション発行 ─────────────────────────────────────────
@@ -61,7 +61,7 @@ export const getSession = cache(async (): Promise<UserSession | null> => {
       supabase
         .from('user_info')
         .select(`
-          user_key, user_id, user_name, admin_flag, organization_key, avatar_url,
+          user_key, user_id, user_name, admin_flag, role, organization_key, avatar_url,
           department:department_data(department_id, department_name),
           job:job_data(job_id, job_name)
         `)
@@ -89,7 +89,8 @@ export const getSession = cache(async (): Promise<UserSession | null> => {
       departmentName:   (user.department as unknown as { department_name: string } | null)?.department_name ?? '',
       jobId:            (user.job as unknown as { job_id: number } | null)?.job_id ?? 0,
       jobName:          (user.job as unknown as { job_name: string } | null)?.job_name ?? '',
-      adminFlag:        user.admin_flag ?? false,
+      role:             ((user as unknown as { role: string }).role ?? 'member') as UserRole,
+      adminFlag:        ((user as unknown as { role: string }).role ?? 'member') === 'admin',
       avatarUrl:        (user as unknown as { avatar_url: string | null }).avatar_url ?? null,
     }
   } catch {

@@ -1,6 +1,8 @@
 // -----------------------------------------------
 // セッション情報（JWT に格納するユーザー情報）
 // -----------------------------------------------
+export type UserRole = 'admin' | 'leader' | 'member'
+
 export type UserSession = {
   userKey: number
   userId: string
@@ -12,7 +14,8 @@ export type UserSession = {
   departmentName: string
   jobId: number
   jobName: string
-  adminFlag: boolean
+  role: UserRole
+  adminFlag: boolean   // computed: role === 'admin'
   avatarUrl: string | null
 }
 
@@ -48,6 +51,7 @@ export type UserInfo = {
   job_id: number | null
   department_id: number | null
   admin_flag: boolean
+  role: UserRole
   organization_key: number
   password: string
   created_at: string

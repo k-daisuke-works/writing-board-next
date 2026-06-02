@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { registerUser, updateUser } from '@/actions/admin'
-import type { UserInfo, Department, Job } from '@/types/database'
+import type { UserInfo, Department, Job, UserRole } from '@/types/database'
 import { X, Loader2 } from 'lucide-react'
 
 type Props = {
@@ -10,6 +10,7 @@ type Props = {
   user?: UserInfo
   departments: Department[]
   jobs: Job[]
+  currentUserRole: UserRole
   onClose: () => void
   onSuccess: () => void
 }
@@ -17,16 +18,14 @@ type Props = {
 const inp = "w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
 const lbl = "block text-xs font-medium text-gray-700 mb-1.5"
 
-export default function UserFormModal({ mode, user, departments, jobs, onClose, onSuccess }: Props) {
-  const [error, setError]         = useState('')
-  const [adminFlag, setAdminFlag] = useState(user?.admin_flag ?? false)
+export default function UserFormModal({ mode, user, departments, jobs, currentUserRole, onClose, onSuccess }: Props) {
+  const [error, setError]            = useState('')
   const [isPending, startTransition] = useTransition()
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError('')
     const fd = new FormData(e.currentTarget)
-    fd.set('isAdmin', adminFlag ? 'true' : 'false')
 
     if (mode === 'add') {
       const raw        = (fd.get('userId') as string) ?? ''
@@ -153,15 +152,16 @@ export default function UserFormModal({ mode, user, departments, jobs, onClose, 
             />
           </div>
 
-          <label className="flex items-center gap-2.5 cursor-pointer select-none py-1">
-            <input
-              type="checkbox"
-              checked={adminFlag}
-              onChange={e => setAdminFlag(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-            <span className="text-sm text-gray-700">管理者権限を付与する</span>
-          </label>
+          <div>
+            <label className={lbl}>権限</label>
+            <select name="role" defaultValue={user?.role ?? 'member'} className={inp}>
+              {currentUserRole === 'admin' && (
+                <option value="admin">管理者</option>
+              )}
+              <option value="leader">リーダー</option>
+              <option value="member">メンバー</option>
+            </select>
+          </div>
 
           <div className="flex gap-2.5 pt-1 pb-safe">
             <button

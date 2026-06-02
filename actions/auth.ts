@@ -71,7 +71,7 @@ export async function login(formData: FormData) {
 
   const { data: user } = await supabase
     .from('user_info')
-    .select('user_key, user_id, admin_flag, password')
+    .select('user_key, user_id, role, password')
     .eq('user_id', userId)
     .eq('organization_key', org.organization_key)
     .single()
@@ -92,7 +92,7 @@ export async function login(formData: FormData) {
   await createSession({
     userKey:         user.user_key,
     organizationKey: org.organization_key,
-    adminFlag:       user.admin_flag ?? false,
+    role:            (user as unknown as { role: string }).role as 'admin' | 'leader' | 'member' ?? 'member',
   })
   redirect('/home')
 }

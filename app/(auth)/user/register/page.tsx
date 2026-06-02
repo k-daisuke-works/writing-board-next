@@ -23,8 +23,8 @@ export default async function UserRegisterPage({
   let organizationKey: number | null = null
   let isInitial = false
 
-  if (session?.adminFlag) {
-    // 管理者モード: セッションの組織を使用
+  if (session?.role === 'admin' || session?.role === 'leader') {
+    // 管理者/リーダーモード: セッションの組織を使用
     organizationKey = session.organizationKey
   } else if (params.token) {
     // 初回セットアップモード: セットアップトークンを検証
@@ -96,7 +96,6 @@ export default async function UserRegisterPage({
         'use server'
         formData.append('organizationKey', String(organizationKey))
         if (isInitial) {
-          formData.set('isAdmin', 'true')
           formData.set('isInitialSetup', 'true')
         }
         const result = await registerUser(formData)
@@ -142,11 +141,16 @@ export default async function UserRegisterPage({
           <input type="password" name="password" required minLength={8} placeholder="8文字以上" className={inputCls} />
         </div>
         {!isInitial && (
-          <label className="flex items-center gap-2.5 cursor-pointer select-none">
-            <input type="checkbox" name="isAdmin" value="true"
-              className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-            <span className="text-sm text-gray-700">管理者権限を付与する</span>
-          </label>
+          <div>
+            <label className={labelCls}>権限</label>
+            <select name="role" defaultValue="member" className={inputCls}>
+              {session?.role === 'admin' && (
+                <option value="admin">管理者</option>
+              )}
+              <option value="leader">リーダー</option>
+              <option value="member">メンバー</option>
+            </select>
+          </div>
         )}
         <div className="pt-1">
           <button type="submit"

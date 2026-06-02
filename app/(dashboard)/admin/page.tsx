@@ -5,17 +5,23 @@ import AdminPanel from './AdminPanel'
 
 export default async function AdminPage() {
   const session = await getSession()
-  if (!session?.adminFlag) redirect('/home')
+  if (!session || session.role === 'member') redirect('/home')
 
   const supabase = await createServiceClient()
   const orgKey   = session.organizationKey
 
+  let usersQuery = supabase
+    .from('user_info')
+    .select('*, department:department_data(department_name), job:job_data(job_name)')
+    .eq('organization_key', orgKey)
+    .order('created_at', { ascending: true })
+
+  if (session.role === 'leader') {
+    usersQuery = usersQuery.eq('department_id', session.departmentId)
+  }
+
   const [{ data: users }, { data: departments }, { data: jobs }] = await Promise.all([
-    supabase
-      .from('user_info')
-      .select('*, department:department_data(department_name), job:job_data(job_name)')
-      .eq('organization_key', orgKey)
-      .order('created_at', { ascending: true }),
+    usersQuery,
     supabase.from('department_data').select('*').eq('organization_key', orgKey).order('department_id'),
     supabase.from('job_data').select('*').eq('organization_key', orgKey).order('job_id'),
   ])
@@ -34,6 +40,7 @@ export default async function AdminPage() {
       departments={departments ?? []}
       jobs={jobs ?? []}
       currentUserKey={session.userKey}
+      currentUserRole={session.role}
       deptCnt={deptCnt}
       jobCnt={jobCnt}
       orgName={session.organizationName}
