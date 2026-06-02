@@ -102,6 +102,35 @@ export type CalendarEvent = {
   created_at: string
 }
 
+export type PostRead = {
+  id: number
+  post_id: number
+  user_key: number
+  user_name: string
+  organization_key: number
+  read_at: string
+}
+
+export type PostReaction = {
+  id: number
+  post_id: number
+  user_key: number
+  user_name: string
+  organization_key: number
+  emoji: string
+  created_at: string
+}
+
+export type PostReply = {
+  id: number
+  post_id: number
+  user_key: number
+  user_name_stamp: string
+  organization_key: number
+  message: string
+  created_at: string
+}
+
 export type WritingData = {
   writing_id: number
   user_key: number | null

@@ -5,11 +5,24 @@ import { deletePost, updatePost, getPdfSignedUrl } from '@/actions/posts'
 import { getPublicMediaUrl } from '@/lib/storage'
 import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
 import { DeletePostButton } from './DeletePostButton'
+import MarkReadOnMount from '@/app/(dashboard)/components/MarkReadOnMount'
+import PostReads from '@/app/(dashboard)/components/PostReads'
+import PostReactions from '@/app/(dashboard)/components/PostReactions'
+import PostReplies from '@/app/(dashboard)/components/PostReplies'
 import Link from 'next/link'
 import { ArrowLeft, Clock, Paperclip, User, ChevronDown } from 'lucide-react'
+import type { PostRead, PostReaction, PostReply } from '@/types/database'
 
 type SA = (fd: FormData) => Promise<void>
 const toAction = (fn: (fd: FormData) => unknown) => fn as unknown as SA
+
+function groupByPostId<T extends { post_id: number }>(items: T[] | null): Record<number, T[]> {
+  return (items ?? []).reduce<Record<number, T[]>>((acc, item) => {
+    if (!acc[item.post_id]) acc[item.post_id] = []
+    acc[item.post_id].push(item)
+    return acc
+  }, {})
+}
 
 export default async function DepartmentHistoryPage({
   params,
@@ -29,11 +42,27 @@ export default async function DepartmentHistoryPage({
     .single()
 
   if (!department) redirect('/posts')
-  const { data: writings }   = await supabase.from('writing_data').select('*')
+
+  const { data: writings } = await supabase.from('writing_data').select('*')
     .eq('department_id', deptId)
     .eq('organization_key', session.organizationKey)
     .eq('post_type', 'board')
     .order('writing_time', { ascending: false })
+
+  const postIds = (writings ?? []).map(w => w.writing_id)
+
+  const [{ data: allReads }, { data: allReactions }, { data: allReplies }] =
+    postIds.length > 0
+      ? await Promise.all([
+          supabase.from('post_reads').select('*').in('post_id', postIds).eq('organization_key', session.organizationKey),
+          supabase.from('post_reactions').select('*').in('post_id', postIds).eq('organization_key', session.organizationKey),
+          supabase.from('post_replies').select('*').in('post_id', postIds).eq('organization_key', session.organizationKey).order('created_at'),
+        ])
+      : [{ data: [] }, { data: [] }, { data: [] }]
+
+  const readsMap     = groupByPostId<PostRead>(allReads as PostRead[])
+  const reactionsMap = groupByPostId<PostReaction>(allReactions as PostReaction[])
+  const repliesMap   = groupByPostId<PostReply>(allReplies as PostReply[])
 
   function fmt(t: string) {
     return new Date(t).toLocaleString('ja-JP', {
@@ -44,6 +73,9 @@ export default async function DepartmentHistoryPage({
 
   return (
     <div className="anim-fade-in max-w-3xl">
+      {/* ページを開いた時点で全投稿を既読にする */}
+      <MarkReadOnMount postIds={postIds} />
+
       <div className="mb-6">
         <Link href="/posts" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition-colors mb-3 w-fit">
           <ArrowLeft className="w-4 h-4" />
@@ -77,27 +109,34 @@ export default async function DepartmentHistoryPage({
               {/* 本文 */}
               <div className="px-4 sm:px-5 py-4 space-y-3">
                 <ExpandableText text={post.message} className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap" />
-
-                {/* 画像 */}
                 {post.image_url && (
-                  <img
-                    src={getPublicMediaUrl('images', post.image_url)}
-                    alt=""
-                    className="rounded-lg max-w-sm w-full border border-gray-100"
-                  />
+                  <img src={getPublicMediaUrl('images', post.image_url)} alt="" className="rounded-lg max-w-sm w-full border border-gray-100" />
                 )}
-
-                {/* 動画 */}
                 {post.video_url && (
-                  <video
-                    src={getPublicMediaUrl('videos', post.video_url)}
-                    controls
-                    className="rounded-lg max-w-sm w-full"
-                  />
+                  <video src={getPublicMediaUrl('videos', post.video_url)} controls className="rounded-lg max-w-sm w-full" />
                 )}
-
-                {/* PDF */}
                 {post.pdf_url && <PdfDownloadButton pdfPath={post.pdf_url} />}
+              </div>
+
+              {/* リアクション・既読・リプライ */}
+              <div className="px-4 sm:px-5 py-3 border-t border-gray-100 space-y-3">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <PostReactions
+                    postId={post.writing_id}
+                    reactions={reactionsMap[post.writing_id] ?? []}
+                    myUserKey={session.userKey}
+                  />
+                  <PostReads
+                    reads={readsMap[post.writing_id] ?? []}
+                    myUserKey={session.userKey}
+                  />
+                </div>
+                <PostReplies
+                  postId={post.writing_id}
+                  replies={repliesMap[post.writing_id] ?? []}
+                  myUserKey={session.userKey}
+                  myUserName={session.userName}
+                />
               </div>
 
               {/* 編集・削除 */}
