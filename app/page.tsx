@@ -35,7 +35,7 @@ function HomeMockup() {
         <div className="w-5 h-5 bg-blue-600 rounded flex items-center justify-center shrink-0">
           <div className="w-2.5 h-2.5 border border-white rounded-sm" />
         </div>
-        <span className="text-[10px] font-semibold text-gray-800">業務連絡</span>
+        <span className="text-[10px] font-semibold text-gray-800">RoScope</span>
         <div className="flex gap-1 ml-1">
           {['ホーム','連絡ボード','スケジュール'].map(t => (
             <span key={t} className="text-[9px] text-gray-500 px-1.5 py-0.5 rounded hover:bg-gray-100">{t}</span>
@@ -196,7 +196,7 @@ const FEATURES = [
   {
     Icon: MessageSquare,
     color: 'bg-blue-50 text-blue-600',
-    title: '業務連絡ボード',
+    title: '連絡ボード',
     desc: '部署ごとのお知らせをリアルタイムで共有。画像・動画・PDFの添付にも対応。',
   },
   {
@@ -245,7 +245,7 @@ export default function LandingPage() {
                 <path d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <span className="font-semibold text-gray-900">業務連絡システム</span>
+            <span className="font-semibold text-gray-900">RoScope</span>
           </div>
           <Link
             href="/login"
@@ -263,12 +263,12 @@ export default function LandingPage() {
         <div className="relative max-w-6xl mx-auto px-5 py-16 lg:py-24 flex flex-col lg:flex-row items-center gap-12">
           {/* テキスト */}
           <div className="flex-1 text-center lg:text-left">
-            <p className="text-blue-300 text-sm font-medium mb-3 tracking-wide">福祉事業所向け業務連絡ツール</p>
+            <p className="text-blue-300 text-sm font-medium mb-3 tracking-wide">チームの今を、一目で見渡す。</p>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight mb-5">
               チームの情報共有を<br />もっとスムーズに
             </h1>
             <p className="text-blue-100 text-base leading-relaxed mb-8 max-w-lg mx-auto lg:mx-0">
-              部署間の業務連絡・スケジュール管理・日程調整・福祉最新情報の収集まで、日常業務に必要な機能をひとつにまとめました。
+              部署間の情報共有・スケジュール管理・日程調整・福祉最新情報の収集まで、日常業務に必要な機能をひとつにまとめました。
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
               <Link
@@ -393,7 +393,7 @@ export default function LandingPage() {
                 <path d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <span className="text-gray-300 text-sm font-medium">業務連絡システム</span>
+            <span className="text-gray-300 text-sm font-medium">RoScope</span>
           </div>
           <p className="text-xs">&copy; 2026 All rights reserved.</p>
         </div>

@@ -7,7 +7,7 @@ export const STATIC_CARDS = [
     href: '/posts',
     Icon: MessageSquare,
     title: '連絡ボード',
-    desc: '各部署の最新業務連絡を確認する',
+    desc: '各部署の最新連絡を確認する',
     iconBg: 'bg-blue-50',
     iconColor: 'text-blue-600',
     adminOnly: false,

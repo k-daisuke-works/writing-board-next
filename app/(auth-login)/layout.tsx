@@ -13,14 +13,14 @@ export default function LoginLayout({ children }: { children: React.ReactNode })
                 <path d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <span className="text-white font-semibold text-lg tracking-tight">業務連絡システム</span>
+            <span className="text-white font-semibold text-lg tracking-tight">RoScope</span>
           </div>
           <div>
             <h2 className="text-3xl font-bold text-white leading-snug mb-4">
               チームの情報共有を<br />もっとスムーズに
             </h2>
             <p className="text-blue-200 text-sm leading-relaxed">
-              部署間の業務連絡をリアルタイムで共有。
+              チームの今を、一目で見渡す。
               大切なお知らせを見逃さない。
             </p>
           </div>
@@ -41,7 +41,7 @@ export default function LoginLayout({ children }: { children: React.ReactNode })
               <path d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <span className="font-semibold text-gray-800">業務連絡システム</span>
+          <span className="font-semibold text-gray-800">RoScope</span>
         </div>
         {children}
       </div>

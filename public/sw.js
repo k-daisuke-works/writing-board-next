@@ -1,7 +1,7 @@
 self.addEventListener('push', (event) => {
   const data = event.data?.json() ?? {}
   event.waitUntil(
-    self.registration.showNotification(data.title ?? '業務連絡', {
+    self.registration.showNotification(data.title ?? 'RoScope', {
       body: data.body ?? '',
       icon: '/icon',
       badge: '/icon',
