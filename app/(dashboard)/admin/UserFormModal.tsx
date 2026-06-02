@@ -109,6 +109,7 @@ export default function UserFormModal({ mode, user, departments, jobs, onClose, 
                 type="text" name="userName" required
                 defaultValue={user?.user_name}
                 placeholder="例: 山田太郎"
+                autoComplete="off"
                 className={inp}
               />
             </div>
@@ -147,6 +148,7 @@ export default function UserFormModal({ mode, user, departments, jobs, onClose, 
               type="password" name="password"
               required={mode === 'add'} minLength={8}
               placeholder="8文字以上"
+              autoComplete="new-password"
               className={inp}
             />
           </div>
