@@ -8,12 +8,12 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: '業務連絡システム',
-  description: '部署間の業務連絡を管理するシステム',
+  title: 'RoScope',
+  description: 'チームの今を、一目で。',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: '業務連絡',
+    title: 'RoScope',
   },
 }
 

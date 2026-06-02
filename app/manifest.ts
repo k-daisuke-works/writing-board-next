@@ -2,9 +2,9 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: '業務連絡システム',
-    short_name: '業務連絡',
-    description: '部署間の業務連絡を管理するシステム',
+    name: 'RoScope',
+    short_name: 'RoScope',
+    description: 'チームの今を、一目で。',
     start_url: '/home',
     display: 'standalone',
     background_color: '#f5f5f5',
