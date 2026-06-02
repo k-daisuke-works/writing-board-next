@@ -6,6 +6,7 @@ const SECRET = new TextEncoder().encode(process.env.JWT_SECRET!)
 
 // 認証なしでアクセスできるパス
 const PUBLIC_PATHS = [
+  '/',
   '/login',
   '/register',
   '/departmentjob/register',  // 初回セットアップ時（orgKey付き）も使用
@@ -15,7 +16,7 @@ const PUBLIC_PATHS = [
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+  if (PUBLIC_PATHS.some((p) => p === '/' ? pathname === '/' : pathname.startsWith(p))) {
     return NextResponse.next()
   }
 
