@@ -39,8 +39,8 @@ function isRateLimited(key: string): boolean {
 
 // ─── ログイン ───────────────────────────────────────────────
 export async function login(formData: FormData) {
-  const organizationId = (formData.get('organizationId') as string)?.trim()
-  const userId         = (formData.get('userId') as string)?.trim()
+  const organizationId = (formData.get('organizationId') as string)?.normalize('NFKC').trim()
+  const userId         = (formData.get('userId') as string)?.normalize('NFKC').trim()
   const password       = formData.get('password') as string
 
   if (!organizationId || !userId || !password) {

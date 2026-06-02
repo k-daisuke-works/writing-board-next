@@ -272,18 +272,19 @@ export async function registerUser(formData: FormData) {
 
   const organizationKey = session?.organizationKey ?? orgKeyFromForm
 
-  const userId       = formData.get('userId') as string
-  const userName     = formData.get('userName') as string
+  // 全角英数字・記号を半角に正規化してから検証（日本語IMEの全角入力対策）
+  const userId       = (formData.get('userId') as string)?.normalize('NFKC').trim()
+  const userName     = (formData.get('userName') as string)?.trim()
   const departmentId = Number(formData.get('departmentId')) || null
   const jobId        = Number(formData.get('jobId')) || null
   const password     = formData.get('password') as string
   // 初回セットアップ時は必ず管理者に
   const isAdmin      = isInitialSetup ? true : (formData.get('isAdmin') === 'true')
 
-  if (!userId?.trim() || !userName?.trim() || !password) {
+  if (!userId || !userName?.trim() || !password) {
     return { error: '必須項目を入力してください。' }
   }
-  if (!/^[a-zA-Z0-9_-]{1,50}$/.test(userId.trim())) {
+  if (!/^[a-zA-Z0-9_-]{1,50}$/.test(userId)) {
     return { error: 'ユーザーIDは英数字・ハイフン・アンダースコアのみ、50文字以内で入力してください。' }
   }
   if (userName.trim().length > 50) {
