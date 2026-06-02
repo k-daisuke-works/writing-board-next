@@ -12,6 +12,7 @@ import PostReads from '@/app/(dashboard)/components/PostReads'
 import PostReactions from '@/app/(dashboard)/components/PostReactions'
 import PostReplies from '@/app/(dashboard)/components/PostReplies'
 import MarkReadOnMount from '@/app/(dashboard)/components/MarkReadOnMount'
+import RealtimeSocial from '@/app/(dashboard)/components/RealtimeSocial'
 
 type Props = {
   initialPosts: Record<number, WritingData>
@@ -83,6 +84,7 @@ export default function RealtimePosts({
   return (
     <>
       <MarkReadOnMount postIds={postIds} />
+      <RealtimeSocial organizationKey={session.organizationKey} />
 
       {toast && (
         <div className="fixed top-4 right-4 z-50 anim-slide-down">

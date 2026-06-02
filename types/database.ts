@@ -147,4 +147,5 @@ export type WritingData = {
   video_url: string | null
   post_type: 'board' | 'team' | 'notice'
   writing_time: string
+  is_important: boolean
 }

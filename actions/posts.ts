@@ -44,10 +44,11 @@ export async function createPost(formData: FormData) {
   const session = await getSession()
   if (!session) return { error: '認証が必要です。' }
 
-  const rawMessage = formData.get('message') as string
-  const pin        = formData.get('pin') as string | null
-  const rawType    = formData.get('postType') as string
-  const postType   = rawType === 'team' ? 'team' : rawType === 'notice' ? 'notice' : 'board'
+  const rawMessage  = formData.get('message') as string
+  const pin         = formData.get('pin') as string | null
+  const rawType     = formData.get('postType') as string
+  const postType    = rawType === 'team' ? 'team' : rawType === 'notice' ? 'notice' : 'board'
+  const isImportant = formData.get('isImportant') === '1'
   const pdfFile    = formData.get('pdfFile')   as File | null
   const imageFile  = formData.get('imageFile') as File | null
   const videoFile  = formData.get('videoFile') as File | null
@@ -108,7 +109,8 @@ export async function createPost(formData: FormData) {
     pdf_url:   pdfUrl,
     image_url: imageUrl,
     video_url: videoUrl,
-    post_type: postType,
+    post_type:    postType,
+    is_important: isImportant,
   })
 
   if (error) return { error: '投稿に失敗しました。' }
@@ -118,6 +120,25 @@ export async function createPost(formData: FormData) {
   } else {
     revalidatePath('/posts')
   }
+
+  // 重要投稿の場合はプッシュ通知を送信
+  if (isImportant) {
+    const internalSecret = process.env.INTERNAL_SECRET
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL
+    if (internalSecret && baseUrl) {
+      fetch(`${baseUrl}/api/push/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-internal-secret': internalSecret },
+        body: JSON.stringify({
+          organizationKey: session.organizationKey,
+          title: '重要なお知らせ',
+          body: `${session.userName}: ${message.slice(0, 80)}`,
+          url: postType === 'board' ? '/posts' : '/home',
+        }),
+      }).catch(() => {})
+    }
+  }
+
   return { success: true }
 }
 

@@ -9,6 +9,7 @@ import MarkReadOnMount from '@/app/(dashboard)/components/MarkReadOnMount'
 import PostReads from '@/app/(dashboard)/components/PostReads'
 import PostReactions from '@/app/(dashboard)/components/PostReactions'
 import PostReplies from '@/app/(dashboard)/components/PostReplies'
+import RealtimeSocial from '@/app/(dashboard)/components/RealtimeSocial'
 import Link from 'next/link'
 import { ArrowLeft, Clock, Paperclip, User, ChevronDown } from 'lucide-react'
 import type { PostRead, PostReaction, PostReply } from '@/types/database'
@@ -73,8 +74,8 @@ export default async function DepartmentHistoryPage({
 
   return (
     <div className="anim-fade-in max-w-3xl">
-      {/* ページを開いた時点で全投稿を既読にする */}
       <MarkReadOnMount postIds={postIds} />
+      <RealtimeSocial organizationKey={session.organizationKey} />
 
       <div className="mb-6">
         <Link href="/posts" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition-colors mb-3 w-fit">

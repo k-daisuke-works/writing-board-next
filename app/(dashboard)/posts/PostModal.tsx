@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPost } from '@/actions/posts'
 import type { UserSession } from '@/types/database'
-import { X, Paperclip, Image, Video, XCircle } from 'lucide-react'
+import { X, Paperclip, Image, Video, XCircle, AlertCircle } from 'lucide-react'
 
 type Props = {
   session: UserSession
@@ -22,6 +22,7 @@ export default function PostModal({ session, postType = 'board', onClose }: Prop
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [videoFile,  setVideoFile]  = useState<File | null>(null)
   const [pdfFile,    setPdfFile]    = useState<File | null>(null)
+  const [isImportant, setIsImportant] = useState(false)
 
   const imageInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
@@ -46,6 +47,7 @@ export default function PostModal({ session, postType = 'board', onClose }: Prop
     fd.set('message', message)
     fd.set('pin', pin)
     fd.set('postType', postType)
+    fd.set('isImportant', isImportant ? '1' : '0')
     if (imageFile) fd.set('imageFile', imageFile)
     if (videoFile) fd.set('videoFile', videoFile)
     if (pdfFile)   fd.set('pdfFile',   pdfFile)
@@ -165,6 +167,21 @@ export default function PostModal({ session, postType = 'board', onClose }: Prop
               </div>
             )}
           </div>
+
+          {/* 重要フラグ */}
+          <label className={`flex items-center gap-2.5 px-3 py-2.5 rounded-md border cursor-pointer transition-colors ${isImportant ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+            <input
+              type="checkbox"
+              checked={isImportant}
+              onChange={(e) => setIsImportant(e.target.checked)}
+              className="w-4 h-4 accent-red-500"
+            />
+            <AlertCircle className={`w-4 h-4 shrink-0 ${isImportant ? 'text-red-500' : 'text-gray-400'}`} />
+            <div>
+              <p className={`text-sm font-medium ${isImportant ? 'text-red-700' : 'text-gray-700'}`}>重要な投稿としてマーク</p>
+              <p className="text-xs text-gray-400">ホーム画面に目立つ形で表示されます</p>
+            </div>
+          </label>
 
           {/* ボタン */}
           <div className="flex gap-2.5 pt-1 pb-safe">

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Building2, Plus, Paperclip, Clock, ChevronRight } from 'lucide-react'
+import { Building2, Plus, Paperclip, Clock, ChevronRight, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { getPublicMediaUrl } from '@/lib/storage'
 import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
@@ -13,6 +13,8 @@ import PostReads from '@/app/(dashboard)/components/PostReads'
 import PostReactions from '@/app/(dashboard)/components/PostReactions'
 import PostReplies from '@/app/(dashboard)/components/PostReplies'
 import MarkReadOnMount from '@/app/(dashboard)/components/MarkReadOnMount'
+import RealtimeSocial from '@/app/(dashboard)/components/RealtimeSocial'
+import PushNotificationButton from '@/app/(dashboard)/components/PushNotificationButton'
 
 type SocialMaps = {
   readsMap: Record<number, PostRead[]>
@@ -96,9 +98,16 @@ function NoticeCard({ dept, post, social }: { dept: Department; post: WritingDat
           <Building2 className="w-4 h-4 text-gray-400 shrink-0" strokeWidth={1.75} />
           <span className="text-sm font-medium text-gray-800">{dept.department_name}</span>
         </div>
-        {post && isRecent(post.writing_time) && (
-          <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">NEW</span>
-        )}
+        <div className="flex items-center gap-1.5">
+          {post?.is_important && (
+            <span className="flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded">
+              <AlertCircle className="w-3 h-3" />重要
+            </span>
+          )}
+          {post && isRecent(post.writing_time) && (
+            <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">NEW</span>
+          )}
+        </div>
       </div>
       <div className="px-4 py-3">
         {post ? (
@@ -140,6 +149,11 @@ function TeamCard({ member, post, isMe, social }: {
           {isMe && <span className="text-xs text-blue-500 font-medium">（自分）</span>}
         </div>
         <div className="flex items-center gap-2">
+          {post?.is_important && (
+            <span className="flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded">
+              <AlertCircle className="w-3 h-3" />重要
+            </span>
+          )}
           {post && isRecent(post.writing_time) && (
             <span className="text-xs font-semibold text-blue-600 bg-blue-100 px-2 py-0.5 rounded">NEW</span>
           )}
@@ -189,6 +203,7 @@ export default function HomeView({
   return (
     <div className="anim-fade-in space-y-6">
       <MarkReadOnMount postIds={allPostIds} />
+      <RealtimeSocial organizationKey={session.organizationKey} />
 
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -201,7 +216,10 @@ export default function HomeView({
             {session.jobName && ` · ${session.jobName}`}
           </p>
         </div>
-        <HomeMenuDropdown adminFlag={session.adminFlag} userKey={session.userKey} />
+        <div className="flex items-center gap-2">
+          <PushNotificationButton />
+          <HomeMenuDropdown adminFlag={session.adminFlag} userKey={session.userKey} />
+        </div>
       </div>
 
       {departments.length > 0 && (

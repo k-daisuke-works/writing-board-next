@@ -3,6 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import type { WritingData, PostRead, PostReaction, PostReply } from '@/types/database'
 import HomeView from './HomeView'
+import ImportantBanner from '@/app/(dashboard)/components/ImportantBanner'
 
 function groupByPostId<T extends { post_id: number }>(items: T[] | null): Record<number, T[]> {
   return (items ?? []).reduce<Record<number, T[]>>((acc, item) => {
@@ -77,17 +78,39 @@ export default async function HomePage() {
     ...Object.values(memberLatest).filter(Boolean).map(p => p!.writing_id),
   ]
 
-  const [{ data: allReads }, { data: allReactions }, { data: allReplies }] =
-    allPostIds.length > 0
-      ? await Promise.all([
-          supabase.from('post_reads').select('*').in('post_id', allPostIds).eq('organization_key', session.organizationKey),
-          supabase.from('post_reactions').select('*').in('post_id', allPostIds).eq('organization_key', session.organizationKey),
-          supabase.from('post_replies').select('*').in('post_id', allPostIds).eq('organization_key', session.organizationKey).order('created_at'),
-        ])
-      : [{ data: [] as PostRead[] }, { data: [] as PostReaction[] }, { data: [] as PostReply[] }]
+  const [[{ data: allReads }, { data: allReactions }, { data: allReplies }], { data: importantPostsRaw }] =
+    await Promise.all([
+      allPostIds.length > 0
+        ? Promise.all([
+            supabase.from('post_reads').select('*').in('post_id', allPostIds).eq('organization_key', session.organizationKey),
+            supabase.from('post_reactions').select('*').in('post_id', allPostIds).eq('organization_key', session.organizationKey),
+            supabase.from('post_replies').select('*').in('post_id', allPostIds).eq('organization_key', session.organizationKey).order('created_at'),
+          ])
+        : Promise.resolve([{ data: [] as PostRead[] }, { data: [] as PostReaction[] }, { data: [] as PostReply[] }]),
+      // 直近7日の重要投稿（未読のもの）
+      supabase.from('writing_data').select('*')
+        .eq('organization_key', session.organizationKey)
+        .eq('is_important', true)
+        .gte('writing_time', new Date(Date.now() - 7 * 86400000).toISOString())
+        .order('writing_time', { ascending: false }),
+    ])
+
+  // 自分が既読でない重要投稿だけ表示
+  const importantPostIds = (importantPostsRaw ?? []).map(p => p.writing_id)
+  const { data: myImportantReads } = importantPostIds.length > 0
+    ? await supabase.from('post_reads').select('post_id').in('post_id', importantPostIds).eq('user_key', session.userKey)
+    : { data: [] as { post_id: number }[] }
+  const readImportantSet = new Set((myImportantReads ?? []).map(r => r.post_id))
+  const unreadImportant = (importantPostsRaw ?? []).filter(p => !readImportantSet.has(p.writing_id))
 
   return (
-    <HomeView
+    <>
+      {unreadImportant.length > 0 && (
+        <div className="mb-4">
+          <ImportantBanner posts={unreadImportant} />
+        </div>
+      )}
+      <HomeView
       session={session}
       departments={departments ?? []}
       deptLatest={deptLatest}
@@ -98,5 +121,6 @@ export default async function HomePage() {
       repliesMap={groupByPostId<PostReply>(allReplies as PostReply[])}
       allPostIds={allPostIds}
     />
+    </>
   )
 }
