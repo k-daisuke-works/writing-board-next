@@ -40,7 +40,7 @@ export default function UserFormModal({ mode, user, departments, jobs, onClose, 
       if (!/^[a-zA-Z0-9_-]{1,50}$/.test(normalized)) {
         const info = [...normalized].map(c => `${c}(U+${c.codePointAt(0)?.toString(16).toUpperCase().padStart(4, '0')})`).join(' ')
         console.error('[UserFormModal] userId invalid chars:', info)
-        setError('ユーザーIDは半角英数字・ハイフン・アンダースコアのみ使用できます。')
+        setError(`ユーザーIDは半角英数字・ハイフン・アンダースコアのみ使用できます。IMEを半角英数字モード（直接入力）にして入力してください。（入力値: ${normalized}）`)
         return
       }
     }
@@ -97,7 +97,10 @@ export default function UserFormModal({ mode, user, departments, jobs, onClose, 
             {mode === 'add' && (
               <div>
                 <label className={lbl}>ユーザーID <span className="text-red-500">*</span></label>
-                <input type="text" name="userId" required placeholder="例: USER001" className={inp} />
+                <input type="text" name="userId" required placeholder="例: USER001"
+                  lang="en" autoComplete="off" autoCorrect="off" autoCapitalize="off"
+                  className={inp} />
+                <p className="text-xs text-gray-400 mt-1">半角英数字で入力（IMEをオフに）</p>
               </div>
             )}
             <div className={mode === 'add' ? '' : 'col-span-2'}>
