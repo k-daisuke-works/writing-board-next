@@ -10,7 +10,7 @@ const MENU_ITEMS = [
   { href: '/members',  Icon: Users,       label: 'メンバー一覧',      adminOnly: false },
   { href: '/expenses', Icon: Receipt,     label: '活動費請求',        adminOnly: false },
   { href: '/manual',   Icon: BookOpen,    label: '使い方マニュアル',  adminOnly: false },
-  { href: '/admin',    Icon: Settings,    label: '管理設定',          adminOnly: true  },
+  { href: '/admin',    Icon: Settings,    label: '組織管理',          adminOnly: true  },
 ]
 
 export default function UserMenu({ session }: { session: UserSession }) {

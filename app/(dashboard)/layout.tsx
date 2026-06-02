@@ -1,7 +1,7 @@
 import { getSession } from '@/lib/session'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { LayoutGrid, MessageSquare, Calendar, Newspaper, Settings } from 'lucide-react'
+import { LayoutGrid, MessageSquare, Calendar, Newspaper } from 'lucide-react'
 import UserMenu from '@/app/(dashboard)/components/UserMenu'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -49,13 +49,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <Newspaper className="w-4 h-4" />
               <span className="hidden sm:inline">福祉情報</span>
             </Link>
-            {session.adminFlag && (
-              <Link href="/admin"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors">
-                <Settings className="w-4 h-4" />
-                <span className="hidden sm:inline">管理</span>
-              </Link>
-            )}
           </nav>
 
           {/* ユーザーエリア */}

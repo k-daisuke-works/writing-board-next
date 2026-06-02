@@ -1,5 +1,5 @@
 import {
-  MessageSquare, Users, Building2, Settings, Receipt, UserCircle, BookOpen,
+  MessageSquare, Users, Settings, Receipt, UserCircle, BookOpen,
 } from 'lucide-react'
 
 export const STATIC_CARDS = [
@@ -40,28 +40,10 @@ export const STATIC_CARDS = [
     adminOnly: false,
   },
   {
-    href: '/user/register',
-    Icon: Users,
-    title: 'ユーザー管理',
-    desc: '新しいメンバーを招待・追加する',
-    iconBg: 'bg-green-50',
-    iconColor: 'text-green-600',
-    adminOnly: true,
-  },
-  {
-    href: '/departmentjob/register',
-    Icon: Building2,
-    title: '部署・職種登録',
-    desc: '組織の部署や職種を設定する',
-    iconBg: 'bg-purple-50',
-    iconColor: 'text-purple-600',
-    adminOnly: true,
-  },
-  {
     href: '/admin',
     Icon: Settings,
-    title: '管理設定',
-    desc: 'ユーザーや組織情報を管理・削除する',
+    title: '組織管理',
+    desc: 'メンバー・部署・職種の登録・管理',
     iconBg: 'bg-gray-50',
     iconColor: 'text-gray-600',
     adminOnly: true,
