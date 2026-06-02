@@ -2,17 +2,23 @@ import { NextRequest, NextResponse } from 'next/server'
 import webpush from 'web-push'
 import { createServiceClient } from '@/lib/supabase/server'
 
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT!,
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!,
-)
+function initVapid() {
+  const subject = process.env.VAPID_SUBJECT
+  const pub     = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+  const priv    = process.env.VAPID_PRIVATE_KEY
+  if (!subject || !pub || !priv) return false
+  webpush.setVapidDetails(subject, pub, priv)
+  return true
+}
 
 export async function POST(req: NextRequest) {
-  // 内部呼び出しのみ許可
   const secret = req.headers.get('x-internal-secret')
   if (secret !== process.env.INTERNAL_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  if (!initVapid()) {
+    return NextResponse.json({ error: 'Push not configured' }, { status: 503 })
   }
 
   const { organizationKey, title, body, url } = await req.json()
