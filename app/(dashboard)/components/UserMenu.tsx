@@ -2,10 +2,16 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { LogOut } from 'lucide-react'
+import { Users, Receipt, BookOpen, Settings, UserCircle, LogOut } from 'lucide-react'
 import { logout } from '@/actions/auth'
-import { buildCards } from '@/app/(dashboard)/components/menuItems'
 import type { UserSession } from '@/types/database'
+
+const MENU_ITEMS = [
+  { href: '/members',  Icon: Users,       label: 'メンバー一覧',      adminOnly: false },
+  { href: '/expenses', Icon: Receipt,     label: '活動費請求',        adminOnly: false },
+  { href: '/manual',   Icon: BookOpen,    label: '使い方マニュアル',  adminOnly: false },
+  { href: '/admin',    Icon: Settings,    label: '管理設定',          adminOnly: true  },
+]
 
 export default function UserMenu({ session }: { session: UserSession }) {
   const [open, setOpen] = useState(false)
@@ -19,7 +25,7 @@ export default function UserMenu({ session }: { session: UserSession }) {
     return () => document.removeEventListener('mousedown', onOutside)
   }, [open])
 
-  const cards = buildCards(session.adminFlag, session.userKey)
+  const items = MENU_ITEMS.filter(item => !item.adminOnly || session.adminFlag)
 
   return (
     <div ref={ref} className="relative shrink-0">
@@ -39,9 +45,9 @@ export default function UserMenu({ session }: { session: UserSession }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 z-50 bg-white border border-gray-200 rounded-xl shadow-lg w-60 overflow-hidden anim-slide-down">
+        <div className="absolute right-0 top-full mt-2 z-50 bg-white border border-gray-200 rounded-xl shadow-lg w-44 overflow-hidden anim-slide-down">
           {/* ユーザー情報 */}
-          <div className="px-4 py-3 border-b border-gray-100">
+          <div className="px-3 py-2.5 border-b border-gray-100">
             <p className="text-sm font-semibold text-gray-900 truncate">{session.userName}</p>
             <p className="text-xs text-gray-400 truncate mt-0.5">
               {session.departmentName || session.organizationName}
@@ -49,34 +55,36 @@ export default function UserMenu({ session }: { session: UserSession }) {
           </div>
 
           {/* メニュー項目 */}
-          <div className="p-1.5">
-            {cards.map(({ href, Icon, title, desc, iconBg, iconColor }) => (
-              <Link key={href} href={href} onClick={() => setOpen(false)}>
-                <div className="flex items-center gap-3 px-2.5 py-2 rounded-md hover:bg-gray-50 transition-colors">
-                  <div className={`w-8 h-8 ${iconBg} rounded-md flex items-center justify-center shrink-0`}>
-                    <Icon className={`w-4 h-4 ${iconColor}`} strokeWidth={1.75} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-800">{title}</p>
-                    <p className="text-xs text-gray-400 truncate">{desc}</p>
-                  </div>
-                </div>
+          <div className="py-1">
+            {items.map(({ href, Icon, label }) => (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <Icon className="w-4 h-4 text-gray-400 shrink-0" strokeWidth={1.75} />
+                {label}
               </Link>
             ))}
+            <Link
+              href={`/member/${session.userKey}`}
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <UserCircle className="w-4 h-4 text-gray-400 shrink-0" strokeWidth={1.75} />
+              プロフィール編集
+            </Link>
           </div>
 
           {/* ログアウト */}
-          <form action={logout} className="border-t border-gray-100 p-1.5">
+          <form action={logout} className="border-t border-gray-100 py-1">
             <button
               type="submit"
-              className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-sm text-red-600 hover:bg-red-50 transition-colors"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
             >
-              <div className="w-8 h-8 bg-red-50 rounded-md flex items-center justify-center shrink-0">
-                <LogOut className="w-4 h-4 text-red-500" strokeWidth={1.75} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-medium">ログアウト</p>
-              </div>
+              <LogOut className="w-4 h-4 shrink-0" strokeWidth={1.75} />
+              ログアウト
             </button>
           </form>
         </div>
