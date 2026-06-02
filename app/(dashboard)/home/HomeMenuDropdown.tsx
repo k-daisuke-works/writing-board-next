@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { MessageSquare, Users, Building2, Settings, Menu, X, Receipt, UserCircle } from 'lucide-react'
+import { MessageSquare, Users, Building2, Settings, Menu, X, Receipt, UserCircle, BookOpen } from 'lucide-react'
 
 const STATIC_CARDS = [
   {
@@ -30,6 +30,15 @@ const STATIC_CARDS = [
     desc: '活動費の請求フォームを開く',
     iconBg: 'bg-orange-50',
     iconColor: 'text-orange-600',
+    adminOnly: false,
+  },
+  {
+    href: '/manual',
+    Icon: BookOpen,
+    title: '使い方マニュアル',
+    desc: 'システムの操作方法を確認する',
+    iconBg: 'bg-sky-50',
+    iconColor: 'text-sky-600',
     adminOnly: false,
   },
   {
