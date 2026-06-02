@@ -13,6 +13,7 @@ export type UserSession = {
   jobId: number
   jobName: string
   adminFlag: boolean
+  avatarUrl: string | null
 }
 
 // -----------------------------------------------

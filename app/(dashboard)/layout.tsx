@@ -1,8 +1,8 @@
 import { getSession } from '@/lib/session'
 import { redirect } from 'next/navigation'
-import { logout } from '@/actions/auth'
 import Link from 'next/link'
-import { LayoutGrid, MessageSquare, Calendar, Newspaper, Settings, LogOut } from 'lucide-react'
+import { LayoutGrid, MessageSquare, Calendar, Newspaper, Settings } from 'lucide-react'
+import UserMenu from '@/app/(dashboard)/components/UserMenu'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
@@ -64,16 +64,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <span className="text-xs font-medium text-gray-800 leading-none">{session.userName}</span>
               <span className="text-xs text-gray-400 leading-none mt-0.5">{session.departmentName || session.organizationName}</span>
             </div>
-            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
-              {session.userName.slice(0, 1)}
-            </div>
-            <form action={logout}>
-              <button type="submit"
-                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 transition-colors px-2 py-1.5 rounded hover:bg-gray-100">
-                <LogOut className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">ログアウト</span>
-              </button>
-            </form>
+            <UserMenu session={session} />
           </div>
         </div>
       </header>

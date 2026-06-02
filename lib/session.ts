@@ -61,7 +61,7 @@ export const getSession = cache(async (): Promise<UserSession | null> => {
       supabase
         .from('user_info')
         .select(`
-          user_key, user_id, user_name, admin_flag, organization_key,
+          user_key, user_id, user_name, admin_flag, organization_key, avatar_url,
           department:department_data(department_id, department_name),
           job:job_data(job_id, job_name)
         `)
@@ -90,6 +90,7 @@ export const getSession = cache(async (): Promise<UserSession | null> => {
       jobId:            (user.job as unknown as { job_id: number } | null)?.job_id ?? 0,
       jobName:          (user.job as unknown as { job_name: string } | null)?.job_name ?? '',
       adminFlag:        user.admin_flag ?? false,
+      avatarUrl:        (user as unknown as { avatar_url: string | null }).avatar_url ?? null,
     }
   } catch {
     return null
