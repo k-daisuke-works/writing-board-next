@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'RoScope',
     short_name: 'RoScope',
-    description: 'チームの今を、一目で。',
+    description: 'チームの今を、一目で見渡す。',
     start_url: '/home',
     display: 'standalone',
     background_color: '#f5f5f5',
