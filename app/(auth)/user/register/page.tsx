@@ -101,7 +101,8 @@ export default async function UserRegisterPage({
         }
         const result = await registerUser(formData)
         if (result?.error) {
-          redirect(`${errorBase}&error=${encodeURIComponent(result.error)}`)
+          const sep = errorBase.includes('?') ? '&' : '?'
+          redirect(`${errorBase}${sep}error=${encodeURIComponent(result.error)}`)
         }
         if (isInitial) redirect('/login')
         else redirect('/user/register?success=true')

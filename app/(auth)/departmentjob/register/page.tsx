@@ -99,7 +99,10 @@ export default async function DepartmentJobRegisterPage({
             'use server'
             formData.append('organizationKey', String(organizationKey))
             const result = await createDepartment(formData)
-            if (result?.error) redirect(`${errorBase}&error=${encodeURIComponent(result.error)}`)
+            if (result?.error) {
+              const sep = errorBase.includes('?') ? '&' : '?'
+              redirect(`${errorBase}${sep}error=${encodeURIComponent(result.error)}`)
+            }
             redirect(successUrl)
           }} className="flex gap-2 mb-3">
             <input type="text" name="departmentName" required placeholder="例: 営業部" className={inputCls} />
@@ -131,7 +134,10 @@ export default async function DepartmentJobRegisterPage({
             'use server'
             formData.append('organizationKey', String(organizationKey))
             const result = await createJob(formData)
-            if (result?.error) redirect(`${errorBase}&error=${encodeURIComponent(result.error)}`)
+            if (result?.error) {
+              const sep = errorBase.includes('?') ? '&' : '?'
+              redirect(`${errorBase}${sep}error=${encodeURIComponent(result.error)}`)
+            }
             redirect(successUrl)
           }} className="flex gap-2 mb-3">
             <input type="text" name="jobName" required placeholder="例: エンジニア" className={inputCls} />
