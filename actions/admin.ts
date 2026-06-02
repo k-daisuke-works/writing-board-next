@@ -329,8 +329,10 @@ export async function registerUser(formData: FormData) {
   })
 
   if (error) {
-    console.error('[registerUser] error:', error)
-    return { error: '登録に失敗しました。' }
+    console.error('[registerUser] supabase error:', error.code, error.message, error.details)
+    if (error.code === '23505') return { error: 'このユーザーIDはすでに登録されています。' }
+    if (error.code === '23503') return { error: '部署または職種の選択に問題があります。' }
+    return { error: `登録に失敗しました。(${error.code ?? 'unknown'})` }
   }
 
   revalidatePath('/admin')

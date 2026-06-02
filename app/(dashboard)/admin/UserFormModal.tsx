@@ -27,6 +27,24 @@ export default function UserFormModal({ mode, user, departments, jobs, onClose, 
     setError('')
     const fd = new FormData(e.currentTarget)
     fd.set('isAdmin', adminFlag ? 'true' : 'false')
+
+    if (mode === 'add') {
+      const raw        = (fd.get('userId') as string) ?? ''
+      const normalized = raw.normalize('NFKC').trim()
+      fd.set('userId', normalized)
+
+      if (!normalized) {
+        setError('ユーザーIDを入力してください。')
+        return
+      }
+      if (!/^[a-zA-Z0-9_-]{1,50}$/.test(normalized)) {
+        const info = [...normalized].map(c => `${c}(U+${c.codePointAt(0)?.toString(16).toUpperCase().padStart(4, '0')})`).join(' ')
+        console.error('[UserFormModal] userId invalid chars:', info)
+        setError('ユーザーIDは半角英数字・ハイフン・アンダースコアのみ使用できます。')
+        return
+      }
+    }
+
     startTransition(async () => {
       try {
         const result = mode === 'add' ? await registerUser(fd) : await updateUser(fd)
