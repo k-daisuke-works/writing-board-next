@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   deleteUser, deleteDepartment, deleteJob,
@@ -77,6 +78,7 @@ export default function AdminPanel({
   const [newDept,    setNewDept]     = useState('')
   const [newJob,     setNewJob]      = useState('')
   const [toast, setToast]            = useState<{ msg: string; ok: boolean } | null>(null)
+  const router = useRouter()
 
   // ── トースト ────────────────────────────────────────────
   function showToast(msg: string, ok = true) {
@@ -469,6 +471,7 @@ export default function AdminPanel({
           onSuccess={() => {
             setUserModal({ open: false })
             showToast(userModal.mode === 'add' ? '追加しました' : '更新しました')
+            router.refresh()
           }}
         />
       )}

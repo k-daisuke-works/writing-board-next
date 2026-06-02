@@ -274,8 +274,8 @@ export async function registerUser(formData: FormData) {
 
   const userId       = formData.get('userId') as string
   const userName     = formData.get('userName') as string
-  const departmentId = Number(formData.get('departmentId'))
-  const jobId        = Number(formData.get('jobId'))
+  const departmentId = Number(formData.get('departmentId')) || null
+  const jobId        = Number(formData.get('jobId')) || null
   const password     = formData.get('password') as string
   // 初回セットアップ時は必ず管理者に
   const isAdmin      = isInitialSetup ? true : (formData.get('isAdmin') === 'true')

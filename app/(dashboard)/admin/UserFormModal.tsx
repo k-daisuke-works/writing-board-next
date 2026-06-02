@@ -28,9 +28,13 @@ export default function UserFormModal({ mode, user, departments, jobs, onClose, 
     const fd = new FormData(e.currentTarget)
     fd.set('isAdmin', adminFlag ? 'true' : 'false')
     startTransition(async () => {
-      const result = mode === 'add' ? await registerUser(fd) : await updateUser(fd)
-      if (result?.error) { setError(result.error); return }
-      onSuccess()
+      try {
+        const result = mode === 'add' ? await registerUser(fd) : await updateUser(fd)
+        if (result?.error) { setError(result.error); return }
+        onSuccess()
+      } catch {
+        setError('エラーが発生しました。もう一度お試しください。')
+      }
     })
   }
 
