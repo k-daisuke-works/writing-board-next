@@ -2,7 +2,15 @@ import { getSession } from '@/lib/session'
 import { createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import RealtimePosts from './RealtimePosts'
-import type { WritingData } from '@/types/database'
+import type { WritingData, PostRead, PostReaction, PostReply } from '@/types/database'
+
+function groupByPostId<T extends { post_id: number }>(items: T[] | null): Record<number, T[]> {
+  return (items ?? []).reduce<Record<number, T[]>>((acc, item) => {
+    if (!acc[item.post_id]) acc[item.post_id] = []
+    acc[item.post_id].push(item)
+    return acc
+  }, {})
+}
 
 export default async function PostsPage() {
   const session = await getSession()
@@ -10,16 +18,12 @@ export default async function PostsPage() {
 
   const supabase = await createServiceClient()
 
-  // ① 部署一覧を取得（小テーブルなので高速）
   const { data: departments } = await supabase
     .from('department_data')
     .select('*')
     .eq('organization_key', session.organizationKey)
     .order('department_id')
 
-  // ② 部署ごとに最新1件だけを並列取得
-  //    以前: 全投稿を一括取得→JSでフィルタ（投稿数が増えるほど遅い）
-  //    現在: 1件×N部署 を Promise.all で並列実行（常に高速）
   const deptPostResults = await Promise.all(
     (departments ?? []).map((dept) =>
       supabase
@@ -34,17 +38,30 @@ export default async function PostsPage() {
     )
   )
 
-  // ③ 結果を Record<department_id, WritingData> に変換
   const latestPosts: Record<number, WritingData> = {}
   for (const { data } of deptPostResults) {
     if (data) latestPosts[data.department_id] = data
   }
+
+  const postIds = Object.values(latestPosts).map(p => p.writing_id)
+
+  const [{ data: allReads }, { data: allReactions }, { data: allReplies }] =
+    postIds.length > 0
+      ? await Promise.all([
+          supabase.from('post_reads').select('*').in('post_id', postIds).eq('organization_key', session.organizationKey),
+          supabase.from('post_reactions').select('*').in('post_id', postIds).eq('organization_key', session.organizationKey),
+          supabase.from('post_replies').select('*').in('post_id', postIds).eq('organization_key', session.organizationKey).order('created_at'),
+        ])
+      : [{ data: [] as PostRead[] }, { data: [] as PostReaction[] }, { data: [] as PostReply[] }]
 
   return (
     <RealtimePosts
       initialPosts={latestPosts}
       departments={departments ?? []}
       session={session}
+      initialReadsMap={groupByPostId<PostRead>(allReads as PostRead[])}
+      initialReactionsMap={groupByPostId<PostReaction>(allReactions as PostReaction[])}
+      initialRepliesMap={groupByPostId<PostReply>(allReplies as PostReply[])}
     />
   )
 }

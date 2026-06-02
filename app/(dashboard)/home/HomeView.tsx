@@ -2,13 +2,25 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Building2, Plus, Video, Paperclip, Clock, ChevronRight } from 'lucide-react'
+import { Building2, Plus, Paperclip, Clock, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { getPublicMediaUrl } from '@/lib/storage'
 import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
-import type { Department, WritingData, UserSession } from '@/types/database'
+import type { Department, WritingData, UserSession, PostRead, PostReaction, PostReply } from '@/types/database'
 import PostModal from '@/app/(dashboard)/posts/PostModal'
 import HomeMenuDropdown from './HomeMenuDropdown'
+import PostReads from '@/app/(dashboard)/components/PostReads'
+import PostReactions from '@/app/(dashboard)/components/PostReactions'
+import PostReplies from '@/app/(dashboard)/components/PostReplies'
+import MarkReadOnMount from '@/app/(dashboard)/components/MarkReadOnMount'
+
+type SocialMaps = {
+  readsMap: Record<number, PostRead[]>
+  reactionsMap: Record<number, PostReaction[]>
+  repliesMap: Record<number, PostReply[]>
+  myUserKey: number
+  myUserName: string
+}
 
 type Props = {
   session: UserSession
@@ -16,6 +28,10 @@ type Props = {
   deptLatest: Record<number, WritingData>
   teamMembers: { user_key: number; user_name: string }[]
   memberLatest: Record<number, WritingData | null>
+  readsMap: Record<number, PostRead[]>
+  reactionsMap: Record<number, PostReaction[]>
+  repliesMap: Record<number, PostReply[]>
+  allPostIds: number[]
 }
 
 function relativeTime(t: string) {
@@ -51,8 +67,28 @@ function MediaBlock({ post }: { post: WritingData }) {
   )
 }
 
-// お知らせカード
-function NoticeCard({ dept, post }: { dept: Department; post: WritingData | undefined }) {
+function SocialBar({ postId, social }: { postId: number; social: SocialMaps }) {
+  return (
+    <div className="mt-3 pt-2 border-t border-gray-100 space-y-2">
+      <PostReactions
+        postId={postId}
+        reactions={social.reactionsMap[postId] ?? []}
+        myUserKey={social.myUserKey}
+      />
+      <div className="flex items-center gap-3">
+        <PostReads reads={social.readsMap[postId] ?? []} myUserKey={social.myUserKey} />
+      </div>
+      <PostReplies
+        postId={postId}
+        replies={social.repliesMap[postId] ?? []}
+        myUserKey={social.myUserKey}
+        myUserName={social.myUserName}
+      />
+    </div>
+  )
+}
+
+function NoticeCard({ dept, post, social }: { dept: Department; post: WritingData | undefined; social: SocialMaps }) {
   return (
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
@@ -75,6 +111,7 @@ function NoticeCard({ dept, post }: { dept: Department; post: WritingData | unde
                 <Clock className="w-3 h-3" />{relativeTime(post.writing_time)}
               </span>
             </div>
+            <SocialBar postId={post.writing_id} social={social} />
           </>
         ) : (
           <p className="text-sm text-gray-400 py-2">まだお知らせがありません</p>
@@ -84,15 +121,14 @@ function NoticeCard({ dept, post }: { dept: Department; post: WritingData | unde
   )
 }
 
-// チームメンバーカード
-function TeamCard({ member, post, isMe }: {
+function TeamCard({ member, post, isMe, social }: {
   member: { user_key: number; user_name: string }
   post: WritingData | null
   isMe: boolean
+  social: SocialMaps
 }) {
   return (
     <div className={`rounded-lg overflow-hidden border ${isMe ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}`}>
-      {/* ヘッダー（メンバー投稿履歴へのリンク） */}
       <Link href={`/member/${member.user_key}`} className={`flex items-center justify-between px-4 py-3 border-b hover:bg-opacity-80 transition-colors group ${isMe ? 'border-blue-100 hover:bg-blue-100' : 'border-gray-100 hover:bg-gray-50'}`}>
         <div className="flex items-center gap-2">
           <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
@@ -110,7 +146,6 @@ function TeamCard({ member, post, isMe }: {
           <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-blue-400 transition-colors" />
         </div>
       </Link>
-      {/* 本文 */}
       <div className="px-4 py-3">
         {post ? (
           <>
@@ -121,6 +156,7 @@ function TeamCard({ member, post, isMe }: {
                 <Clock className="w-3 h-3" />{relativeTime(post.writing_time)}
               </span>
             </div>
+            <SocialBar postId={post.writing_id} social={social} />
           </>
         ) : (
           <p className="text-sm text-gray-400 py-2">まだ投稿がありません</p>
@@ -130,9 +166,20 @@ function TeamCard({ member, post, isMe }: {
   )
 }
 
-export default function HomeView({ session, departments, deptLatest, teamMembers, memberLatest }: Props) {
+export default function HomeView({
+  session, departments, deptLatest, teamMembers, memberLatest,
+  readsMap, reactionsMap, repliesMap, allPostIds,
+}: Props) {
   const [modalType, setModalType] = useState<'team' | 'notice' | null>(null)
   const router = useRouter()
+
+  const social: SocialMaps = {
+    readsMap,
+    reactionsMap,
+    repliesMap,
+    myUserKey: session.userKey,
+    myUserName: session.userName,
+  }
 
   function closeModal() {
     setModalType(null)
@@ -141,7 +188,8 @@ export default function HomeView({ session, departments, deptLatest, teamMembers
 
   return (
     <div className="anim-fade-in space-y-6">
-      {/* ページヘッダー */}
+      <MarkReadOnMount postIds={allPostIds} />
+
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">
@@ -156,7 +204,6 @@ export default function HomeView({ session, departments, deptLatest, teamMembers
         <HomeMenuDropdown adminFlag={session.adminFlag} userKey={session.userKey} />
       </div>
 
-      {/* 各部署からのお知らせ */}
       {departments.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-3">
@@ -170,13 +217,12 @@ export default function HomeView({ session, departments, deptLatest, teamMembers
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {departments.map((dept) => (
-              <NoticeCard key={dept.department_id} dept={dept} post={deptLatest[dept.department_id]} />
+              <NoticeCard key={dept.department_id} dept={dept} post={deptLatest[dept.department_id]} social={social} />
             ))}
           </div>
         </section>
       )}
 
-      {/* チームのメッセージ */}
       <section>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-gray-600">
@@ -211,6 +257,7 @@ export default function HomeView({ session, departments, deptLatest, teamMembers
                 member={member}
                 post={memberLatest[member.user_key]}
                 isMe={member.user_key === session.userKey}
+                social={social}
               />
             ))}
           </div>

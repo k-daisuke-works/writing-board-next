@@ -4,15 +4,22 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getPublicMediaUrl } from '@/lib/storage'
 import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
-import type { Department, WritingData, UserSession } from '@/types/database'
+import type { Department, WritingData, UserSession, PostRead, PostReaction, PostReply } from '@/types/database'
 import PostModal from './PostModal'
 import Link from 'next/link'
 import { Plus, Clock, Paperclip, Building2, ChevronRight, Wifi, Video } from 'lucide-react'
+import PostReads from '@/app/(dashboard)/components/PostReads'
+import PostReactions from '@/app/(dashboard)/components/PostReactions'
+import PostReplies from '@/app/(dashboard)/components/PostReplies'
+import MarkReadOnMount from '@/app/(dashboard)/components/MarkReadOnMount'
 
 type Props = {
   initialPosts: Record<number, WritingData>
   departments: Department[]
   session: UserSession
+  initialReadsMap: Record<number, PostRead[]>
+  initialReactionsMap: Record<number, PostReaction[]>
+  initialRepliesMap: Record<number, PostReply[]>
 }
 
 function relativeTime(t: string) {
@@ -30,7 +37,10 @@ function isRecent(t: string | null) {
   return !!t && Date.now() - new Date(t).getTime() < 7 * 864e5
 }
 
-export default function RealtimePosts({ initialPosts, departments, session }: Props) {
+export default function RealtimePosts({
+  initialPosts, departments, session,
+  initialReadsMap, initialReactionsMap, initialRepliesMap,
+}: Props) {
   const [latestPosts, setLatestPosts] = useState(initialPosts)
   const [showModal, setShowModal]     = useState(false)
   const [toast, setToast]             = useState<string | null>(null)
@@ -67,10 +77,13 @@ export default function RealtimePosts({ initialPosts, departments, session }: Pr
     return () => { supabase.removeChannel(ch) }
   }, [session.organizationKey])
 
+  const postIds = Object.values(latestPosts).map(p => p.writing_id)
   const newCount = departments.filter((d) => isRecent(latestPosts[d.department_id]?.writing_time ?? null)).length
 
   return (
     <>
+      <MarkReadOnMount postIds={postIds} />
+
       {toast && (
         <div className="fixed top-4 right-4 z-50 anim-slide-down">
           <div className="bg-gray-900 text-white text-sm px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2.5">
@@ -113,7 +126,6 @@ export default function RealtimePosts({ initialPosts, departments, session }: Pr
 
             return (
               <div key={dept.department_id} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:border-blue-200 transition-colors h-full flex flex-col">
-                {/* カードヘッダー（部署詳細へのリンク） */}
                 <Link href={`/department/${dept.department_id}`} className="flex items-center justify-between px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors group">
                   <div className="flex items-center gap-2">
                     <Building2 className="w-4 h-4 text-gray-400" strokeWidth={1.75} />
@@ -125,7 +137,6 @@ export default function RealtimePosts({ initialPosts, departments, session }: Pr
                   </div>
                 </Link>
 
-                {/* カード本文（クリックしても遷移しない） */}
                 <div className="flex-1 px-4 py-3">
                   {post ? (
                     <>
@@ -147,7 +158,7 @@ export default function RealtimePosts({ initialPosts, departments, session }: Pr
                         <video src={getPublicMediaUrl('videos', post.video_url)} controls className="mt-2 rounded max-w-xs w-full" />
                       )}
 
-                      <div className="flex items-center justify-between mt-3">
+                      <div className="flex items-center justify-between mt-3 pb-2 border-b border-gray-50">
                         <div className="flex items-center gap-2">
                           {post.pdf_url && <span className="flex items-center gap-1 text-xs text-gray-400"><Paperclip className="w-3 h-3" />PDF</span>}
                           {post.video_url && !post.image_url && <span className="flex items-center gap-1 text-xs text-gray-400"><Video className="w-3 h-3" />動画</span>}
@@ -155,6 +166,23 @@ export default function RealtimePosts({ initialPosts, departments, session }: Pr
                         <span className="flex items-center gap-1 text-xs text-gray-400">
                           <Clock className="w-3 h-3" />{relativeTime(post.writing_time)}
                         </span>
+                      </div>
+
+                      <div className="pt-2 space-y-2">
+                        <PostReactions
+                          postId={post.writing_id}
+                          reactions={initialReactionsMap[post.writing_id] ?? []}
+                          myUserKey={session.userKey}
+                        />
+                        <div className="flex items-center gap-3">
+                          <PostReads reads={initialReadsMap[post.writing_id] ?? []} myUserKey={session.userKey} />
+                        </div>
+                        <PostReplies
+                          postId={post.writing_id}
+                          replies={initialRepliesMap[post.writing_id] ?? []}
+                          myUserKey={session.userKey}
+                          myUserName={session.userName}
+                        />
                       </div>
                     </>
                   ) : (

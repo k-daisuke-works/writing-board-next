@@ -1,8 +1,16 @@
 import { getSession } from '@/lib/session'
 import { createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import type { WritingData } from '@/types/database'
+import type { WritingData, PostRead, PostReaction, PostReply } from '@/types/database'
 import HomeView from './HomeView'
+
+function groupByPostId<T extends { post_id: number }>(items: T[] | null): Record<number, T[]> {
+  return (items ?? []).reduce<Record<number, T[]>>((acc, item) => {
+    if (!acc[item.post_id]) acc[item.post_id] = []
+    acc[item.post_id].push(item)
+    return acc
+  }, {})
+}
 
 export default async function HomePage() {
   const session = await getSession()
@@ -18,35 +26,23 @@ export default async function HomePage() {
     { data: allOrgPosts },
     { data: teamRecentPosts },
   ] = await Promise.all([
-    supabase
-      .from('department_data')
-      .select('*')
-      .eq('organization_key', session.organizationKey)
-      .order('department_id'),
+    supabase.from('department_data').select('*').eq('organization_key', session.organizationKey).order('department_id'),
 
     hasDept
-      ? supabase
-          .from('user_info')
-          .select('user_key, user_name')
+      ? supabase.from('user_info').select('user_key, user_name')
           .eq('department_id', session.departmentId)
           .eq('organization_key', session.organizationKey)
           .order('user_name')
       : Promise.resolve({ data: [] as { user_key: number; user_name: string }[], error: null }),
 
-    // post_type='notice' の最新投稿を部署ごとにdedup（各部署からのお知らせ用）
-    supabase
-      .from('writing_data')
-      .select('*')
+    supabase.from('writing_data').select('*')
       .eq('organization_key', session.organizationKey)
       .eq('post_type', 'notice')
       .order('writing_time', { ascending: false })
       .limit(200),
 
-    // チームの7日以内のteam投稿
     hasDept
-      ? supabase
-          .from('writing_data')
-          .select('*')
+      ? supabase.from('writing_data').select('*')
           .eq('department_id', session.departmentId)
           .eq('organization_key', session.organizationKey)
           .eq('post_type', 'team')
@@ -75,6 +71,21 @@ export default async function HomePage() {
     if (!(m.user_key in memberLatest)) memberLatest[m.user_key] = null
   }
 
+  // ホームに表示される全投稿のソーシャルデータを取得
+  const allPostIds = [
+    ...Object.values(deptLatest).map(p => p.writing_id),
+    ...Object.values(memberLatest).filter(Boolean).map(p => p!.writing_id),
+  ]
+
+  const [{ data: allReads }, { data: allReactions }, { data: allReplies }] =
+    allPostIds.length > 0
+      ? await Promise.all([
+          supabase.from('post_reads').select('*').in('post_id', allPostIds).eq('organization_key', session.organizationKey),
+          supabase.from('post_reactions').select('*').in('post_id', allPostIds).eq('organization_key', session.organizationKey),
+          supabase.from('post_replies').select('*').in('post_id', allPostIds).eq('organization_key', session.organizationKey).order('created_at'),
+        ])
+      : [{ data: [] as PostRead[] }, { data: [] as PostReaction[] }, { data: [] as PostReply[] }]
+
   return (
     <HomeView
       session={session}
@@ -82,6 +93,10 @@ export default async function HomePage() {
       deptLatest={deptLatest}
       teamMembers={teamMembers}
       memberLatest={memberLatest}
+      readsMap={groupByPostId<PostRead>(allReads as PostRead[])}
+      reactionsMap={groupByPostId<PostReaction>(allReactions as PostReaction[])}
+      repliesMap={groupByPostId<PostReply>(allReplies as PostReply[])}
+      allPostIds={allPostIds}
     />
   )
 }

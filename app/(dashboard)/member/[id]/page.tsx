@@ -6,11 +6,24 @@ import { getPublicMediaUrl } from '@/lib/storage'
 import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
 import { DeletePostButton } from '@/app/(dashboard)/department/[id]/DeletePostButton'
 import ProfileEditModal from './ProfileEditModal'
+import MarkReadOnMount from '@/app/(dashboard)/components/MarkReadOnMount'
+import PostReads from '@/app/(dashboard)/components/PostReads'
+import PostReactions from '@/app/(dashboard)/components/PostReactions'
+import PostReplies from '@/app/(dashboard)/components/PostReplies'
 import Link from 'next/link'
 import { ArrowLeft, Clock, Paperclip, User, ChevronDown, Building2 } from 'lucide-react'
+import type { PostRead, PostReaction, PostReply } from '@/types/database'
 
 type SA = (fd: FormData) => Promise<void>
 const toAction = (fn: (fd: FormData) => unknown) => fn as unknown as SA
+
+function groupByPostId<T extends { post_id: number }>(items: T[] | null): Record<number, T[]> {
+  return (items ?? []).reduce<Record<number, T[]>>((acc, item) => {
+    if (!acc[item.post_id]) acc[item.post_id] = []
+    acc[item.post_id].push(item)
+    return acc
+  }, {})
+}
 
 export default async function MemberHistoryPage({
   params,
@@ -39,6 +52,21 @@ export default async function MemberHistoryPage({
 
   if (!member) redirect('/members')
 
+  const postIds = (posts ?? []).map(p => p.writing_id)
+
+  const [{ data: allReads }, { data: allReactions }, { data: allReplies }] =
+    postIds.length > 0
+      ? await Promise.all([
+          supabase.from('post_reads').select('*').in('post_id', postIds).eq('organization_key', session.organizationKey),
+          supabase.from('post_reactions').select('*').in('post_id', postIds).eq('organization_key', session.organizationKey),
+          supabase.from('post_replies').select('*').in('post_id', postIds).eq('organization_key', session.organizationKey).order('created_at'),
+        ])
+      : [{ data: [] as PostRead[] }, { data: [] as PostReaction[] }, { data: [] as PostReply[] }]
+
+  const readsMap = groupByPostId<PostRead>(allReads as PostRead[])
+  const reactionsMap = groupByPostId<PostReaction>(allReactions as PostReaction[])
+  const repliesMap = groupByPostId<PostReply>(allReplies as PostReply[])
+
   const canEdit = session.userKey === userId || session.adminFlag
 
   function fmt(t: string) {
@@ -50,6 +78,8 @@ export default async function MemberHistoryPage({
 
   return (
     <div className="anim-fade-in max-w-3xl">
+      <MarkReadOnMount postIds={postIds} />
+
       <Link href="/members" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition-colors mb-4 w-fit">
         <ArrowLeft className="w-4 h-4" />
         メンバー一覧に戻る
@@ -58,7 +88,6 @@ export default async function MemberHistoryPage({
       {/* プロフィールカード */}
       <div className="bg-white border border-gray-200 rounded-lg p-5 mb-6">
         <div className="flex items-start gap-4">
-          {/* アバター */}
           <div className="w-16 h-16 rounded-full overflow-hidden bg-blue-100 shrink-0 border border-gray-200">
             {member.avatar_url ? (
               <img src={member.avatar_url} alt="" className="w-full h-full object-cover" />
@@ -69,7 +98,6 @@ export default async function MemberHistoryPage({
             )}
           </div>
 
-          {/* 情報 */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2 flex-wrap">
               <div>
@@ -134,33 +162,53 @@ export default async function MemberHistoryPage({
                   <video src={getPublicMediaUrl('videos', post.video_url)} controls className="rounded-lg max-w-sm w-full" />
                 )}
                 {post.pdf_url && <PdfDownloadButton pdfPath={post.pdf_url} />}
+
+                {/* ソーシャル */}
+                <div className="pt-2 border-t border-gray-100 space-y-2">
+                  <PostReactions
+                    postId={post.writing_id}
+                    reactions={reactionsMap[post.writing_id] ?? []}
+                    myUserKey={session.userKey}
+                  />
+                  <div className="flex items-center gap-3">
+                    <PostReads reads={readsMap[post.writing_id] ?? []} myUserKey={session.userKey} />
+                  </div>
+                  <PostReplies
+                    postId={post.writing_id}
+                    replies={repliesMap[post.writing_id] ?? []}
+                    myUserKey={session.userKey}
+                    myUserName={session.userName}
+                  />
+                </div>
               </div>
 
-              <details className="border-t border-gray-100">
-                <summary className="flex items-center gap-1.5 px-5 py-2.5 text-xs text-gray-400 cursor-pointer hover:bg-gray-50 hover:text-gray-600 transition-colors list-none select-none group">
-                  <ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform" />
-                  編集 / 削除
-                </summary>
-                <div className="bg-gray-50 px-4 sm:px-5 py-4 space-y-3 border-t border-gray-100">
-                  <form action={toAction(updatePost)} className="space-y-2.5">
-                    <input type="hidden" name="writingId" value={post.writing_id} />
-                    <textarea name="message" defaultValue={post.message} rows={3}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 resize-none transition-colors bg-white" />
-                    <div className="flex gap-2 flex-wrap">
-                      <input type="text" name="pin" placeholder="PIN"
-                        className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors bg-white w-32" />
-                      <label className="flex items-center gap-1.5 border border-gray-300 rounded-md px-3 py-1.5 cursor-pointer hover:bg-white transition-colors text-sm text-gray-500">
-                        <Paperclip className="w-3.5 h-3.5" />PDF
-                        <input type="file" name="pdfFile" accept=".pdf" className="sr-only" />
-                      </label>
-                      <button type="submit" className="bg-yellow-400 hover:bg-yellow-500 text-yellow-900 px-4 py-1.5 rounded-md text-xs font-semibold transition-colors">
-                        更新
-                      </button>
-                    </div>
-                  </form>
-                  <DeletePostButton action={deletePost} writingId={post.writing_id} />
-                </div>
-              </details>
+              {canEdit && (
+                <details className="border-t border-gray-100">
+                  <summary className="flex items-center gap-1.5 px-5 py-2.5 text-xs text-gray-400 cursor-pointer hover:bg-gray-50 hover:text-gray-600 transition-colors list-none select-none group">
+                    <ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform" />
+                    編集 / 削除
+                  </summary>
+                  <div className="bg-gray-50 px-4 sm:px-5 py-4 space-y-3 border-t border-gray-100">
+                    <form action={toAction(updatePost)} className="space-y-2.5">
+                      <input type="hidden" name="writingId" value={post.writing_id} />
+                      <textarea name="message" defaultValue={post.message} rows={3}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 resize-none transition-colors bg-white" />
+                      <div className="flex gap-2 flex-wrap">
+                        <input type="text" name="pin" placeholder="PIN"
+                          className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors bg-white w-32" />
+                        <label className="flex items-center gap-1.5 border border-gray-300 rounded-md px-3 py-1.5 cursor-pointer hover:bg-white transition-colors text-sm text-gray-500">
+                          <Paperclip className="w-3.5 h-3.5" />PDF
+                          <input type="file" name="pdfFile" accept=".pdf" className="sr-only" />
+                        </label>
+                        <button type="submit" className="bg-yellow-400 hover:bg-yellow-500 text-yellow-900 px-4 py-1.5 rounded-md text-xs font-semibold transition-colors">
+                          更新
+                        </button>
+                      </div>
+                    </form>
+                    <DeletePostButton action={deletePost} writingId={post.writing_id} />
+                  </div>
+                </details>
+              )}
             </div>
           ))}
         </div>
