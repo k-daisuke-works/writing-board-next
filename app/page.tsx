@@ -2,8 +2,63 @@ import Link from 'next/link'
 import {
   MessageSquare, Calendar, Users, Newspaper,
   Receipt, ClipboardList, ArrowRight, CheckCircle2,
+  Megaphone, Sparkles, Wrench, Rocket,
 } from 'lucide-react'
 import { RoScopeLogo } from '@/app/components/RoScopeLogo'
+
+// ── お知らせデータ ──────────────────────────────────────────
+type AnnouncementType = 'release' | 'feature' | 'improvement' | 'fix'
+
+const ANNOUNCEMENTS: {
+  date: string
+  version: string
+  type: AnnouncementType
+  title: string
+  desc: string
+}[] = [
+  {
+    date: '2026年6月3日',
+    version: 'v1.4',
+    type: 'feature',
+    title: '3段階ロール制を導入',
+    desc: '管理者・リーダー・メンバーの3段階でアクセス権限を細かく設定できるようになりました。ロールに応じた投稿・編集・削除権限を管理できます。',
+  },
+  {
+    date: '2026年5月20日',
+    version: 'v1.3',
+    type: 'feature',
+    title: 'プッシュ通知に対応',
+    desc: '重要マークのついた投稿が作成されたとき、スマホへリアルタイム通知。大切なお知らせを見逃しません。',
+  },
+  {
+    date: '2026年5月10日',
+    version: 'v1.2',
+    type: 'improvement',
+    title: 'リアクション・返信機能を追加',
+    desc: '投稿に絵文字リアクションや返信コメントができるようになりました。チームとのコミュニケーションがより活発になります。',
+  },
+  {
+    date: '2026年4月28日',
+    version: 'v1.1',
+    type: 'improvement',
+    title: 'プロフィール・アバター機能',
+    desc: 'メンバーのプロフィール写真とプロフィールページを追加。誰の投稿かひと目でわかるようになりました。',
+  },
+  {
+    date: '2026年4月1日',
+    version: 'v1.0',
+    type: 'release',
+    title: 'RoScope 正式リリース',
+    desc: '福祉施設チーム向けの業務連絡システム「RoScope」を正式リリースしました。チームの情報共有をもっとスムーズに。',
+  },
+]
+
+const ANNOUNCEMENT_STYLES: Record<AnnouncementType, { badge: string; dot: string; Icon: React.ElementType }> = {
+  release: { badge: 'bg-indigo-100 text-indigo-700', dot: 'bg-indigo-500', Icon: Rocket },
+  feature: { badge: 'bg-teal-100 text-teal-700', dot: 'bg-teal-500', Icon: Sparkles },
+  improvement: { badge: 'bg-blue-100 text-blue-700', dot: 'bg-blue-500', Icon: Megaphone },
+  fix: { badge: 'bg-gray-100 text-gray-600', dot: 'bg-gray-400', Icon: Wrench },
+}
 
 // ── ブラウザ風フレーム ──────────────────────────────────────
 function BrowserFrame({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -287,6 +342,25 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* 統計バー */}
+      <section className="bg-white border-b border-gray-100 py-8">
+        <div className="max-w-6xl mx-auto px-5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+            {[
+              { num: '15+', label: '導入施設数' },
+              { num: '200+', label: 'アクティブユーザー' },
+              { num: '3,000+', label: '月間投稿数' },
+              { num: '99.9%', label: '稼働率' },
+            ].map(({ num, label }) => (
+              <div key={label}>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{num}</p>
+                <p className="text-xs text-gray-500 mt-1">{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* 機能紹介 */}
       <section className="py-16 lg:py-24 bg-gray-50">
         <div className="max-w-6xl mx-auto px-5">
@@ -357,6 +431,84 @@ export default function LandingPage() {
             </div>
             <div className="flex-1 w-full max-w-lg mx-auto">
               <ScheduleMockup />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* チームイメージ */}
+      <section className="py-16 lg:py-24 bg-white overflow-hidden">
+        <div className="max-w-6xl mx-auto px-5">
+          <div className="flex flex-col lg:flex-row items-center gap-12">
+            <div className="flex-1 text-center lg:text-left">
+              <p className="text-teal-600 text-sm font-semibold mb-2">FOR WELFARE TEAMS</p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+                福祉施設の現場に<br />寄り添ったつくり
+              </h2>
+              <p className="text-gray-500 leading-relaxed mb-6">
+                毎日の業務連絡、大切なお知らせ、スタッフ間の日程調整——現場の声をもとに設計されたシンプルなUIで、ITが苦手なスタッフでも迷わず使えます。
+              </p>
+              <ul className="space-y-2 text-sm text-gray-600 text-left inline-block">
+                {[
+                  'スマートフォンからでも快適に操作',
+                  '重要なお知らせは未読バナーで通知',
+                  '複数の部署・施設を一括で管理可能',
+                ].map(t => (
+                  <li key={t} className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-teal-500 shrink-0" />{t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="flex-1 w-full max-w-lg mx-auto relative">
+              <div className="absolute -inset-4 bg-gradient-to-br from-teal-50 to-indigo-50 rounded-3xl -z-10" />
+              <img
+                src="https://picsum.photos/seed/rosco-team/720/480"
+                alt="チームの様子"
+                className="rounded-2xl shadow-lg w-full object-cover"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* お知らせ */}
+      <section className="py-16 lg:py-24 bg-gray-50">
+        <div className="max-w-3xl mx-auto px-5">
+          <div className="text-center mb-10">
+            <p className="text-blue-600 text-sm font-semibold mb-2">CHANGELOG</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">お知らせ・更新履歴</h2>
+          </div>
+
+          <div className="relative">
+            {/* 縦ライン */}
+            <div className="absolute left-5 top-3 bottom-3 w-px bg-gray-200 hidden sm:block" />
+
+            <div className="space-y-6">
+              {ANNOUNCEMENTS.map((item) => {
+                const { badge, dot, Icon } = ANNOUNCEMENT_STYLES[item.type]
+                return (
+                  <div key={`${item.date}-${item.version}`} className="flex gap-5 sm:gap-8 items-start group">
+                    {/* ドット */}
+                    <div className="relative z-10 hidden sm:flex shrink-0 items-center justify-center w-10 h-10 rounded-full bg-white border-2 border-gray-200 group-hover:border-gray-300 transition-colors shadow-sm">
+                      <div className={`w-3 h-3 rounded-full ${dot}`} />
+                    </div>
+                    {/* カード */}
+                    <div className="flex-1 bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+                      <div className="flex items-center flex-wrap gap-2 mb-2">
+                        <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${badge}`}>
+                          <Icon className="w-3 h-3" />
+                          {item.version}
+                        </span>
+                        <span className="text-xs text-gray-400">{item.date}</span>
+                      </div>
+                      <h3 className="font-semibold text-gray-900 mb-1">{item.title}</h3>
+                      <p className="text-sm text-gray-500 leading-relaxed">{item.desc}</p>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>
