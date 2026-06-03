@@ -273,7 +273,7 @@ export default function HomeView({
               <Plus className="w-3.5 h-3.5" />お知らせを投稿
             </button>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="space-y-2">
             {departments.map((dept) => (
               <NoticeCard key={dept.department_id} dept={dept} posts={deptPosts[dept.department_id] ?? []} social={social} />
             ))}
