@@ -1,3 +1,5 @@
+import { RoScopeLogo } from '@/app/components/RoScopeLogo'
+
 export default function LoginLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex">
@@ -7,13 +9,8 @@ export default function LoginLayout({ children }: { children: React.ReactNode })
         style={{ background: 'linear-gradient(160deg, #1e3a8a 0%, #1d4ed8 60%, #2563eb 100%)' }}
       >
         <div>
-          <div className="flex items-center gap-3 mb-16">
-            <div className="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="7" cy="14" r="4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="17" cy="14" r="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M11 14h2M7 10V8h3m4 0h3V10" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <span className="text-white font-semibold text-lg tracking-tight">RoScope</span>
+          <div className="mb-16">
+            <RoScopeLogo size="md" variant="light" />
           </div>
           <div>
             <h2 className="text-3xl font-bold text-white leading-snug mb-4">
@@ -35,13 +32,8 @@ export default function LoginLayout({ children }: { children: React.ReactNode })
       {/* 右パネル：フォームエリア */}
       <div className="flex-1 flex flex-col items-center justify-start lg:justify-center px-6 py-10 lg:px-8 lg:py-12 bg-gray-50 overflow-y-auto">
         {/* モバイル用ロゴ */}
-        <div className="flex items-center gap-2.5 mb-8 lg:hidden w-full max-w-md">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-          <span className="font-semibold text-gray-800">RoScope</span>
+        <div className="mb-8 lg:hidden w-full max-w-md">
+          <RoScopeLogo size="sm" />
         </div>
         {children}
       </div>

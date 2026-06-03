@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { LayoutGrid, MessageSquare, Calendar, Newspaper, Search } from 'lucide-react'
 import UserMenu from '@/app/(dashboard)/components/UserMenu'
+import { RoScopeLogo } from '@/app/components/RoScopeLogo'
 
 async function getUnreadCounts(organizationKey: number, userKey: number, departmentId: number) {
   const supabase = await createServiceClient()
@@ -48,13 +49,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-6">
 
-          <Link href="/home" className="flex items-center gap-2.5 shrink-0 group">
-            <div className="w-7 h-7 bg-blue-600 rounded flex items-center justify-center group-hover:bg-blue-700 transition-colors">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="7" cy="14" r="4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="17" cy="14" r="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M11 14h2M7 10V8h3m4 0h3V10" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <span className="text-sm font-semibold text-gray-900 hidden sm:block">RoScope</span>
+          <Link href="/home" className="shrink-0">
+            <RoScopeLogo size="sm" />
           </Link>
 
           <div className="w-px h-5 bg-gray-200 hidden sm:block" />
