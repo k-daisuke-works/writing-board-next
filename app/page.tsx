@@ -2,7 +2,7 @@ import Link from 'next/link'
 import {
   MessageSquare, Calendar, Users, Newspaper,
   Receipt, ClipboardList, ArrowRight, CheckCircle2,
-  Megaphone, Sparkles, Wrench, Rocket,
+  Megaphone, Sparkles, Rocket, Wrench,
 } from 'lucide-react'
 import { RoScopeLogo } from '@/app/components/RoScopeLogo'
 
@@ -342,25 +342,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 統計バー */}
-      <section className="bg-white border-b border-gray-100 py-8">
-        <div className="max-w-6xl mx-auto px-5">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
-            {[
-              { num: '15+', label: '導入施設数' },
-              { num: '200+', label: 'アクティブユーザー' },
-              { num: '3,000+', label: '月間投稿数' },
-              { num: '99.9%', label: '稼働率' },
-            ].map(({ num, label }) => (
-              <div key={label}>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{num}</p>
-                <p className="text-xs text-gray-500 mt-1">{label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* 機能紹介 */}
       <section className="py-16 lg:py-24 bg-gray-50">
         <div className="max-w-6xl mx-auto px-5">
@@ -436,39 +417,49 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* チームイメージ */}
-      <section className="py-16 lg:py-24 bg-white overflow-hidden">
+      {/* こんな場面で活躍します */}
+      <section className="py-16 lg:py-24 bg-white">
         <div className="max-w-6xl mx-auto px-5">
-          <div className="flex flex-col lg:flex-row items-center gap-12">
-            <div className="flex-1 text-center lg:text-left">
-              <p className="text-teal-600 text-sm font-semibold mb-2">FOR WELFARE TEAMS</p>
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-                福祉施設の現場に<br />寄り添ったつくり
-              </h2>
-              <p className="text-gray-500 leading-relaxed mb-6">
-                毎日の業務連絡、大切なお知らせ、スタッフ間の日程調整——現場の声をもとに設計されたシンプルなUIで、ITが苦手なスタッフでも迷わず使えます。
-              </p>
-              <ul className="space-y-2 text-sm text-gray-600 text-left inline-block">
-                {[
-                  'スマートフォンからでも快適に操作',
-                  '重要なお知らせは未読バナーで通知',
-                  '複数の部署・施設を一括で管理可能',
-                ].map(t => (
-                  <li key={t} className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-teal-500 shrink-0" />{t}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="flex-1 w-full max-w-lg mx-auto relative">
-              <div className="absolute -inset-4 bg-gradient-to-br from-teal-50 to-indigo-50 rounded-3xl -z-10" />
-              <img
-                src="https://picsum.photos/seed/rosco-team/720/480"
-                alt="チームの様子"
-                className="rounded-2xl shadow-lg w-full object-cover"
-                loading="lazy"
-              />
-            </div>
+          <div className="text-center mb-12">
+            <p className="text-teal-600 text-sm font-semibold mb-2">USE CASES</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">こんな場面で活躍します</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                img: 'https://images.unsplash.com/oiqFyLx_KDU?auto=format&fit=crop&w=600&h=360&q=80',
+                alt: '朝礼・情報共有の様子',
+                label: '毎日の朝礼・業務連絡',
+                desc: '各部署のお知らせをホーム画面でまとめて確認。大切な情報をチーム全員が同じタイミングで受け取れます。',
+              },
+              {
+                img: 'https://images.unsplash.com/UikYLDQj9_I?auto=format&fit=crop&w=600&h=360&q=80',
+                alt: 'スケジュール調整の様子',
+                label: '会議・研修の日程調整',
+                desc: '候補日をメンバーに共有して○△×で回答収集。カレンダーへの自動登録で手間をゼロに。',
+              },
+              {
+                img: 'https://images.unsplash.com/5V6KbvRcnV8?auto=format&fit=crop&w=600&h=360&q=80',
+                alt: '重要連絡を確認する様子',
+                label: '重要連絡の確実な周知',
+                desc: '重要マーク付きの投稿は未読バナーとプッシュ通知でお知らせ。見逃しを防いで連絡の抜け漏れをなくします。',
+              },
+            ].map(({ img, alt, label, desc }) => (
+              <div key={label} className="rounded-2xl overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow group">
+                <div className="overflow-hidden h-48">
+                  <img
+                    src={img}
+                    alt={alt}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-5">
+                  <h3 className="font-semibold text-gray-900 mb-2">{label}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
