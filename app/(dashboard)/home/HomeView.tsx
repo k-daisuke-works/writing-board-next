@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Building2, Plus, Paperclip, Clock, ChevronRight, AlertCircle, Megaphone } from 'lucide-react'
 import Link from 'next/link'
 import { getPublicMediaUrl } from '@/lib/storage'
@@ -182,7 +181,6 @@ export default function HomeView({
   readsMap, reactionsMap, repliesMap, allPostIds, importantPosts, avatarMap,
 }: Props) {
   const [modalType, setModalType] = useState<'team' | 'notice' | null>(null)
-  const router = useRouter()
 
   const social: SocialMaps = {
     readsMap,
@@ -196,7 +194,6 @@ export default function HomeView({
 
   function closeModal() {
     setModalType(null)
-    router.refresh()
   }
 
   return (

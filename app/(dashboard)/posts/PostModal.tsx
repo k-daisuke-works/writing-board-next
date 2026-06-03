@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { mutate } from 'swr'
 import { createPost } from '@/actions/posts'
 import type { UserSession } from '@/types/database'
 import { X, Paperclip, Image, Video, XCircle, AlertCircle } from 'lucide-react'
@@ -55,6 +56,7 @@ export default function PostModal({ session, postType = 'board', onClose }: Prop
     if (pdfFile)   fd.set('pdfFile',   pdfFile)
     const result = await createPost(fd)
     if (result?.error) { setError(result.error); setLoading(false); return }
+    mutate(key => typeof key === 'string' && key.startsWith('/api/data/'))
     onClose()
   }
 
