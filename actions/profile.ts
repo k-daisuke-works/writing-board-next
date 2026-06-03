@@ -29,7 +29,7 @@ export async function updateProfile(formData: FormData) {
 
     if (!error) {
       const { data } = supabase.storage.from('avatars').getPublicUrl(path)
-      avatarUrl = `${data.publicUrl}?t=${Date.now()}`
+      avatarUrl = data.publicUrl
     }
   }
 

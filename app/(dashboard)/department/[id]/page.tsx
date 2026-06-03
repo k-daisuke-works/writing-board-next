@@ -65,6 +65,14 @@ export default async function DepartmentHistoryPage({
   const reactionsMap = groupByPostId<PostReaction>(allReactions as PostReaction[])
   const repliesMap   = groupByPostId<PostReply>(allReplies as PostReply[])
 
+  const replyUserKeys = [...new Set((allReplies ?? []).map(r => (r as PostReply).user_key))]
+  const avatarMap: Record<number, string | null> = {}
+  if (replyUserKeys.length > 0) {
+    const { data: avatarData } = await supabase
+      .from('user_info').select('user_key, avatar_url').in('user_key', replyUserKeys)
+    for (const u of avatarData ?? []) avatarMap[u.user_key] = u.avatar_url ?? null
+  }
+
   function fmt(t: string) {
     return new Date(t).toLocaleString('ja-JP', {
       year: 'numeric', month: '2-digit', day: '2-digit',
@@ -137,6 +145,8 @@ export default async function DepartmentHistoryPage({
                   replies={repliesMap[post.writing_id] ?? []}
                   myUserKey={session.userKey}
                   myUserName={session.userName}
+                  myAvatarUrl={session.avatarUrl}
+                  avatarMap={avatarMap}
                 />
               </div>
 

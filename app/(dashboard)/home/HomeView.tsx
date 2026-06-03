@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Building2, Plus, Paperclip, Clock, ChevronRight, AlertCircle, Megaphone } from 'lucide-react'
 import Link from 'next/link'
 import { getPublicMediaUrl } from '@/lib/storage'
+import { relativeTime, isRecent } from '@/lib/utils'
 import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
 import type { Department, WritingData, UserSession, PostRead, PostReaction, PostReply } from '@/types/database'
 import PostModal from '@/app/(dashboard)/posts/PostModal'
@@ -22,6 +23,8 @@ type SocialMaps = {
   repliesMap: Record<number, PostReply[]>
   myUserKey: number
   myUserName: string
+  myAvatarUrl: string | null
+  avatarMap: Record<number, string | null>
 }
 
 type Props = {
@@ -35,21 +38,9 @@ type Props = {
   repliesMap: Record<number, PostReply[]>
   allPostIds: number[]
   importantPosts: WritingData[]
+  avatarMap: Record<number, string | null>
 }
 
-function relativeTime(t: string) {
-  const m = Math.floor((Date.now() - new Date(t).getTime()) / 60000)
-  if (m < 1) return 'たった今'
-  if (m < 60) return `${m}分前`
-  const h = Math.floor(m / 60)
-  if (h < 24) return `${h}時間前`
-  const d = Math.floor(h / 24)
-  return `${d}日前`
-}
-
-function isRecent(t: string) {
-  return Date.now() - new Date(t).getTime() < 7 * 864e5
-}
 
 function MediaBlock({ post }: { post: WritingData }) {
   return (
@@ -86,6 +77,8 @@ function SocialBar({ postId, social }: { postId: number; social: SocialMaps }) {
         replies={social.repliesMap[postId] ?? []}
         myUserKey={social.myUserKey}
         myUserName={social.myUserName}
+        myAvatarUrl={social.myAvatarUrl}
+        avatarMap={social.avatarMap}
       />
     </div>
   )
@@ -186,7 +179,7 @@ function TeamCard({ member, post, isMe, social }: {
 
 export default function HomeView({
   session, departments, deptLatest, teamMembers, memberLatest,
-  readsMap, reactionsMap, repliesMap, allPostIds, importantPosts,
+  readsMap, reactionsMap, repliesMap, allPostIds, importantPosts, avatarMap,
 }: Props) {
   const [modalType, setModalType] = useState<'team' | 'notice' | null>(null)
   const router = useRouter()
@@ -197,6 +190,8 @@ export default function HomeView({
     repliesMap,
     myUserKey: session.userKey,
     myUserName: session.userName,
+    myAvatarUrl: session.avatarUrl,
+    avatarMap,
   }
 
   function closeModal() {

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getPublicMediaUrl } from '@/lib/storage'
 import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
+import { relativeTime, isRecent } from '@/lib/utils'
 import type { Department, WritingData, UserSession, PostRead, PostReaction, PostReply } from '@/types/database'
 import PostModal from './PostModal'
 import Link from 'next/link'
@@ -21,26 +22,13 @@ type Props = {
   initialReadsMap: Record<number, PostRead[]>
   initialReactionsMap: Record<number, PostReaction[]>
   initialRepliesMap: Record<number, PostReply[]>
+  initialAvatarMap: Record<number, string | null>
 }
 
-function relativeTime(t: string) {
-  const m = Math.floor((Date.now() - new Date(t).getTime()) / 60000)
-  if (m < 1)  return 'たった今'
-  if (m < 60) return `${m}分前`
-  const h = Math.floor(m / 60)
-  if (h < 24) return `${h}時間前`
-  const d = Math.floor(h / 24)
-  if (d < 7)  return `${d}日前`
-  return new Date(t).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })
-}
-
-function isRecent(t: string | null) {
-  return !!t && Date.now() - new Date(t).getTime() < 7 * 864e5
-}
 
 export default function RealtimePosts({
   initialPosts, departments, session,
-  initialReadsMap, initialReactionsMap, initialRepliesMap,
+  initialReadsMap, initialReactionsMap, initialRepliesMap, initialAvatarMap,
 }: Props) {
   const [latestPosts, setLatestPosts] = useState(initialPosts)
   const [showModal, setShowModal]     = useState(false)
@@ -184,6 +172,8 @@ export default function RealtimePosts({
                           replies={initialRepliesMap[post.writing_id] ?? []}
                           myUserKey={session.userKey}
                           myUserName={session.userName}
+                          myAvatarUrl={session.avatarUrl}
+                          avatarMap={initialAvatarMap}
                         />
                       </div>
                     </>

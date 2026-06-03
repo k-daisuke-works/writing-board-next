@@ -64,9 +64,17 @@ export default async function MemberHistoryPage({
         ])
       : [{ data: [] as PostRead[] }, { data: [] as PostReaction[] }, { data: [] as PostReply[] }]
 
-  const readsMap = groupByPostId<PostRead>(allReads as PostRead[])
+  const readsMap     = groupByPostId<PostRead>(allReads as PostRead[])
   const reactionsMap = groupByPostId<PostReaction>(allReactions as PostReaction[])
-  const repliesMap = groupByPostId<PostReply>(allReplies as PostReply[])
+  const repliesMap   = groupByPostId<PostReply>(allReplies as PostReply[])
+
+  const replyUserKeys = [...new Set((allReplies ?? []).map(r => (r as PostReply).user_key))]
+  const avatarMap: Record<number, string | null> = {}
+  if (replyUserKeys.length > 0) {
+    const { data: avatarData } = await supabase
+      .from('user_info').select('user_key, avatar_url').in('user_key', replyUserKeys)
+    for (const u of avatarData ?? []) avatarMap[u.user_key] = u.avatar_url ?? null
+  }
 
   const canEdit = session.userKey === userId || session.adminFlag
 
@@ -180,6 +188,8 @@ export default async function MemberHistoryPage({
                     replies={repliesMap[post.writing_id] ?? []}
                     myUserKey={session.userKey}
                     myUserName={session.userName}
+                    myAvatarUrl={session.avatarUrl}
+                    avatarMap={avatarMap}
                   />
                 </div>
               </div>

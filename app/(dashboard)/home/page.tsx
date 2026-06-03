@@ -88,7 +88,6 @@ export default async function HomePage() {
       allPostIds.length > 0
         ? supabase.from('post_replies').select('*').in('post_id', allPostIds).eq('organization_key', session.organizationKey).order('created_at')
         : Promise.resolve({ data: [] as PostReply[] }),
-      // 全体掲示板（board）の重要投稿（期限内のもののみ）
       supabase.from('writing_data').select('*')
         .eq('organization_key', session.organizationKey)
         .eq('post_type', 'board')
@@ -97,6 +96,16 @@ export default async function HomePage() {
         .order('writing_time', { ascending: false })
         .limit(10),
     ])
+
+  const avatarMap: Record<number, string | null> = { [session.userKey]: session.avatarUrl ?? null }
+  for (const m of teamMembers) avatarMap[m.user_key] = m.avatar_url ?? null
+
+  const unknownReplyAuthorKeys = [...new Set((allReplies ?? []).map(r => r.user_key as number))].filter(k => !(k in avatarMap))
+  if (unknownReplyAuthorKeys.length > 0) {
+    const { data: avatarData } = await supabase
+      .from('user_info').select('user_key, avatar_url').in('user_key', unknownReplyAuthorKeys)
+    for (const u of avatarData ?? []) avatarMap[u.user_key] = u.avatar_url ?? null
+  }
 
   return (
     <HomeView
@@ -110,6 +119,7 @@ export default async function HomePage() {
       repliesMap={groupByPostId<PostReply>(allReplies as PostReply[])}
       allPostIds={allPostIds}
       importantPosts={importantPostsRaw ?? []}
+      avatarMap={avatarMap}
     />
   )
 }

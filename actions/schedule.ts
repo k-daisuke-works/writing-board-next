@@ -49,6 +49,8 @@ export async function createScheduleEvent(formData: FormData) {
   if (dateError) return { error: '候補日時の登録に失敗しました。' }
 
   revalidatePath('/schedule')
+  revalidatePath('/schedule/calendar')
+  revalidatePath('/schedule/department')
   return { success: true, eventId: event.event_id }
 }
 
@@ -94,6 +96,7 @@ export async function upsertScheduleResponse(formData: FormData) {
 
   if (error) return { error: '回答の保存に失敗しました。' }
 
+  revalidatePath(`/schedule/${eventId}`)
   return { success: true }
 }
 

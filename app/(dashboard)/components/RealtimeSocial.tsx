@@ -9,7 +9,7 @@ export default function RealtimeSocial({ organizationKey }: { organizationKey: n
   const supabase = createClient()
 
   useEffect(() => {
-    const ch = supabase.channel('social-realtime')
+    const ch = supabase.channel(`social-${organizationKey}`)
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'post_reactions',
         filter: `organization_key=eq.${organizationKey}`,

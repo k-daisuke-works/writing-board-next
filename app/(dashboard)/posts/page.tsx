@@ -18,29 +18,21 @@ export default async function PostsPage() {
 
   const supabase = await createServiceClient()
 
-  const { data: departments } = await supabase
-    .from('department_data')
-    .select('*')
-    .eq('organization_key', session.organizationKey)
-    .order('department_id')
-
-  const deptPostResults = await Promise.all(
-    (departments ?? []).map((dept) =>
-      supabase
-        .from('writing_data')
-        .select('*')
-        .eq('department_id', dept.department_id)
-        .eq('organization_key', session.organizationKey)
-        .eq('post_type', 'board')
-        .order('writing_time', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-    )
-  )
+  const [{ data: departments }, { data: boardPosts }] = await Promise.all([
+    supabase.from('department_data').select('*')
+      .eq('organization_key', session.organizationKey)
+      .order('department_id'),
+    supabase.from('writing_data').select('*')
+      .eq('organization_key', session.organizationKey)
+      .eq('post_type', 'board')
+      .order('writing_time', { ascending: false }),
+  ])
 
   const latestPosts: Record<number, WritingData> = {}
-  for (const { data } of deptPostResults) {
-    if (data) latestPosts[data.department_id] = data
+  for (const post of boardPosts ?? []) {
+    if (post.department_id != null && !latestPosts[post.department_id]) {
+      latestPosts[post.department_id] = post
+    }
   }
 
   const postIds = Object.values(latestPosts).map(p => p.writing_id)
@@ -54,6 +46,14 @@ export default async function PostsPage() {
         ])
       : [{ data: [] as PostRead[] }, { data: [] as PostReaction[] }, { data: [] as PostReply[] }]
 
+  const replyUserKeys = [...new Set((allReplies ?? []).map(r => (r as PostReply).user_key))]
+  const avatarMap: Record<number, string | null> = {}
+  if (replyUserKeys.length > 0) {
+    const { data: avatarData } = await supabase
+      .from('user_info').select('user_key, avatar_url').in('user_key', replyUserKeys)
+    for (const u of avatarData ?? []) avatarMap[u.user_key] = u.avatar_url ?? null
+  }
+
   return (
     <RealtimePosts
       initialPosts={latestPosts}
@@ -62,6 +62,7 @@ export default async function PostsPage() {
       initialReadsMap={groupByPostId<PostRead>(allReads as PostRead[])}
       initialReactionsMap={groupByPostId<PostReaction>(allReactions as PostReaction[])}
       initialRepliesMap={groupByPostId<PostReply>(allReplies as PostReply[])}
+      initialAvatarMap={avatarMap}
     />
   )
 }
