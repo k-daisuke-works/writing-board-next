@@ -418,6 +418,49 @@ public/file.svg  public/globe.svg  public/next.svg  public/vercel.svg  public/wi
 
 ## 🟡 パフォーマンス
 
+### ページ遷移の体感速度は `loading.tsx` で解決する
+App Router はサーバーのデータ取得が終わるまで画面が切り替わらない。  
+`loading.tsx` を置くと React Suspense が即座に発動し、スケルトンが見えるため体感が大幅改善する。  
+**実際に起きたこと：`loading.tsx` が一切なく、ナビゲーションのたびに画面が数秒フリーズしていた。**
+
+- `app/(dashboard)/loading.tsx` を1つ置けば全ダッシュボードページをカバーできる
+- ページ固有のスケルトンが必要なら各ページディレクトリに追加する
+- スケルトンは `animate-pulse` + `bg-gray-200` のシンプルな矩形で十分
+
+```tsx
+// app/(dashboard)/loading.tsx
+function SkeletonCard() {
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg p-5 space-y-3">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse shrink-0" />
+        <div className="flex-1 space-y-2">
+          <div className="h-3.5 w-28 bg-gray-200 rounded animate-pulse" />
+          <div className="h-3 w-20 bg-gray-200 rounded animate-pulse" />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <div className="h-3.5 bg-gray-200 rounded animate-pulse" />
+        <div className="h-3.5 w-4/5 bg-gray-200 rounded animate-pulse" />
+      </div>
+    </div>
+  )
+}
+export default function Loading() {
+  return (
+    <div className="space-y-5">
+      <div className="space-y-2">
+        <div className="h-6 w-44 bg-gray-200 rounded animate-pulse" />
+        <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
+      </div>
+    </div>
+  )
+}
+```
+
 ### Server Page の独立クエリは必ず `Promise.all` で並列化する
 直列 `await` が残っていないか、実装後に毎回確認する。  
 **実際に起きたこと：`posts/page.tsx` で `departments` と `boardPosts` を直列に書いており、片方が終わるまでもう片方が始まらなかった。**
