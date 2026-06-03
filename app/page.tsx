@@ -425,7 +425,7 @@ export default function LandingPage() {
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">こんな場面で活躍します</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            [
+            {[
               {
                 img: 'https://images.pexels.com/photos/6248989/pexels-photo-6248989.jpeg?auto=compress&cs=tinysrgb&w=600&h=360&fit=crop',
                 alt: '朝礼・情報共有の様子',
