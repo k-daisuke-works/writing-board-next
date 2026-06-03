@@ -81,8 +81,9 @@ actions/
 
 lib/
   session.ts       JWT検証・UserSession取得
-  supabase/server.ts  createServiceClient()
+  supabase/server.ts  createServiceClient()（同期関数、service roleはcookie不要）
   storage.ts       getPublicMediaUrl()
+  utils.ts         relativeTime() / isRecent()（共有ユーティリティ）
   welfare-rss.ts   RSSパーサー・フィード定義
 
 app/(dashboard)/
