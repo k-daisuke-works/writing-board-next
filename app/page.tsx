@@ -425,21 +425,21 @@ export default function LandingPage() {
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">こんな場面で活躍します</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
+            [
               {
-                img: 'https://images.unsplash.com/oiqFyLx_KDU?auto=format&fit=crop&w=600&h=360&q=80',
+                img: 'https://images.pexels.com/photos/6248989/pexels-photo-6248989.jpeg?auto=compress&cs=tinysrgb&w=600&h=360&fit=crop',
                 alt: '朝礼・情報共有の様子',
                 label: '毎日の朝礼・業務連絡',
                 desc: '各部署のお知らせをホーム画面でまとめて確認。大切な情報をチーム全員が同じタイミングで受け取れます。',
               },
               {
-                img: 'https://images.unsplash.com/UikYLDQj9_I?auto=format&fit=crop&w=600&h=360&q=80',
-                alt: 'スケジュール調整の様子',
+                img: 'https://images.pexels.com/photos/6170652/pexels-photo-6170652.jpeg?auto=compress&cs=tinysrgb&w=600&h=360&fit=crop',
+                alt: 'スケジュール管理の様子',
                 label: '会議・研修の日程調整',
                 desc: '候補日をメンバーに共有して○△×で回答収集。カレンダーへの自動登録で手間をゼロに。',
               },
               {
-                img: 'https://images.unsplash.com/5V6KbvRcnV8?auto=format&fit=crop&w=600&h=360&q=80',
+                img: 'https://images.pexels.com/photos/34975095/pexels-photo-34975095.jpeg?auto=compress&cs=tinysrgb&w=600&h=360&fit=crop',
                 alt: '重要連絡を確認する様子',
                 label: '重要連絡の確実な周知',
                 desc: '重要マーク付きの投稿は未読バナーとプッシュ通知でお知らせ。見逃しを防いで連絡の抜け漏れをなくします。',
