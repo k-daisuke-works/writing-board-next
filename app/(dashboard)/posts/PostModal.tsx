@@ -213,11 +213,16 @@ export default function PostModal({ session, postType = 'board', onClose }: Prop
             </div>
           </label>
 
-          {/* 表示期限（boardの重要投稿のみ） */}
-          {isImportant && postType === 'board' && (
+          {/* 表示期限（noticeは常時、boardは重要投稿のみ） */}
+          {(postType === 'notice' || (isImportant && postType === 'board')) && (
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                表示期限 <span className="text-gray-400 font-normal">（この日まで重要連絡に表示）</span>
+                表示期限{' '}
+                <span className="text-gray-400 font-normal">
+                  {postType === 'notice'
+                    ? '（この日まで部署のお知らせとして固定表示）'
+                    : '（この日まで重要連絡に表示）'}
+                </span>
               </label>
               <input
                 type="date"

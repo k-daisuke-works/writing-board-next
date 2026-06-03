@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   const postType       = rawType === 'team' ? 'team' : rawType === 'notice' ? 'notice' : 'board'
   const isImportant    = formData.get('isImportant') === '1' && (session.role === 'admin' || session.role === 'leader')
   const rawDisplayUntil = formData.get('displayUntil') as string | null
-  const displayUntil   = isImportant && rawDisplayUntil ? new Date(rawDisplayUntil + 'T23:59:59').toISOString() : null
+  const displayUntil   = (postType === 'notice' || isImportant) && rawDisplayUntil ? new Date(rawDisplayUntil + 'T23:59:59').toISOString() : null
   const pdfFile        = formData.get('pdfFile')   as File | null
   const imageFile      = formData.get('imageFile') as File | null
   const videoFile      = formData.get('videoFile') as File | null

@@ -40,9 +40,17 @@ export async function GET() {
       : Promise.resolve({ data: [] as WritingData[] }),
   ])
 
-  const deptLatest: Record<number, WritingData> = {}
+  const now = new Date().toISOString()
+  const deptPosts: Record<number, WritingData[]> = {}
   for (const post of allOrgPosts ?? []) {
-    if (post.department_id && !deptLatest[post.department_id]) deptLatest[post.department_id] = post
+    if (!post.department_id) continue
+    if (!deptPosts[post.department_id]) deptPosts[post.department_id] = []
+    deptPosts[post.department_id].push(post)
+  }
+  const deptLatest: Record<number, WritingData> = {}
+  for (const [deptId, posts] of Object.entries(deptPosts)) {
+    const sticky = posts.find(p => p.display_until && p.display_until >= now)
+    deptLatest[Number(deptId)] = sticky ?? posts[0]
   }
 
   const teamMembers = membersRaw ?? []
