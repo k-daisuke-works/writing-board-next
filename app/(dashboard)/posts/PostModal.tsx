@@ -66,7 +66,7 @@ export default function PostModal({ session, postType = 'board', onClose }: Prop
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 anim-overlay"
       style={{ background: 'rgba(0,0,0,0.45)' }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+      onClick={(e) => { if (e.target === e.currentTarget && !loading) onClose() }}
     >
       <div className="bg-white rounded-t-2xl sm:rounded-lg shadow-2xl w-full sm:max-w-lg flex flex-col max-h-[92dvh] sm:max-h-[90vh] anim-slide-down">
 
@@ -77,8 +77,8 @@ export default function PostModal({ session, postType = 'board', onClose }: Prop
             <h2 className="text-sm font-semibold text-gray-900">{title}</h2>
             <p className="text-xs text-gray-400 mt-0.5">{session.departmentName} · {session.userName}</p>
           </div>
-          <button onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+          <button onClick={onClose} disabled={loading}
+            className="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-30 disabled:pointer-events-none">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -205,8 +205,8 @@ export default function PostModal({ session, postType = 'board', onClose }: Prop
 
           {/* ボタン */}
           <div className="flex gap-2.5 pt-1 pb-safe">
-            <button type="button" onClick={onClose}
-              className="flex-1 border border-gray-300 text-gray-700 text-sm font-medium py-2.5 rounded-md hover:bg-gray-50 transition-colors">
+            <button type="button" onClick={onClose} disabled={loading}
+              className="flex-1 border border-gray-300 text-gray-700 text-sm font-medium py-2.5 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:pointer-events-none">
               キャンセル
             </button>
             <button type="submit" disabled={loading || !message.trim()}
