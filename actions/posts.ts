@@ -30,9 +30,11 @@ function isImageMagicBytes(buf: ArrayBuffer): boolean {
 }
 
 function isVideoMagicBytes(buf: ArrayBuffer): boolean {
-  const b = new Uint8Array(buf.slice(0, 12))
-  if (b[4] === 0x66 && b[5] === 0x74 && b[6] === 0x79 && b[7] === 0x70) return true        // MP4/MOV
-  if (b[0] === 0x1A && b[1] === 0x45 && b[2] === 0xDF && b[3] === 0xA3) return true        // WebM
+  const b = new Uint8Array(buf.slice(0, 16))
+  if (b[0] === 0x1A && b[1] === 0x45 && b[2] === 0xDF && b[3] === 0xA3) return true        // WebM/MKV
+  if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46) return true        // AVI (RIFF)
+  if (b[4] === 0x66 && b[5] === 0x74 && b[6] === 0x79 && b[7] === 0x70) return true        // MP4/MOV/3GP
+  if (b[8] === 0x66 && b[9] === 0x74 && b[10] === 0x79 && b[11] === 0x70) return true      // MP4 variant
   return false
 }
 

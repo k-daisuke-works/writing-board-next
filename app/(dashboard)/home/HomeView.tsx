@@ -1,17 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { Building2, Plus, Paperclip, Clock, ChevronRight, AlertCircle, Megaphone } from 'lucide-react'
+import { Building2, Plus, Clock, ChevronRight, AlertCircle, Megaphone } from 'lucide-react'
 import Link from 'next/link'
-import { getPublicMediaUrl } from '@/lib/storage'
 import { relativeTime, isRecent } from '@/lib/utils'
 import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
-import type { Department, WritingData, UserSession, PostRead, PostReaction, PostReply } from '@/types/database'
+import type { Department, WritingData, UserSession, PostRead, PostReaction, PostReply, PostAttachment } from '@/types/database'
 import PostModal from '@/app/(dashboard)/posts/PostModal'
 import HomeMenuDropdown from './HomeMenuDropdown'
 import PostReads from '@/app/(dashboard)/components/PostReads'
 import PostReactions from '@/app/(dashboard)/components/PostReactions'
 import PostReplies from '@/app/(dashboard)/components/PostReplies'
+import PostAttachments from '@/app/(dashboard)/components/PostAttachments'
 import MarkReadOnMount from '@/app/(dashboard)/components/MarkReadOnMount'
 import RealtimeSocial from '@/app/(dashboard)/components/RealtimeSocial'
 import PushNotificationButton from '@/app/(dashboard)/components/PushNotificationButton'
@@ -24,6 +24,7 @@ type SocialMaps = {
   myUserName: string
   myAvatarUrl: string | null
   avatarMap: Record<number, string | null>
+  attachmentsMap: Record<number, PostAttachment[]>
 }
 
 type Props = {
@@ -38,27 +39,10 @@ type Props = {
   allPostIds: number[]
   importantPosts: WritingData[]
   avatarMap: Record<number, string | null>
+  attachmentsMap: Record<number, PostAttachment[]>
 }
 
 
-function MediaBlock({ post }: { post: WritingData }) {
-  return (
-    <>
-      {post.image_url && (
-        <img src={getPublicMediaUrl('images', post.image_url)} alt="" className="mt-3 rounded-lg max-w-xs w-full border border-gray-100" />
-      )}
-      {post.video_url && (
-        <video src={getPublicMediaUrl('videos', post.video_url)} controls className="mt-3 rounded-lg max-w-xs w-full" />
-      )}
-      {post.pdf_url && (
-        <a href={`/api/pdf?path=${encodeURIComponent(post.pdf_url)}`} target="_blank" rel="noopener noreferrer"
-          className="mt-2 inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 transition-colors">
-          <Paperclip className="w-3.5 h-3.5" />PDFを開く
-        </a>
-      )}
-    </>
-  )
-}
 
 function SocialBar({ postId, social }: { postId: number; social: SocialMaps }) {
   return (
@@ -115,7 +99,7 @@ function NoticeCard({ dept, posts, social }: { dept: Department; posts: WritingD
                   </p>
                 )}
                 <ExpandableText text={post.message} className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap" />
-                <MediaBlock post={post} />
+                <PostAttachments post={post} attachments={social.attachmentsMap[post.writing_id] ?? []} />
                 <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-50">
                   <span className="text-xs text-gray-500">{post.user_name_stamp}</span>
                   <span className="flex items-center gap-1 text-xs text-gray-400">
@@ -169,7 +153,7 @@ function TeamCard({ member, post, isMe, social }: {
         {post ? (
           <>
             <ExpandableText text={post.message} className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap" />
-            <MediaBlock post={post} />
+            <PostAttachments post={post} attachments={social.attachmentsMap[post.writing_id] ?? []} />
             <div className="flex items-center justify-end mt-3 pt-2 border-t border-gray-50">
               <span className="flex items-center gap-1 text-xs text-gray-400">
                 <Clock className="w-3 h-3" />{relativeTime(post.writing_time)}
@@ -187,7 +171,7 @@ function TeamCard({ member, post, isMe, social }: {
 
 export default function HomeView({
   session, departments, deptPosts, teamMembers, memberLatest,
-  readsMap, reactionsMap, repliesMap, allPostIds, importantPosts, avatarMap,
+  readsMap, reactionsMap, repliesMap, allPostIds, importantPosts, avatarMap, attachmentsMap,
 }: Props) {
   const [modalType, setModalType] = useState<'team' | 'notice' | null>(null)
 
@@ -199,6 +183,7 @@ export default function HomeView({
     myUserName: session.userName,
     myAvatarUrl: session.avatarUrl,
     avatarMap,
+    attachmentsMap,
   }
 
   function closeModal() {

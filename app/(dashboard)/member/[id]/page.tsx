@@ -2,8 +2,8 @@ import { getSession } from '@/lib/session'
 import { createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { deletePost, updatePost, getPdfSignedUrl } from '@/actions/posts'
-import { getPublicMediaUrl } from '@/lib/storage'
 import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
+import PostAttachments from '@/app/(dashboard)/components/PostAttachments'
 import { DeletePostButton } from '@/app/(dashboard)/department/[id]/DeletePostButton'
 import ProfileEditModal from './ProfileEditModal'
 import MarkReadOnMount from '@/app/(dashboard)/components/MarkReadOnMount'
@@ -13,7 +13,7 @@ import PostReplies from '@/app/(dashboard)/components/PostReplies'
 import RealtimeSocial from '@/app/(dashboard)/components/RealtimeSocial'
 import Link from 'next/link'
 import { ArrowLeft, Clock, Paperclip, User, ChevronDown, Building2 } from 'lucide-react'
-import type { PostRead, PostReaction, PostReply } from '@/types/database'
+import type { PostRead, PostReaction, PostReply, PostAttachment } from '@/types/database'
 
 type SA = (fd: FormData) => Promise<void>
 const toAction = (fn: (fd: FormData) => unknown) => fn as unknown as SA
@@ -55,18 +55,24 @@ export default async function MemberHistoryPage({
 
   const postIds = (posts ?? []).map(p => p.writing_id)
 
-  const [{ data: allReads }, { data: allReactions }, { data: allReplies }] =
+  const [{ data: allReads }, { data: allReactions }, { data: allReplies }, { data: attachmentsRaw }] =
     postIds.length > 0
       ? await Promise.all([
           supabase.from('post_reads').select('*').in('post_id', postIds).eq('organization_key', session.organizationKey),
           supabase.from('post_reactions').select('*').in('post_id', postIds).eq('organization_key', session.organizationKey),
           supabase.from('post_replies').select('*').in('post_id', postIds).eq('organization_key', session.organizationKey).order('created_at'),
+          supabase.from('post_attachments').select('*').in('post_id', postIds).eq('organization_key', session.organizationKey),
         ])
-      : [{ data: [] as PostRead[] }, { data: [] as PostReaction[] }, { data: [] as PostReply[] }]
+      : [{ data: [] as PostRead[] }, { data: [] as PostReaction[] }, { data: [] as PostReply[] }, { data: [] as PostAttachment[] }]
 
   const readsMap     = groupByPostId<PostRead>(allReads as PostRead[])
   const reactionsMap = groupByPostId<PostReaction>(allReactions as PostReaction[])
   const repliesMap   = groupByPostId<PostReply>(allReplies as PostReply[])
+  const attachmentsMap: Record<number, PostAttachment[]> = {}
+  for (const a of (attachmentsRaw ?? []) as PostAttachment[]) {
+    if (!attachmentsMap[a.post_id]) attachmentsMap[a.post_id] = []
+    attachmentsMap[a.post_id].push(a)
+  }
 
   const replyUserKeys = [...new Set((allReplies ?? []).map(r => (r as PostReply).user_key))]
   const avatarMap: Record<number, string | null> = {}
@@ -165,13 +171,7 @@ export default async function MemberHistoryPage({
 
               <div className="px-4 sm:px-5 py-4 space-y-3">
                 <ExpandableText text={post.message} className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap" />
-                {post.image_url && (
-                  <img src={getPublicMediaUrl('images', post.image_url)} alt="" className="rounded-lg max-w-sm w-full border border-gray-100" />
-                )}
-                {post.video_url && (
-                  <video src={getPublicMediaUrl('videos', post.video_url)} controls className="rounded-lg max-w-sm w-full" />
-                )}
-                {post.pdf_url && <PdfDownloadButton pdfPath={post.pdf_url} />}
+                <PostAttachments post={post} attachments={attachmentsMap[post.writing_id] ?? []} />
 
                 {/* ソーシャル */}
                 <div className="pt-2 border-t border-gray-100 space-y-2">
@@ -234,13 +234,3 @@ export default async function MemberHistoryPage({
   )
 }
 
-async function PdfDownloadButton({ pdfPath }: { pdfPath: string }) {
-  const url = await getPdfSignedUrl(pdfPath)
-  if (!url) return null
-  return (
-    <a href={url} target="_blank" rel="noopener noreferrer"
-       className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 transition-colors">
-      <Paperclip className="w-3.5 h-3.5" />PDFを開く
-    </a>
-  )
-}

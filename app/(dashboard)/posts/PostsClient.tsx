@@ -19,6 +19,7 @@ export default function PostsClient({ session }: { session: UserSession }) {
       initialReactionsMap={data?.reactionsMap ?? {}}
       initialRepliesMap={data?.repliesMap ?? {}}
       initialAvatarMap={data?.avatarMap ?? {}}
+      initialAttachmentsMap={data?.attachmentsMap ?? {}}
     />
   )
 }

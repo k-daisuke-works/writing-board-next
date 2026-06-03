@@ -22,6 +22,7 @@ export default function HomeClient({ session }: { session: UserSession }) {
       allPostIds={data?.allPostIds ?? []}
       importantPosts={data?.importantPosts ?? []}
       avatarMap={data?.avatarMap ?? {}}
+      attachmentsMap={data?.attachmentsMap ?? {}}
     />
   )
 }

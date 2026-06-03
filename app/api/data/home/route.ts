@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/session'
 import { createServiceClient } from '@/lib/supabase/server'
-import type { WritingData, PostRead, PostReaction, PostReply } from '@/types/database'
+import type { WritingData, PostRead, PostReaction, PostReply, PostAttachment } from '@/types/database'
 
 function groupByPostId<T extends { post_id: number }>(items: T[] | null): Record<number, T[]> {
   return (items ?? []).reduce<Record<number, T[]>>((acc, item) => {
@@ -74,7 +74,7 @@ export async function GET() {
     ...Object.values(memberLatest).filter(Boolean).map(p => p!.writing_id),
   ]
 
-  const [{ data: allReads }, { data: allReactions }, { data: allReplies }, { data: importantPostsRaw }] =
+  const [{ data: allReads }, { data: allReactions }, { data: allReplies }, { data: importantPostsRaw }, { data: attachmentsRaw }] =
     await Promise.all([
       allPostIds.length > 0
         ? supabase.from('post_reads').select('*').in('post_id', allPostIds).eq('organization_key', session.organizationKey)
@@ -89,6 +89,9 @@ export async function GET() {
         .eq('organization_key', session.organizationKey).eq('post_type', 'board').eq('is_important', true)
         .or(`display_until.is.null,display_until.gte.${new Date().toISOString()}`)
         .order('writing_time', { ascending: false }).limit(10),
+      allPostIds.length > 0
+        ? supabase.from('post_attachments').select('*').in('post_id', allPostIds).eq('organization_key', session.organizationKey)
+        : Promise.resolve({ data: [] as PostAttachment[] }),
     ])
 
   const avatarMap: Record<number, string | null> = { [session.userKey]: session.avatarUrl ?? null }
@@ -97,6 +100,12 @@ export async function GET() {
   if (unknownKeys.length > 0) {
     const { data: avatarData } = await supabase.from('user_info').select('user_key, avatar_url').in('user_key', unknownKeys)
     for (const u of avatarData ?? []) avatarMap[u.user_key] = u.avatar_url ?? null
+  }
+
+  const attachmentsMap: Record<number, PostAttachment[]> = {}
+  for (const a of (attachmentsRaw ?? []) as PostAttachment[]) {
+    if (!attachmentsMap[a.post_id]) attachmentsMap[a.post_id] = []
+    attachmentsMap[a.post_id].push(a)
   }
 
   return NextResponse.json({
@@ -110,6 +119,7 @@ export async function GET() {
     allPostIds,
     importantPosts: importantPostsRaw ?? [],
     avatarMap,
+    attachmentsMap,
     fetchedAt: Date.now(),
   })
 }

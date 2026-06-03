@@ -135,6 +135,15 @@ export type PostReply = {
   created_at: string
 }
 
+export type PostAttachment = {
+  id: number
+  post_id: number
+  organization_key: number
+  file_type: 'image' | 'video' | 'pdf'
+  url: string
+  created_at: string
+}
+
 export type WritingData = {
   writing_id: number
   user_key: number | null

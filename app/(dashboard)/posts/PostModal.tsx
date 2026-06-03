@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { mutate } from 'swr'
 import { createPost } from '@/actions/posts'
 import type { UserSession } from '@/types/database'
@@ -34,31 +34,45 @@ type Props = {
 const inputCls = "w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
 
 export default function PostModal({ session, postType = 'board', onClose }: Props) {
-  const [message,    setMessage]    = useState('')
-  const [pin,        setPin]        = useState('')
-  const [loading,    setLoading]    = useState(false)
-  const [error,      setError]      = useState('')
+  const [message,       setMessage]       = useState('')
+  const [pin,           setPin]           = useState('')
+  const [loading,       setLoading]       = useState(false)
+  const [error,         setError]         = useState('')
   const [uploadProgress, setUploadProgress] = useState<number | null>(null)
-  const [imageFile,  setImageFile]  = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [videoFile,  setVideoFile]  = useState<File | null>(null)
-  const [pdfFile,    setPdfFile]    = useState<File | null>(null)
-  const [isImportant,  setIsImportant]  = useState(false)
-  const [displayUntil, setDisplayUntil] = useState('')
+  const [isImportant,   setIsImportant]   = useState(false)
+  const [displayUntil,  setDisplayUntil]  = useState('')
+
+  const [imageItems, setImageItems] = useState<{ file: File; preview: string }[]>([])
+  const [videoFiles, setVideoFiles] = useState<File[]>([])
+  const [pdfFiles,   setPdfFiles]   = useState<File[]>([])
 
   const imageInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
   const pdfInputRef   = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    return () => { if (imagePreview) URL.revokeObjectURL(imagePreview) }
-  }, [imagePreview])
+  // Cleanup previews on unmount
+  const imageItemsRef = useRef(imageItems)
+  useEffect(() => { imageItemsRef.current = imageItems }, [imageItems])
+  useEffect(() => () => { imageItemsRef.current.forEach(({ preview }) => URL.revokeObjectURL(preview)) }, [])
 
-  function onImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0] ?? null
-    if (imagePreview) URL.revokeObjectURL(imagePreview)
-    setImageFile(file)
-    setImagePreview(file ? URL.createObjectURL(file) : null)
+  function onImageAdd(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? [])
+    setImageItems(prev => [...prev, ...files.map(f => ({ file: f, preview: URL.createObjectURL(f) }))])
+    e.target.value = ''
+  }
+  function removeImage(i: number) {
+    setImageItems(prev => {
+      URL.revokeObjectURL(prev[i].preview)
+      return prev.filter((_, j) => j !== i)
+    })
+  }
+  function onVideoAdd(e: React.ChangeEvent<HTMLInputElement>) {
+    setVideoFiles(prev => [...prev, ...Array.from(e.target.files ?? [])])
+    e.target.value = ''
+  }
+  function onPdfAdd(e: React.ChangeEvent<HTMLInputElement>) {
+    setPdfFiles(prev => [...prev, ...Array.from(e.target.files ?? [])])
+    e.target.value = ''
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -66,17 +80,19 @@ export default function PostModal({ session, postType = 'board', onClose }: Prop
     if (!message.trim()) { setError('内容を入力してください。'); return }
     setLoading(true)
     setUploadProgress(null)
+
     const fd = new FormData()
     fd.set('message', message)
     fd.set('pin', pin)
     fd.set('postType', postType)
     fd.set('isImportant', isImportant ? '1' : '0')
     if (isImportant && displayUntil) fd.set('displayUntil', displayUntil)
-    if (imageFile) fd.set('imageFile', imageFile)
-    if (videoFile) fd.set('videoFile', videoFile)
-    if (pdfFile)   fd.set('pdfFile',   pdfFile)
+    if (postType === 'notice' && displayUntil) fd.set('displayUntil', displayUntil)
+    for (const { file } of imageItems) fd.append('imageFiles', file)
+    for (const f of videoFiles) fd.append('videoFiles', f)
+    for (const f of pdfFiles) fd.append('pdfFiles', f)
 
-    const hasFile = !!(imageFile || videoFile || pdfFile)
+    const hasFile = imageItems.length > 0 || videoFiles.length > 0 || pdfFiles.length > 0
     const result = hasFile
       ? await uploadWithProgress(fd, setUploadProgress)
       : await createPost(fd)
@@ -143,57 +159,66 @@ export default function PostModal({ session, postType = 'board', onClose }: Prop
 
           {/* 添付ファイル */}
           <div>
-            <p className="text-xs font-medium text-gray-700 mb-2">添付ファイル <span className="text-gray-400 font-normal">（任意）</span></p>
+            <p className="text-xs font-medium text-gray-700 mb-2">
+              添付ファイル <span className="text-gray-400 font-normal">（任意・複数可）</span>
+            </p>
             <div className="flex gap-2">
               {/* 画像 */}
-              <label className={`flex-1 flex items-center justify-center gap-1.5 border rounded-md px-3 py-2 cursor-pointer text-xs font-medium transition-colors ${imageFile ? 'border-blue-400 bg-blue-50 text-blue-600' : 'border-gray-300 text-gray-500 hover:bg-gray-50'}`}>
-                <Image className="w-3.5 h-3.5" />画像
-                <input ref={imageInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="sr-only" onChange={onImageChange} />
+              <label className={`flex-1 flex items-center justify-center gap-1.5 border rounded-md px-3 py-2 cursor-pointer text-xs font-medium transition-colors ${imageItems.length > 0 ? 'border-blue-400 bg-blue-50 text-blue-600' : 'border-gray-300 text-gray-500 hover:bg-gray-50'}`}>
+                <Image className="w-3.5 h-3.5" />
+                画像{imageItems.length > 0 ? `(${imageItems.length})` : ''}
+                <input ref={imageInputRef} type="file" multiple accept="image/jpeg,image/png,image/gif,image/webp" className="sr-only" onChange={onImageAdd} />
               </label>
               {/* 動画 */}
-              <label className={`flex-1 flex items-center justify-center gap-1.5 border rounded-md px-3 py-2 cursor-pointer text-xs font-medium transition-colors ${videoFile ? 'border-purple-400 bg-purple-50 text-purple-600' : 'border-gray-300 text-gray-500 hover:bg-gray-50'}`}>
-                <Video className="w-3.5 h-3.5" />動画
-                <input ref={videoInputRef} type="file" accept="video/mp4,video/quicktime,video/webm,video/avi" className="sr-only"
-                  onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)} />
+              <label className={`flex-1 flex items-center justify-center gap-1.5 border rounded-md px-3 py-2 cursor-pointer text-xs font-medium transition-colors ${videoFiles.length > 0 ? 'border-purple-400 bg-purple-50 text-purple-600' : 'border-gray-300 text-gray-500 hover:bg-gray-50'}`}>
+                <Video className="w-3.5 h-3.5" />
+                動画{videoFiles.length > 0 ? `(${videoFiles.length})` : ''}
+                <input ref={videoInputRef} type="file" multiple accept="video/mp4,video/quicktime,video/webm,video/avi" className="sr-only" onChange={onVideoAdd} />
               </label>
               {/* PDF */}
-              <label className={`flex-1 flex items-center justify-center gap-1.5 border rounded-md px-3 py-2 cursor-pointer text-xs font-medium transition-colors ${pdfFile ? 'border-orange-400 bg-orange-50 text-orange-600' : 'border-gray-300 text-gray-500 hover:bg-gray-50'}`}>
-                <Paperclip className="w-3.5 h-3.5" />PDF
-                <input ref={pdfInputRef} type="file" accept=".pdf" className="sr-only"
-                  onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)} />
+              <label className={`flex-1 flex items-center justify-center gap-1.5 border rounded-md px-3 py-2 cursor-pointer text-xs font-medium transition-colors ${pdfFiles.length > 0 ? 'border-orange-400 bg-orange-50 text-orange-600' : 'border-gray-300 text-gray-500 hover:bg-gray-50'}`}>
+                <Paperclip className="w-3.5 h-3.5" />
+                PDF{pdfFiles.length > 0 ? `(${pdfFiles.length})` : ''}
+                <input ref={pdfInputRef} type="file" multiple accept=".pdf" className="sr-only" onChange={onPdfAdd} />
               </label>
             </div>
 
             {/* プレビュー */}
-            {(imageFile || videoFile || pdfFile) && (
+            {(imageItems.length > 0 || videoFiles.length > 0 || pdfFiles.length > 0) && (
               <div className="mt-2 space-y-1.5">
-                {imageFile && imagePreview && (
-                  <div className="flex items-center gap-2 bg-blue-50 rounded-md p-2">
-                    <img src={imagePreview} alt="" className="w-10 h-10 rounded object-cover shrink-0" />
-                    <span className="text-xs text-blue-700 truncate flex-1">{imageFile.name}</span>
-                    <button type="button" onClick={() => { setImageFile(null); setImagePreview(null); if (imageInputRef.current) imageInputRef.current.value = '' }}>
-                      <XCircle className="w-4 h-4 text-blue-400 hover:text-blue-600" />
-                    </button>
+                {imageItems.length > 0 && (
+                  <div className={imageItems.length === 1 ? 'flex' : 'grid grid-cols-3 gap-1.5'}>
+                    {imageItems.map((item, i) => (
+                      <div key={i} className="relative">
+                        <img src={item.preview} alt=""
+                          className={`rounded object-cover border border-blue-100 ${imageItems.length === 1 ? 'w-16 h-16' : 'w-full h-16'}`}
+                        />
+                        <button type="button" onClick={() => removeImage(i)}
+                          className="absolute -top-1 -right-1 bg-white rounded-full shadow">
+                          <XCircle className="w-4 h-4 text-blue-400 hover:text-blue-600" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
-                {videoFile && (
-                  <div className="flex items-center gap-2 bg-purple-50 rounded-md p-2">
+                {videoFiles.map((f, i) => (
+                  <div key={i} className="flex items-center gap-2 bg-purple-50 rounded-md p-2">
                     <Video className="w-4 h-4 text-purple-500 shrink-0" />
-                    <span className="text-xs text-purple-700 truncate flex-1">{videoFile.name}</span>
-                    <button type="button" onClick={() => { setVideoFile(null); if (videoInputRef.current) videoInputRef.current.value = '' }}>
+                    <span className="text-xs text-purple-700 truncate flex-1">{f.name}</span>
+                    <button type="button" onClick={() => setVideoFiles(prev => prev.filter((_, j) => j !== i))}>
                       <XCircle className="w-4 h-4 text-purple-400 hover:text-purple-600" />
                     </button>
                   </div>
-                )}
-                {pdfFile && (
-                  <div className="flex items-center gap-2 bg-orange-50 rounded-md p-2">
+                ))}
+                {pdfFiles.map((f, i) => (
+                  <div key={i} className="flex items-center gap-2 bg-orange-50 rounded-md p-2">
                     <Paperclip className="w-4 h-4 text-orange-500 shrink-0" />
-                    <span className="text-xs text-orange-700 truncate flex-1">{pdfFile.name}</span>
-                    <button type="button" onClick={() => { setPdfFile(null); if (pdfInputRef.current) pdfInputRef.current.value = '' }}>
+                    <span className="text-xs text-orange-700 truncate flex-1">{f.name}</span>
+                    <button type="button" onClick={() => setPdfFiles(prev => prev.filter((_, j) => j !== i))}>
                       <XCircle className="w-4 h-4 text-orange-400 hover:text-orange-600" />
                     </button>
                   </div>
-                )}
+                ))}
               </div>
             )}
           </div>
@@ -213,7 +238,7 @@ export default function PostModal({ session, postType = 'board', onClose }: Prop
             </div>
           </label>
 
-          {/* 表示期限（noticeは常時、boardは重要投稿のみ） */}
+          {/* 表示期限 */}
           {(postType === 'notice' || (isImportant && postType === 'board')) && (
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1.5">

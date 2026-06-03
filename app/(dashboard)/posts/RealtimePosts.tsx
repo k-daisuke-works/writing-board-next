@@ -2,16 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { getPublicMediaUrl } from '@/lib/storage'
 import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
 import { relativeTime, isRecent } from '@/lib/utils'
-import type { Department, WritingData, UserSession, PostRead, PostReaction, PostReply } from '@/types/database'
+import type { Department, WritingData, UserSession, PostRead, PostReaction, PostReply, PostAttachment } from '@/types/database'
 import PostModal from './PostModal'
 import Link from 'next/link'
-import { Plus, Clock, Paperclip, Building2, ChevronRight, Wifi, Video } from 'lucide-react'
+import { Plus, Clock, Building2, ChevronRight, Wifi } from 'lucide-react'
 import PostReads from '@/app/(dashboard)/components/PostReads'
 import PostReactions from '@/app/(dashboard)/components/PostReactions'
 import PostReplies from '@/app/(dashboard)/components/PostReplies'
+import PostAttachments from '@/app/(dashboard)/components/PostAttachments'
 import MarkReadOnMount from '@/app/(dashboard)/components/MarkReadOnMount'
 import RealtimeSocial from '@/app/(dashboard)/components/RealtimeSocial'
 
@@ -23,12 +23,13 @@ type Props = {
   initialReactionsMap: Record<number, PostReaction[]>
   initialRepliesMap: Record<number, PostReply[]>
   initialAvatarMap: Record<number, string | null>
+  initialAttachmentsMap: Record<number, PostAttachment[]>
 }
 
 
 export default function RealtimePosts({
   initialPosts, departments, session,
-  initialReadsMap, initialReactionsMap, initialRepliesMap, initialAvatarMap,
+  initialReadsMap, initialReactionsMap, initialRepliesMap, initialAvatarMap, initialAttachmentsMap,
 }: Props) {
   const [latestPosts, setLatestPosts] = useState(initialPosts)
   const [showModal, setShowModal]     = useState(false)
@@ -141,18 +142,9 @@ export default function RealtimePosts({
                         className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap"
                       />
 
-                      {post.image_url && (
-                        <img src={getPublicMediaUrl('images', post.image_url)} alt="" className="mt-2 rounded max-w-xs w-full border border-gray-100" />
-                      )}
-                      {post.video_url && (
-                        <video src={getPublicMediaUrl('videos', post.video_url)} controls className="mt-2 rounded max-w-xs w-full" />
-                      )}
+                      <PostAttachments post={post} attachments={initialAttachmentsMap[post.writing_id] ?? []} />
 
-                      <div className="flex items-center justify-between mt-3 pb-2 border-b border-gray-50">
-                        <div className="flex items-center gap-2">
-                          {post.pdf_url && <span className="flex items-center gap-1 text-xs text-gray-400"><Paperclip className="w-3 h-3" />PDF</span>}
-                          {post.video_url && !post.image_url && <span className="flex items-center gap-1 text-xs text-gray-400"><Video className="w-3 h-3" />動画</span>}
-                        </div>
+                      <div className="flex items-center justify-end mt-3 pb-2 border-b border-gray-50">
                         <span className="flex items-center gap-1 text-xs text-gray-400">
                           <Clock className="w-3 h-3" />{relativeTime(post.writing_time)}
                         </span>
