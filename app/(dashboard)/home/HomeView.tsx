@@ -28,7 +28,7 @@ type Props = {
   session: UserSession
   departments: Department[]
   deptLatest: Record<number, WritingData>
-  teamMembers: { user_key: number; user_name: string }[]
+  teamMembers: { user_key: number; user_name: string; avatar_url?: string | null }[]
   memberLatest: Record<number, WritingData | null>
   readsMap: Record<number, PostRead[]>
   reactionsMap: Record<number, PostReaction[]>
@@ -131,7 +131,7 @@ function NoticeCard({ dept, post, social }: { dept: Department; post: WritingDat
 }
 
 function TeamCard({ member, post, isMe, social }: {
-  member: { user_key: number; user_name: string }
+  member: { user_key: number; user_name: string; avatar_url?: string | null }
   post: WritingData | null
   isMe: boolean
   social: SocialMaps
@@ -140,10 +140,13 @@ function TeamCard({ member, post, isMe, social }: {
     <div className={`rounded-lg overflow-hidden border ${isMe ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}`}>
       <Link href={`/member/${member.user_key}`} className={`flex items-center justify-between px-4 py-3 border-b hover:bg-opacity-80 transition-colors group ${isMe ? 'border-blue-100 hover:bg-blue-100' : 'border-gray-100 hover:bg-gray-50'}`}>
         <div className="flex items-center gap-2">
-          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+          <div className={`w-7 h-7 rounded-full overflow-hidden shrink-0 flex items-center justify-center text-xs font-bold ${
             isMe ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'
           }`}>
-            {member.user_name.slice(0, 1)}
+            {member.avatar_url
+              ? <img src={member.avatar_url} alt="" className="w-full h-full object-cover" />
+              : member.user_name.slice(0, 1)
+            }
           </div>
           <span className="text-sm font-medium text-gray-800">{member.user_name}</span>
           {isMe && <span className="text-xs text-blue-500 font-medium">（自分）</span>}

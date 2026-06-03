@@ -3,6 +3,7 @@ import {
   MessageSquare, Calendar, Users, Newspaper,
   Receipt, ClipboardList, ArrowRight, CheckCircle2,
 } from 'lucide-react'
+import { RoScopeLogo } from '@/app/components/RoScopeLogo'
 
 // ── ブラウザ風フレーム ──────────────────────────────────────
 function BrowserFrame({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -239,14 +240,7 @@ export default function LandingPage() {
       {/* ナビバー */}
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-5 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-blue-600 rounded flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="7" cy="14" r="4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="17" cy="14" r="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M11 14h2M7 10V8h3m4 0h3V10" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <span className="font-semibold text-gray-900">RoScope</span>
-          </div>
+          <RoScopeLogo size="sm" />
           <Link
             href="/login"
             className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition-colors"
@@ -387,14 +381,7 @@ export default function LandingPage() {
       {/* フッター */}
       <footer className="bg-gray-900 text-gray-400 py-8">
         <div className="max-w-6xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 bg-blue-600 rounded flex items-center justify-center">
-              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="7" cy="14" r="4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="17" cy="14" r="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M11 14h2M7 10V8h3m4 0h3V10" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <span className="text-gray-300 text-sm font-medium">RoScope</span>
-          </div>
+          <RoScopeLogo size="sm" variant="light" />
           <p className="text-xs">&copy; 2026 All rights reserved.</p>
         </div>
       </footer>

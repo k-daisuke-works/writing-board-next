@@ -30,11 +30,11 @@ export default async function HomePage() {
     supabase.from('department_data').select('*').eq('organization_key', session.organizationKey).order('department_id'),
 
     hasDept
-      ? supabase.from('user_info').select('user_key, user_name')
+      ? supabase.from('user_info').select('user_key, user_name, avatar_url')
           .eq('department_id', session.departmentId)
           .eq('organization_key', session.organizationKey)
           .order('user_name')
-      : Promise.resolve({ data: [] as { user_key: number; user_name: string }[], error: null }),
+      : Promise.resolve({ data: [] as { user_key: number; user_name: string; avatar_url: string | null }[], error: null }),
 
     supabase.from('writing_data').select('*')
       .eq('organization_key', session.organizationKey)
