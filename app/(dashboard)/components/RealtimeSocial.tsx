@@ -1,11 +1,10 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { mutate } from 'swr'
 import { createClient } from '@/lib/supabase/client'
 
 export default function RealtimeSocial({ organizationKey }: { organizationKey: number }) {
-  const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
@@ -13,11 +12,11 @@ export default function RealtimeSocial({ organizationKey }: { organizationKey: n
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'post_reactions',
         filter: `organization_key=eq.${organizationKey}`,
-      }, () => router.refresh())
+      }, () => mutate(key => typeof key === 'string' && key.startsWith('/api/data/')))
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'post_replies',
         filter: `organization_key=eq.${organizationKey}`,
-      }, () => router.refresh())
+      }, () => mutate(key => typeof key === 'string' && key.startsWith('/api/data/')))
       .subscribe()
     return () => { supabase.removeChannel(ch) }
   }, [organizationKey])
