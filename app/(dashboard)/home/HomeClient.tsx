@@ -13,7 +13,7 @@ export default function HomeClient({ session }: { session: UserSession }) {
     <HomeView
       session={session}
       departments={data?.departments ?? []}
-      deptLatest={data?.deptLatest ?? {}}
+      deptPosts={data?.deptPosts ?? {}}
       teamMembers={data?.teamMembers ?? []}
       memberLatest={data?.memberLatest ?? {}}
       readsMap={data?.readsMap ?? {}}

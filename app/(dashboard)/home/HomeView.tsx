@@ -29,7 +29,7 @@ type SocialMaps = {
 type Props = {
   session: UserSession
   departments: Department[]
-  deptLatest: Record<number, WritingData>
+  deptPosts: Record<number, WritingData[]>
   teamMembers: { user_key: number; user_name: string; avatar_url?: string | null }[]
   memberLatest: Record<number, WritingData | null>
   readsMap: Record<number, PostRead[]>
@@ -83,7 +83,7 @@ function SocialBar({ postId, social }: { postId: number; social: SocialMaps }) {
   )
 }
 
-function NoticeCard({ dept, post, social }: { dept: Department; post: WritingData | undefined; social: SocialMaps }) {
+function NoticeCard({ dept, posts, social }: { dept: Department; posts: WritingData[]; social: SocialMaps }) {
   return (
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
@@ -92,31 +92,40 @@ function NoticeCard({ dept, post, social }: { dept: Department; post: WritingDat
           <span className="text-sm font-medium text-gray-800">{dept.department_name}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          {post?.is_important && (
+          {posts.some(p => p.is_important) && (
             <span className="flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded">
               <AlertCircle className="w-3 h-3" />重要
             </span>
           )}
-          {post && isRecent(post.writing_time) && (
+          {posts.some(p => isRecent(p.writing_time)) && (
             <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">NEW</span>
           )}
         </div>
       </div>
       <div className="px-4 py-3">
-        {post ? (
-          <>
-            <ExpandableText text={post.message} className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap" />
-            <MediaBlock post={post} />
-            <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-50">
-              <span className="text-xs text-gray-500">{post.user_name_stamp}</span>
-              <span className="flex items-center gap-1 text-xs text-gray-400">
-                <Clock className="w-3 h-3" />{relativeTime(post.writing_time)}
-              </span>
-            </div>
-            <SocialBar postId={post.writing_id} social={social} />
-          </>
-        ) : (
+        {posts.length === 0 ? (
           <p className="text-sm text-gray-400 py-2">まだお知らせがありません</p>
+        ) : (
+          <div className="space-y-3">
+            {posts.map((post, i) => (
+              <div key={post.writing_id} className={i > 0 ? 'pt-3 border-t border-gray-100' : ''}>
+                {post.display_until && (
+                  <p className="text-xs text-blue-500 font-medium mb-1.5">
+                    {new Date(post.display_until).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })}まで固定表示
+                  </p>
+                )}
+                <ExpandableText text={post.message} className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap" />
+                <MediaBlock post={post} />
+                <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-50">
+                  <span className="text-xs text-gray-500">{post.user_name_stamp}</span>
+                  <span className="flex items-center gap-1 text-xs text-gray-400">
+                    <Clock className="w-3 h-3" />{relativeTime(post.writing_time)}
+                  </span>
+                </div>
+                <SocialBar postId={post.writing_id} social={social} />
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>
@@ -177,7 +186,7 @@ function TeamCard({ member, post, isMe, social }: {
 }
 
 export default function HomeView({
-  session, departments, deptLatest, teamMembers, memberLatest,
+  session, departments, deptPosts, teamMembers, memberLatest,
   readsMap, reactionsMap, repliesMap, allPostIds, importantPosts, avatarMap,
 }: Props) {
   const [modalType, setModalType] = useState<'team' | 'notice' | null>(null)
@@ -266,7 +275,7 @@ export default function HomeView({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {departments.map((dept) => (
-              <NoticeCard key={dept.department_id} dept={dept} post={deptLatest[dept.department_id]} social={social} />
+              <NoticeCard key={dept.department_id} dept={dept} posts={deptPosts[dept.department_id] ?? []} social={social} />
             ))}
           </div>
         </section>

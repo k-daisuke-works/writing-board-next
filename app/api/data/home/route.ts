@@ -41,16 +41,19 @@ export async function GET() {
   ])
 
   const now = new Date().toISOString()
-  const deptPosts: Record<number, WritingData[]> = {}
+  const deptRaw: Record<number, WritingData[]> = {}
   for (const post of allOrgPosts ?? []) {
     if (!post.department_id) continue
-    if (!deptPosts[post.department_id]) deptPosts[post.department_id] = []
-    deptPosts[post.department_id].push(post)
+    if (!deptRaw[post.department_id]) deptRaw[post.department_id] = []
+    deptRaw[post.department_id].push(post)
   }
-  const deptLatest: Record<number, WritingData> = {}
-  for (const [deptId, posts] of Object.entries(deptPosts)) {
-    const sticky = posts.find(p => p.display_until && p.display_until >= now)
-    deptLatest[Number(deptId)] = sticky ?? posts[0]
+  // 期限設定中のお知らせは全件表示、最新1件は常に含める（重複除外）
+  const deptPosts: Record<number, WritingData[]> = {}
+  for (const [deptId, posts] of Object.entries(deptRaw)) {
+    const sticky = posts.filter(p => p.display_until && p.display_until >= now)
+    const latest = posts[0]
+    const isLatestSticky = sticky.some(p => p.writing_id === latest.writing_id)
+    deptPosts[Number(deptId)] = isLatestSticky ? sticky : [...sticky, latest]
   }
 
   const teamMembers = membersRaw ?? []
@@ -67,7 +70,7 @@ export async function GET() {
   }
 
   const allPostIds = [
-    ...Object.values(deptLatest).map(p => p.writing_id),
+    ...Object.values(deptPosts).flat().map(p => p.writing_id),
     ...Object.values(memberLatest).filter(Boolean).map(p => p!.writing_id),
   ]
 
@@ -98,7 +101,7 @@ export async function GET() {
 
   return NextResponse.json({
     departments: departments ?? [],
-    deptLatest,
+    deptPosts,
     teamMembers,
     memberLatest,
     readsMap:     groupByPostId<PostRead>(allReads as PostRead[]),
