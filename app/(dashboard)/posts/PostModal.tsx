@@ -6,23 +6,32 @@ import { createPost } from '@/actions/posts'
 import type { UserSession } from '@/types/database'
 import { X, Paperclip, Image, Video, XCircle, AlertCircle } from 'lucide-react'
 
-function uploadWithProgress(
-  fd: FormData,
+async function signAndUpload(
+  file: File,
+  fileType: 'image' | 'video' | 'pdf',
   onProgress: (pct: number) => void,
-): Promise<{ success?: boolean; error?: string }> {
-  return new Promise((resolve) => {
+): Promise<string | null> {
+  const res = await fetch('/api/storage/sign', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fileType, filename: file.name }),
+  })
+  const { signedUrl, path, error } = await res.json()
+  if (error || !signedUrl) return null
+
+  await new Promise<void>((resolve, reject) => {
     const xhr = new XMLHttpRequest()
     xhr.upload.addEventListener('progress', (e) => {
       if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100))
     })
-    xhr.addEventListener('load', () => {
-      try { resolve(JSON.parse(xhr.responseText)) }
-      catch { resolve({ error: 'エラーが発生しました。' }) }
-    })
-    xhr.addEventListener('error', () => resolve({ error: 'アップロードに失敗しました。' }))
-    xhr.open('POST', '/api/posts/create')
-    xhr.send(fd)
+    xhr.addEventListener('load', () => (xhr.status < 300 ? resolve() : reject()))
+    xhr.addEventListener('error', reject)
+    xhr.open('PUT', signedUrl)
+    xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream')
+    xhr.send(file)
   })
+
+  return path as string
 }
 
 type Props = {
@@ -80,24 +89,54 @@ export default function PostModal({ session, postType = 'board', onClose }: Prop
     if (!message.trim()) { setError('内容を入力してください。'); return }
     setLoading(true)
     setUploadProgress(null)
+    setError('')
 
-    const fd = new FormData()
-    fd.set('message', message)
-    fd.set('pin', pin)
-    fd.set('postType', postType)
-    fd.set('isImportant', isImportant ? '1' : '0')
-    if (isImportant && displayUntil) fd.set('displayUntil', displayUntil)
-    if (postType === 'notice' && displayUntil) fd.set('displayUntil', displayUntil)
-    for (const { file } of imageItems) fd.append('imageFiles', file)
-    for (const f of videoFiles) fd.append('videoFiles', f)
-    for (const f of pdfFiles) fd.append('pdfFiles', f)
+    const totalFiles = imageItems.length + videoFiles.length + pdfFiles.length
+    let done = 0
+    function onFileProgress(filePct: number) {
+      setUploadProgress(Math.round(((done + filePct / 100) / Math.max(totalFiles, 1)) * 100))
+    }
 
-    const hasFile = imageItems.length > 0 || videoFiles.length > 0 || pdfFiles.length > 0
-    const result = hasFile
-      ? await uploadWithProgress(fd, setUploadProgress)
-      : await createPost(fd)
+    try {
+      const imagePaths: string[] = []
+      const videoPaths: string[] = []
+      const pdfPaths:   string[] = []
 
-    if (result?.error) { setError(result.error); setLoading(false); setUploadProgress(null); return }
+      for (const { file } of imageItems) {
+        const path = await signAndUpload(file, 'image', onFileProgress)
+        if (!path) throw new Error('画像のアップロードに失敗しました。')
+        imagePaths.push(path); done++
+      }
+      for (const file of videoFiles) {
+        const path = await signAndUpload(file, 'video', onFileProgress)
+        if (!path) throw new Error('動画のアップロードに失敗しました。')
+        videoPaths.push(path); done++
+      }
+      for (const file of pdfFiles) {
+        const path = await signAndUpload(file, 'pdf', onFileProgress)
+        if (!path) throw new Error('PDFのアップロードに失敗しました。')
+        pdfPaths.push(path); done++
+      }
+
+      if (totalFiles > 0) setUploadProgress(100)
+
+      const fd = new FormData()
+      fd.set('message', message)
+      fd.set('pin', pin)
+      fd.set('postType', postType)
+      fd.set('isImportant', isImportant ? '1' : '0')
+      if ((isImportant || postType === 'notice') && displayUntil) fd.set('displayUntil', displayUntil)
+      fd.set('imagePaths', JSON.stringify(imagePaths))
+      fd.set('videoPaths', JSON.stringify(videoPaths))
+      fd.set('pdfPaths',   JSON.stringify(pdfPaths))
+
+      const result = await createPost(fd)
+      if (result?.error) { setError(result.error); setLoading(false); setUploadProgress(null); return }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'アップロードに失敗しました。')
+      setLoading(false); setUploadProgress(null); return
+    }
+
     mutate(key => typeof key === 'string' && key.startsWith('/api/data/'))
     onClose()
   }

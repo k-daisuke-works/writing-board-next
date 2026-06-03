@@ -6,36 +6,20 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/session'
 
 const MAX_MESSAGE_LENGTH = 5000
-const MAX_PDF_SIZE_BYTES   = 10  * 1024 * 1024   // 10 MB
-const MAX_IMAGE_SIZE_BYTES = 10  * 1024 * 1024   // 10 MB
-const MAX_VIDEO_SIZE_BYTES = 50  * 1024 * 1024   // 50 MB
+const MAX_PDF_SIZE_BYTES = 10 * 1024 * 1024
 
 function stripHtml(text: string): string {
   return text.replace(/<[^>]*>/g, '').trim()
 }
 
+function parseJsonPaths(raw: string | null): string[] {
+  if (!raw) return []
+  try { return JSON.parse(raw) } catch { return [] }
+}
+
 function isPdfMagicBytes(buf: ArrayBuffer): boolean {
   const b = new Uint8Array(buf.slice(0, 5))
   return String.fromCharCode(...b) === '%PDF-'
-}
-
-function isImageMagicBytes(buf: ArrayBuffer): boolean {
-  const b = new Uint8Array(buf.slice(0, 12))
-  if (b[0] === 0xFF && b[1] === 0xD8 && b[2] === 0xFF) return true                          // JPEG
-  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4E && b[3] === 0x47) return true         // PNG
-  if (b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46) return true                          // GIF
-  if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 &&
-      b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50) return true       // WebP
-  return false
-}
-
-function isVideoMagicBytes(buf: ArrayBuffer): boolean {
-  const b = new Uint8Array(buf.slice(0, 16))
-  if (b[0] === 0x1A && b[1] === 0x45 && b[2] === 0xDF && b[3] === 0xA3) return true        // WebM/MKV
-  if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46) return true        // AVI (RIFF)
-  if (b[4] === 0x66 && b[5] === 0x74 && b[6] === 0x79 && b[7] === 0x70) return true        // MP4/MOV/3GP
-  if (b[8] === 0x66 && b[9] === 0x74 && b[10] === 0x79 && b[11] === 0x70) return true      // MP4 variant
-  return false
 }
 
 function safeName(original: string): string {
@@ -53,55 +37,28 @@ export async function createPost(formData: FormData) {
   const isImportant = formData.get('isImportant') === '1' &&
     (session.role === 'admin' || session.role === 'leader')
   const rawDisplayUntil = formData.get('displayUntil') as string | null
-  const displayUntil = (postType === 'notice' || isImportant) && rawDisplayUntil ? new Date(rawDisplayUntil + 'T23:59:59').toISOString() : null
-  const pdfFile    = formData.get('pdfFile')   as File | null
-  const imageFile  = formData.get('imageFile') as File | null
-  const videoFile  = formData.get('videoFile') as File | null
+  const displayUntil    = (postType === 'notice' || isImportant) && rawDisplayUntil
+    ? new Date(rawDisplayUntil + 'T23:59:59').toISOString()
+    : null
+
+  // ファイルはクライアント側でSupabase Storageへ直接アップロード済み。パスのみ受け取る。
+  const imageUrls = parseJsonPaths(formData.get('imagePaths') as string | null)
+  const videoUrls = parseJsonPaths(formData.get('videoPaths') as string | null)
+  const pdfUrls   = parseJsonPaths(formData.get('pdfPaths')   as string | null)
 
   const message = stripHtml(rawMessage ?? '')
   if (!message) return { error: '内容を入力してください。' }
   if (message.length > MAX_MESSAGE_LENGTH) return { error: `本文は${MAX_MESSAGE_LENGTH}文字以内で入力してください。` }
 
-  const supabase = await createServiceClient()
-  let pdfUrl:   string | null = null
-  let imageUrl: string | null = null
-  let videoUrl: string | null = null
+  // パスが自組織のディレクトリ配下であることを確認
+  const orgPrefix = `${session.organizationKey}/`
+  if ([...imageUrls, ...videoUrls, ...pdfUrls].some(p => !p.startsWith(orgPrefix)))
+    return { error: '不正なファイルパスです。' }
 
-  if (pdfFile && pdfFile.size > 0) {
-    if (pdfFile.size > MAX_PDF_SIZE_BYTES) return { error: 'PDFは10MB以下にしてください。' }
-    const buf = await pdfFile.arrayBuffer()
-    if (!isPdfMagicBytes(buf)) return { error: 'PDFファイルの形式が正しくありません。' }
-    const path = `${session.organizationKey}/${Date.now()}_${safeName(pdfFile.name)}`
-    const { data, error } = await supabase.storage.from('pdfs').upload(path, buf, { contentType: 'application/pdf' })
-    if (error) return { error: 'PDFのアップロードに失敗しました。' }
-    pdfUrl = data.path
-  }
-
-  if (imageFile && imageFile.size > 0) {
-    if (imageFile.size > MAX_IMAGE_SIZE_BYTES) return { error: '画像は10MB以下にしてください。' }
-    if (!imageFile.type.startsWith('image/')) return { error: '画像ファイルを選択してください。' }
-    const buf = await imageFile.arrayBuffer()
-    if (!isImageMagicBytes(buf)) return { error: '画像ファイルの形式が正しくありません。' }
-    const path = `${session.organizationKey}/${Date.now()}_${safeName(imageFile.name)}`
-    const { data, error } = await supabase.storage.from('images').upload(path, buf, { contentType: imageFile.type })
-    if (error) return { error: '画像のアップロードに失敗しました。' }
-    imageUrl = data.path
-  }
-
-  if (videoFile && videoFile.size > 0) {
-    if (videoFile.size > MAX_VIDEO_SIZE_BYTES) return { error: '動画は50MB以下にしてください。' }
-    if (!videoFile.type.startsWith('video/')) return { error: '動画ファイルを選択してください。' }
-    const buf = await videoFile.arrayBuffer()
-    if (!isVideoMagicBytes(buf)) return { error: '動画ファイルの形式が正しくありません。' }
-    const path = `${session.organizationKey}/${Date.now()}_${safeName(videoFile.name)}`
-    const { data, error } = await supabase.storage.from('videos').upload(path, buf, { contentType: videoFile.type })
-    if (error) return { error: '動画のアップロードに失敗しました。' }
-    videoUrl = data.path
-  }
-
+  const supabase  = createServiceClient()
   const hashedPin = pin?.trim() ? await bcrypt.hash(pin.trim(), 10) : null
 
-  const { error } = await supabase.from('writing_data').insert({
+  const { data: insertedPost, error } = await supabase.from('writing_data').insert({
     user_key:              session.userKey,
     job_id:                session.jobId,
     department_id:         session.departmentId,
@@ -109,17 +66,26 @@ export async function createPost(formData: FormData) {
     user_name_stamp:       session.userName,
     job_name_stamp:        session.jobName,
     department_name_stamp: session.departmentName,
-    pin:                   hashedPin,
+    pin:           hashedPin,
     message,
-    pdf_url:   pdfUrl,
-    image_url: imageUrl,
-    video_url: videoUrl,
+    image_url:     imageUrls[0] ?? null,
+    video_url:     videoUrls[0] ?? null,
+    pdf_url:       pdfUrls[0] ?? null,
     post_type:     postType,
     is_important:  isImportant,
     display_until: displayUntil,
-  })
+  }).select('writing_id').single()
 
-  if (error) return { error: '投稿に失敗しました。' }
+  if (error || !insertedPost) return { error: '投稿に失敗しました。' }
+
+  const attachments = [
+    ...imageUrls.map(url => ({ post_id: insertedPost.writing_id, organization_key: session.organizationKey, file_type: 'image' as const, url })),
+    ...videoUrls.map(url => ({ post_id: insertedPost.writing_id, organization_key: session.organizationKey, file_type: 'video' as const, url })),
+    ...pdfUrls.map(url => ({ post_id: insertedPost.writing_id, organization_key: session.organizationKey, file_type: 'pdf' as const, url })),
+  ]
+  if (attachments.length > 0) {
+    await supabase.from('post_attachments').insert(attachments)
+  }
 
   if (postType === 'team' || postType === 'notice') {
     revalidatePath('/home')
@@ -127,7 +93,6 @@ export async function createPost(formData: FormData) {
     revalidatePath('/posts')
   }
 
-  // 重要投稿の場合はプッシュ通知を送信
   if (isImportant) {
     const internalSecret = process.env.INTERNAL_SECRET
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL
@@ -163,7 +128,7 @@ export async function updatePost(formData: FormData) {
   if (!message) return { error: '内容を入力してください。' }
   if (message.length > MAX_MESSAGE_LENGTH) return { error: `本文は${MAX_MESSAGE_LENGTH}文字以内で入力してください。` }
 
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
   const { data: post } = await supabase
     .from('writing_data')
@@ -218,7 +183,7 @@ export async function deletePost(formData: FormData) {
 
   if (!Number.isInteger(writingId) || writingId <= 0) return { error: '不正なリクエストです。' }
 
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
   const { data: post } = await supabase
     .from('writing_data')
@@ -266,7 +231,7 @@ export async function getPdfSignedUrl(pdfPath: string) {
   const session = await getSession()
   if (!session) return null
   if (!pdfPath.startsWith(`${session.organizationKey}/`)) return null
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
   const { data } = await supabase.storage.from('pdfs').createSignedUrl(pdfPath, 60)
   return data?.signedUrl ?? null
 }
