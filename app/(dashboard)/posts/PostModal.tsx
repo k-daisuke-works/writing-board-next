@@ -6,6 +6,25 @@ import { createPost } from '@/actions/posts'
 import type { UserSession } from '@/types/database'
 import { X, Paperclip, Image, Video, XCircle, AlertCircle } from 'lucide-react'
 
+function uploadWithProgress(
+  fd: FormData,
+  onProgress: (pct: number) => void,
+): Promise<{ success?: boolean; error?: string }> {
+  return new Promise((resolve) => {
+    const xhr = new XMLHttpRequest()
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100))
+    })
+    xhr.addEventListener('load', () => {
+      try { resolve(JSON.parse(xhr.responseText)) }
+      catch { resolve({ error: 'エラーが発生しました。' }) }
+    })
+    xhr.addEventListener('error', () => resolve({ error: 'アップロードに失敗しました。' }))
+    xhr.open('POST', '/api/posts/create')
+    xhr.send(fd)
+  })
+}
+
 type Props = {
   session: UserSession
   postType?: 'board' | 'team' | 'notice'
@@ -19,6 +38,7 @@ export default function PostModal({ session, postType = 'board', onClose }: Prop
   const [pin,        setPin]        = useState('')
   const [loading,    setLoading]    = useState(false)
   const [error,      setError]      = useState('')
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null)
   const [imageFile,  setImageFile]  = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [videoFile,  setVideoFile]  = useState<File | null>(null)
@@ -45,6 +65,7 @@ export default function PostModal({ session, postType = 'board', onClose }: Prop
     e.preventDefault()
     if (!message.trim()) { setError('内容を入力してください。'); return }
     setLoading(true)
+    setUploadProgress(null)
     const fd = new FormData()
     fd.set('message', message)
     fd.set('pin', pin)
@@ -54,8 +75,13 @@ export default function PostModal({ session, postType = 'board', onClose }: Prop
     if (imageFile) fd.set('imageFile', imageFile)
     if (videoFile) fd.set('videoFile', videoFile)
     if (pdfFile)   fd.set('pdfFile',   pdfFile)
-    const result = await createPost(fd)
-    if (result?.error) { setError(result.error); setLoading(false); return }
+
+    const hasFile = !!(imageFile || videoFile || pdfFile)
+    const result = hasFile
+      ? await uploadWithProgress(fd, setUploadProgress)
+      : await createPost(fd)
+
+    if (result?.error) { setError(result.error); setLoading(false); setUploadProgress(null); return }
     mutate(key => typeof key === 'string' && key.startsWith('/api/data/'))
     onClose()
   }
@@ -200,6 +226,21 @@ export default function PostModal({ session, postType = 'board', onClose }: Prop
                 onChange={(e) => setDisplayUntil(e.target.value)}
                 className={inputCls}
               />
+            </div>
+          )}
+
+          {/* アップロード進捗 */}
+          {loading && uploadProgress !== null && (
+            <div className="space-y-1.5">
+              <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="bg-blue-500 h-1.5 rounded-full transition-all duration-200"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+              <p className="text-xs text-center text-gray-400">
+                {uploadProgress < 100 ? `${uploadProgress}% アップロード中…` : '処理中…'}
+              </p>
             </div>
           )}
 
