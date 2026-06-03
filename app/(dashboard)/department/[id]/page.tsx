@@ -80,7 +80,7 @@ export default async function DepartmentHistoryPage({
       <div className="mb-6">
         <Link href="/posts" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition-colors mb-3 w-fit">
           <ArrowLeft className="w-4 h-4" />
-          連絡ボードに戻る
+          全体掲示板に戻る
         </Link>
         <h1 className="text-xl font-semibold text-gray-900">{department?.department_name}</h1>
         <p className="text-sm text-gray-400 mt-0.5">{writings?.length ?? 0}件の投稿</p>

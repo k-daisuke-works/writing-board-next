@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Building2, Plus, Paperclip, Clock, ChevronRight, AlertCircle } from 'lucide-react'
+import { Building2, Plus, Paperclip, Clock, ChevronRight, AlertCircle, Megaphone } from 'lucide-react'
 import Link from 'next/link'
 import { getPublicMediaUrl } from '@/lib/storage'
 import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
@@ -34,6 +34,7 @@ type Props = {
   reactionsMap: Record<number, PostReaction[]>
   repliesMap: Record<number, PostReply[]>
   allPostIds: number[]
+  importantPosts: WritingData[]
 }
 
 function relativeTime(t: string) {
@@ -185,7 +186,7 @@ function TeamCard({ member, post, isMe, social }: {
 
 export default function HomeView({
   session, departments, deptLatest, teamMembers, memberLatest,
-  readsMap, reactionsMap, repliesMap, allPostIds,
+  readsMap, reactionsMap, repliesMap, allPostIds, importantPosts,
 }: Props) {
   const [modalType, setModalType] = useState<'team' | 'notice' | null>(null)
   const router = useRouter()
@@ -225,10 +226,45 @@ export default function HomeView({
         </div>
       </div>
 
+      {importantPosts.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-gray-600 flex items-center gap-1.5">
+              <Megaphone className="w-3.5 h-3.5 text-red-500" />重要連絡
+            </h2>
+            <Link href="/posts" className="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors">
+              全体掲示板を見る
+            </Link>
+          </div>
+          <div className="space-y-2">
+            {importantPosts.map((post) => (
+              <div key={post.writing_id} className="bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+                <div className="flex items-center flex-wrap gap-2 mb-1.5">
+                  <span className="text-xs font-semibold text-red-600 bg-red-100 px-1.5 py-0.5 rounded">重要</span>
+                  <span className="text-xs font-medium text-gray-700">{post.department_name_stamp}</span>
+                  <span className="text-xs text-gray-500">{post.user_name_stamp}</span>
+                  {post.display_until && (
+                    <span className="text-xs text-red-400 ml-auto">
+                      {new Date(post.display_until).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })}まで
+                    </span>
+                  )}
+                </div>
+                <ExpandableText text={post.message} className="text-sm text-red-900 leading-relaxed whitespace-pre-wrap" />
+                <div className="flex items-center justify-end mt-1.5">
+                  <span className="flex items-center gap-1 text-xs text-red-400">
+                    <Clock className="w-3 h-3" />{relativeTime(post.writing_time)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {departments.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-gray-600">各部署からのお知らせ</h2>
+            <h2 className="text-sm font-semibold text-gray-600">部署からのお知らせ</h2>
             <button
               onClick={() => setModalType('notice')}
               className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"

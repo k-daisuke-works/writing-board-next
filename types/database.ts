@@ -152,4 +152,5 @@ export type WritingData = {
   post_type: 'board' | 'team' | 'notice'
   writing_time: string
   is_important: boolean
+  display_until: string | null
 }

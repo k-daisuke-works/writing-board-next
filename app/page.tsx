@@ -93,7 +93,7 @@ function HomeMockup() {
         </div>
         <span className="text-[10px] font-semibold text-gray-800">RoScope</span>
         <div className="flex gap-1 ml-1">
-          {['ホーム','連絡ボード','スケジュール'].map(t => (
+          {['ホーム','全体掲示板','スケジュール'].map(t => (
             <span key={t} className="text-[9px] text-gray-500 px-1.5 py-0.5 rounded hover:bg-gray-100">{t}</span>
           ))}
         </div>
@@ -252,8 +252,8 @@ const FEATURES = [
   {
     Icon: MessageSquare,
     color: 'bg-blue-50 text-blue-600',
-    title: '連絡ボード',
-    desc: '部署ごとのお知らせをリアルタイムで共有。画像・動画・PDFの添付にも対応。',
+    title: '全体掲示板',
+    desc: '全部署から組織全体へのお知らせをリアルタイムで共有。重要連絡はホームに自動表示。',
   },
   {
     Icon: Calendar,

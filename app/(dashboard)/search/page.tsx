@@ -7,7 +7,7 @@ import { Search, Clock, Building2, User } from 'lucide-react'
 import SearchForm from './SearchForm'
 
 const POST_TYPE_LABEL: Record<string, string> = {
-  board: '連絡ボード',
+  board: '全体掲示板',
   team: 'チーム',
   notice: 'お知らせ',
 }

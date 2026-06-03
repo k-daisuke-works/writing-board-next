@@ -50,6 +50,8 @@ export async function createPost(formData: FormData) {
   const postType    = rawType === 'team' ? 'team' : rawType === 'notice' ? 'notice' : 'board'
   const isImportant = formData.get('isImportant') === '1' &&
     (session.role === 'admin' || session.role === 'leader')
+  const rawDisplayUntil = formData.get('displayUntil') as string | null
+  const displayUntil = isImportant && rawDisplayUntil ? new Date(rawDisplayUntil + 'T23:59:59').toISOString() : null
   const pdfFile    = formData.get('pdfFile')   as File | null
   const imageFile  = formData.get('imageFile') as File | null
   const videoFile  = formData.get('videoFile') as File | null
@@ -110,8 +112,9 @@ export async function createPost(formData: FormData) {
     pdf_url:   pdfUrl,
     image_url: imageUrl,
     video_url: videoUrl,
-    post_type:    postType,
-    is_important: isImportant,
+    post_type:     postType,
+    is_important:  isImportant,
+    display_until: displayUntil,
   })
 
   if (error) return { error: '投稿に失敗しました。' }

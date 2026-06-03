@@ -97,7 +97,7 @@ export default function RealtimePosts({
 
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">連絡ボード</h1>
+          <h1 className="text-xl font-semibold text-gray-900">全体掲示板</h1>
           <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-2">
             {departments.length}部署
             {newCount > 0 && <span className="text-blue-600 font-medium">· {newCount}件の新着</span>}

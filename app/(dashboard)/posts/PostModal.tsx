@@ -22,7 +22,8 @@ export default function PostModal({ session, postType = 'board', onClose }: Prop
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [videoFile,  setVideoFile]  = useState<File | null>(null)
   const [pdfFile,    setPdfFile]    = useState<File | null>(null)
-  const [isImportant, setIsImportant] = useState(false)
+  const [isImportant,  setIsImportant]  = useState(false)
+  const [displayUntil, setDisplayUntil] = useState('')
 
   const imageInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
@@ -48,6 +49,7 @@ export default function PostModal({ session, postType = 'board', onClose }: Prop
     fd.set('pin', pin)
     fd.set('postType', postType)
     fd.set('isImportant', isImportant ? '1' : '0')
+    if (isImportant && displayUntil) fd.set('displayUntil', displayUntil)
     if (imageFile) fd.set('imageFile', imageFile)
     if (videoFile) fd.set('videoFile', videoFile)
     if (pdfFile)   fd.set('pdfFile',   pdfFile)
@@ -94,7 +96,7 @@ export default function PostModal({ session, postType = 'board', onClose }: Prop
             </label>
             <textarea
               value={message} onChange={(e) => setMessage(e.target.value)}
-              rows={5} placeholder={postType === 'team' ? 'チームへのメッセージを入力…' : postType === 'notice' ? 'お知らせの内容を入力してください…' : '連絡ボードの内容を入力してください…'}
+              rows={5} placeholder={postType === 'team' ? 'チームへのメッセージを入力…' : postType === 'notice' ? 'お知らせの内容を入力してください…' : '全体掲示板の内容を入力してください…'}
               className="w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
             />
             <p className="text-right text-xs text-gray-400 mt-1">{message.length}文字</p>
@@ -173,15 +175,31 @@ export default function PostModal({ session, postType = 'board', onClose }: Prop
             <input
               type="checkbox"
               checked={isImportant}
-              onChange={(e) => setIsImportant(e.target.checked)}
+              onChange={(e) => { setIsImportant(e.target.checked); if (!e.target.checked) setDisplayUntil('') }}
               className="w-4 h-4 accent-red-500"
             />
             <AlertCircle className={`w-4 h-4 shrink-0 ${isImportant ? 'text-red-500' : 'text-gray-400'}`} />
             <div>
               <p className={`text-sm font-medium ${isImportant ? 'text-red-700' : 'text-gray-700'}`}>重要な投稿としてマーク</p>
-              <p className="text-xs text-gray-400">ホーム画面に目立つ形で表示されます</p>
+              <p className="text-xs text-gray-400">ホーム画面の「重要連絡」に表示されます</p>
             </div>
           </label>
+
+          {/* 表示期限（boardの重要投稿のみ） */}
+          {isImportant && postType === 'board' && (
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                表示期限 <span className="text-gray-400 font-normal">（この日まで重要連絡に表示）</span>
+              </label>
+              <input
+                type="date"
+                value={displayUntil}
+                min={new Date().toISOString().slice(0, 10)}
+                onChange={(e) => setDisplayUntil(e.target.value)}
+                className={inputCls}
+              />
+            </div>
+          )}
 
           {/* ボタン */}
           <div className="flex gap-2.5 pt-1 pb-safe">
