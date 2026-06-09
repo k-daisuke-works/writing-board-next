@@ -23,13 +23,12 @@ export async function GET() {
       ? supabase.from('user_info').select('user_key, user_name, avatar_url')
           .eq('department_id', session.departmentId).eq('organization_key', session.organizationKey).order('user_name')
       : Promise.resolve({ data: [] as { user_key: number; user_name: string; avatar_url: string | null }[] }),
-    // 自部署の重要フラグつきチームメッセージ = 「部署からのお知らせ」
+    // 自部署のお知らせ: team+is_important=true（新形式）または post_type='notice'（旧形式後方互換）
     hasDept
       ? supabase.from('writing_data').select('*')
           .eq('organization_key', session.organizationKey)
-          .eq('post_type', 'team')
-          .eq('is_important', true)
           .eq('department_id', session.departmentId)
+          .or('post_type.eq.notice,and(post_type.eq.team,is_important.eq.true)')
           .or(`display_until.is.null,display_until.gte.${now}`)
           .order('writing_time', { ascending: false })
           .limit(20)
