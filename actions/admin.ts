@@ -342,14 +342,15 @@ export async function registerUser(formData: FormData) {
   const hashed = await bcrypt.hash(password, 10)
 
   const { error } = await supabase.from('user_info').insert({
-    user_id:          userId.trim(),
-    user_name:        userName.trim(),
-    department_id:    departmentId,
-    job_id:           jobId,
-    role:             userRole,
-    admin_flag:       userRole === 'admin',
-    organization_key: organizationKey,
-    password:         hashed,
+    user_id:              userId.trim(),
+    user_name:            userName.trim(),
+    department_id:        departmentId,
+    job_id:               jobId,
+    role:                 userRole,
+    admin_flag:           userRole === 'admin',
+    organization_key:     organizationKey,
+    password:             hashed,
+    must_change_password: !isInitialSetup,
   })
 
   if (error) {
