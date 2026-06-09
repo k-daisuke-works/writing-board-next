@@ -71,7 +71,7 @@ export async function login(formData: FormData) {
 
   const { data: user } = await supabase
     .from('user_info')
-    .select('user_key, user_id, role, password, must_change_password')
+    .select('user_key, user_id, role, password, must_change_password, is_active, password_changed_at')
     .eq('user_id', userId)
     .eq('organization_key', org.organization_key)
     .single()
@@ -81,21 +81,55 @@ export async function login(formData: FormData) {
     return { error: 'ログインに失敗しました。' }
   }
 
+  const u = user as unknown as {
+    role: string
+    must_change_password: boolean
+    is_active: boolean
+    password_changed_at: string | null
+  }
+
+  if (!u.is_active) {
+    recordFailedAttempt(key)
+    return { error: 'このアカウントは凍結されています。管理者にお問い合わせください。' }
+  }
+
   const isValid = await bcrypt.compare(password, user.password)
   if (!isValid) {
     recordFailedAttempt(key)
     return { error: 'ログインに失敗しました。' }
   }
 
-  // 成功: レート制限リセット、最小クレームでセッション発行
+  // パスワード有効期限チェック
+  const { data: policy } = await supabase
+    .from('password_policy')
+    .select('min_length, expiry_days')
+    .eq('organization_key', org.organization_key)
+    .single()
+
+  let isExpired = false
+  if (policy?.expiry_days && u.password_changed_at) {
+    const changedAt  = new Date(u.password_changed_at).getTime()
+    const expiresAt  = changedAt + policy.expiry_days * 24 * 60 * 60 * 1000
+    isExpired = Date.now() > expiresAt
+  }
+
+  // 成功: レート制限リセット、ログイン履歴記録、セッション発行
   loginAttempts.delete(key)
+
+  supabase.from('login_history').insert({
+    user_key:       user.user_key,
+    organization_key: org.organization_key,
+    user_name_stamp: userId,
+    ip_address:     ip,
+  }).then(() => {})
+
   await createSession({
     userKey:         user.user_key,
     organizationKey: org.organization_key,
-    role:            (user as unknown as { role: string }).role as 'admin' | 'leader' | 'member' ?? 'member',
+    role:            u.role as 'admin' | 'leader' | 'member' ?? 'member',
   })
 
-  const mustChange = (user as unknown as { must_change_password: boolean }).must_change_password
+  const mustChange = u.must_change_password || isExpired
   redirect(mustChange ? '/change-password' : '/home')
 }
 

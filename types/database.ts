@@ -44,19 +44,59 @@ export type Job = {
   user_count?: number
 }
 
+export type Position = {
+  position_id: number
+  position_name: string
+  organization_key: number
+}
+
+export type EmploymentType = {
+  employment_type_id: number
+  employment_type_name: string
+  organization_key: number
+}
+
+export type Group = {
+  group_id: number
+  group_name: string
+  organization_key: number
+  members?: { user_key: number; user_name: string }[]
+}
+
+export type LoginHistoryEntry = {
+  id: number
+  user_key: number | null
+  organization_key: number
+  user_name_stamp: string
+  logged_at: string
+  ip_address: string | null
+}
+
+export type PasswordPolicy = {
+  organization_key: number
+  min_length: number
+  expiry_days: number | null
+}
+
 export type UserInfo = {
   user_key: number
   user_id: string
   user_name: string
   job_id: number | null
   department_id: number | null
+  position_id: number | null
+  employment_type_id: number | null
+  is_active: boolean
   admin_flag: boolean
   role: UserRole
   organization_key: number
   password: string
+  password_changed_at: string | null
   created_at: string
   department?: Department
   job?: Job
+  position?: Position
+  employment_type?: EmploymentType
 }
 
 export type ScheduleEvent = {

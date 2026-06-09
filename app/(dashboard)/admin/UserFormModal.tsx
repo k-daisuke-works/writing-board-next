@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { registerUser, updateUser } from '@/actions/admin'
-import type { UserInfo, Department, Job, UserRole } from '@/types/database'
+import type { UserInfo, Department, Job, Position, EmploymentType, UserRole } from '@/types/database'
 import { X, Loader2 } from 'lucide-react'
 
 type Props = {
@@ -10,6 +10,8 @@ type Props = {
   user?: UserInfo
   departments: Department[]
   jobs: Job[]
+  positions: Position[]
+  employmentTypes: EmploymentType[]
   currentUserRole: UserRole
   onClose: () => void
   onSuccess: () => void
@@ -18,7 +20,7 @@ type Props = {
 const inp = "w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
 const lbl = "block text-xs font-medium text-gray-700 mb-1.5"
 
-export default function UserFormModal({ mode, user, departments, jobs, currentUserRole, onClose, onSuccess }: Props) {
+export default function UserFormModal({ mode, user, departments, jobs, positions, employmentTypes, currentUserRole, onClose, onSuccess }: Props) {
   const [error, setError]            = useState('')
   const [isPending, startTransition] = useTransition()
 
@@ -130,6 +132,27 @@ export default function UserFormModal({ mode, user, departments, jobs, currentUs
                 <option value="">未設定</option>
                 {jobs.map(j => (
                   <option key={j.job_id} value={j.job_id}>{j.job_name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={lbl}>役職</label>
+              <select name="positionId" defaultValue={user?.position_id ?? ''} className={inp}>
+                <option value="">未設定</option>
+                {positions.map(p => (
+                  <option key={p.position_id} value={p.position_id}>{p.position_name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={lbl}>雇用形態</label>
+              <select name="employmentTypeId" defaultValue={user?.employment_type_id ?? ''} className={inp}>
+                <option value="">未設定</option>
+                {employmentTypes.map(et => (
+                  <option key={et.employment_type_id} value={et.employment_type_id}>{et.employment_type_name}</option>
                 ))}
               </select>
             </div>
