@@ -199,12 +199,17 @@ export default function HomeView({
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-gray-600">部署からのお知らせ</h2>
-            <button
-              onClick={() => setModal({ postType: 'notice' })}
-              className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" />お知らせを投稿
-            </button>
+            <div className="flex items-center gap-3">
+              <Link href={`/department/${session.departmentId}`} className="text-xs font-medium text-gray-400 hover:text-blue-600 transition-colors">
+                過去のお知らせ
+              </Link>
+              <button
+                onClick={() => setModal({ postType: 'notice' })}
+                className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />お知らせを投稿
+              </button>
+            </div>
           </div>
           <div className="space-y-2">
             {noticePosts.length === 0 ? (

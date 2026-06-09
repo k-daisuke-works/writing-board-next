@@ -11,9 +11,9 @@ import PostReactions from '@/app/(dashboard)/components/PostReactions'
 import PostReplies from '@/app/(dashboard)/components/PostReplies'
 import RealtimeSocial from '@/app/(dashboard)/components/RealtimeSocial'
 import Link from 'next/link'
-import { ArrowLeft, Clock, Paperclip, User, ChevronDown } from 'lucide-react'
+import { ArrowLeft, Clock, Paperclip, User, ChevronDown, Megaphone, AlertCircle } from 'lucide-react'
 import type { PostRead, PostReaction, PostReply, PostAttachment } from '@/types/database'
-import { groupByPostId, fmtDatetime } from '@/lib/utils'
+import { groupByPostId, fmtDatetime, fmtShortDate, relativeTime } from '@/lib/utils'
 
 type SA = (fd: FormData) => Promise<void>
 const toAction = (fn: (fd: FormData) => unknown) => fn as unknown as SA
@@ -37,13 +37,24 @@ export default async function DepartmentHistoryPage({
 
   if (!department) redirect('/posts')
 
-  const { data: writings } = await supabase.from('writing_data').select('*')
-    .eq('department_id', deptId)
-    .eq('organization_key', session.organizationKey)
-    .eq('post_type', 'board')
-    .order('writing_time', { ascending: false })
+  const [{ data: writings }, { data: notices }] = await Promise.all([
+    supabase.from('writing_data').select('*')
+      .eq('department_id', deptId)
+      .eq('organization_key', session.organizationKey)
+      .eq('post_type', 'board')
+      .order('writing_time', { ascending: false }),
+    supabase.from('writing_data').select('*')
+      .eq('department_id', deptId)
+      .eq('organization_key', session.organizationKey)
+      .or('post_type.eq.notice,and(post_type.eq.team,is_important.eq.true)')
+      .order('writing_time', { ascending: false })
+      .limit(50),
+  ])
 
-  const postIds = (writings ?? []).map(w => w.writing_id)
+  const postIds = [
+    ...(notices ?? []).map(w => w.writing_id),
+    ...(writings ?? []).map(w => w.writing_id),
+  ]
 
   const [{ data: allReads }, { data: allReactions }, { data: allReplies }, { data: attachmentsRaw }] =
     postIds.length > 0
@@ -83,9 +94,60 @@ export default async function DepartmentHistoryPage({
           全体掲示板に戻る
         </Link>
         <h1 className="text-xl font-semibold text-gray-900">{department?.department_name}</h1>
-        <p className="text-sm text-gray-400 mt-0.5">{writings?.length ?? 0}件の投稿</p>
       </div>
 
+      {notices && notices.length > 0 && (
+        <section className="mb-6">
+          <h2 className="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-1.5">
+            <Megaphone className="w-3.5 h-3.5 text-blue-500" />お知らせ履歴
+            <span className="font-normal text-gray-400">{notices.length}件</span>
+          </h2>
+          <div className="space-y-2">
+            {notices.map((post) => (
+              <div key={post.writing_id} className="bg-white border border-gray-200 rounded-lg px-4 py-3">
+                <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
+                  {post.is_important && (
+                    <span className="flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-50 px-1.5 py-0.5 rounded">
+                      <AlertCircle className="w-3 h-3" />重要
+                    </span>
+                  )}
+                  {post.display_until && (
+                    <span className="text-xs text-blue-500 font-medium">
+                      {fmtShortDate(post.display_until)}まで固定表示
+                    </span>
+                  )}
+                </div>
+                <ExpandableText text={post.message} className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap" />
+                <PostAttachments post={post} attachments={attachmentsMap[post.writing_id] ?? []} />
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50">
+                  <span className="text-xs text-gray-500">{post.user_name_stamp}</span>
+                  <span className="flex items-center gap-1 text-xs text-gray-400">
+                    <Clock className="w-3 h-3" />{relativeTime(post.writing_time)}
+                  </span>
+                </div>
+                <div className="mt-2 pt-2 border-t border-gray-100 space-y-2">
+                  <PostReactions postId={post.writing_id} reactions={reactionsMap[post.writing_id] ?? []} myUserKey={session.userKey} />
+                  <PostReads reads={readsMap[post.writing_id] ?? []} myUserKey={session.userKey} />
+                  <PostReplies
+                    postId={post.writing_id}
+                    replies={repliesMap[post.writing_id] ?? []}
+                    myUserKey={session.userKey}
+                    myUserName={session.userName}
+                    myAvatarUrl={session.avatarUrl}
+                    avatarMap={avatarMap}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section>
+        <h2 className="text-sm font-semibold text-gray-600 mb-3">
+          全体掲示板への投稿
+          <span className="font-normal text-gray-400 ml-1.5">{writings?.length ?? 0}件</span>
+        </h2>
       {writings && writings.length > 0 ? (
         <div className="space-y-2.5">
           {writings.map((post) => (
@@ -173,6 +235,7 @@ export default async function DepartmentHistoryPage({
           <p className="text-sm text-gray-400">この部署にはまだ投稿がありません</p>
         </div>
       )}
+      </section>
     </div>
   )
 }
