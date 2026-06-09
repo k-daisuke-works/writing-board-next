@@ -37,18 +37,19 @@ async function signAndUpload(
 type Props = {
   session: UserSession
   postType?: 'board' | 'team' | 'notice'
+  defaultImportant?: boolean
   onClose: () => void
 }
 
 const inputCls = "w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
 
-export default function PostModal({ session, postType = 'board', onClose }: Props) {
+export default function PostModal({ session, postType = 'board', defaultImportant = false, onClose }: Props) {
   const [message,       setMessage]       = useState('')
   const [pin,           setPin]           = useState('')
   const [loading,       setLoading]       = useState(false)
   const [error,         setError]         = useState('')
   const [uploadProgress, setUploadProgress] = useState<number | null>(null)
-  const [isImportant,   setIsImportant]   = useState(false)
+  const [isImportant,   setIsImportant]   = useState(defaultImportant)
   const [displayUntil,  setDisplayUntil]  = useState('')
 
   const [imageItems, setImageItems] = useState<{ file: File; preview: string }[]>([])

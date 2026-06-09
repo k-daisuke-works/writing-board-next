@@ -19,20 +19,28 @@ export async function GET() {
   const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString()
   const hasDept = session.departmentId > 0
 
+  const now = new Date().toISOString()
+
   const [
-    { data: departments },
     { data: membersRaw },
-    { data: allOrgPosts },
+    { data: deptNoticesRaw },
     { data: teamRecentPosts },
   ] = await Promise.all([
-    supabase.from('department_data').select('*').eq('organization_key', session.organizationKey).order('department_id'),
     hasDept
       ? supabase.from('user_info').select('user_key, user_name, avatar_url')
           .eq('department_id', session.departmentId).eq('organization_key', session.organizationKey).order('user_name')
       : Promise.resolve({ data: [] as { user_key: number; user_name: string; avatar_url: string | null }[] }),
-    supabase.from('writing_data').select('*')
-      .eq('organization_key', session.organizationKey).eq('post_type', 'notice')
-      .order('writing_time', { ascending: false }).limit(200),
+    // 自部署の重要フラグつきチームメッセージ = 「部署からのお知らせ」
+    hasDept
+      ? supabase.from('writing_data').select('*')
+          .eq('organization_key', session.organizationKey)
+          .eq('post_type', 'team')
+          .eq('is_important', true)
+          .eq('department_id', session.departmentId)
+          .or(`display_until.is.null,display_until.gte.${now}`)
+          .order('writing_time', { ascending: false })
+          .limit(20)
+      : Promise.resolve({ data: [] as WritingData[] }),
     hasDept
       ? supabase.from('writing_data').select('*')
           .eq('department_id', session.departmentId).eq('organization_key', session.organizationKey)
@@ -40,21 +48,7 @@ export async function GET() {
       : Promise.resolve({ data: [] as WritingData[] }),
   ])
 
-  const now = new Date().toISOString()
-  const deptRaw: Record<number, WritingData[]> = {}
-  for (const post of allOrgPosts ?? []) {
-    if (!post.department_id) continue
-    if (!deptRaw[post.department_id]) deptRaw[post.department_id] = []
-    deptRaw[post.department_id].push(post)
-  }
-  // 期限設定中のお知らせは全件表示、最新1件は常に含める（重複除外）
-  const deptPosts: Record<number, WritingData[]> = {}
-  for (const [deptId, posts] of Object.entries(deptRaw)) {
-    const sticky = posts.filter(p => p.display_until && p.display_until >= now)
-    const latest = posts[0]
-    const isLatestSticky = sticky.some(p => p.writing_id === latest.writing_id)
-    deptPosts[Number(deptId)] = isLatestSticky ? sticky : [...sticky, latest]
-  }
+  const noticePosts = (deptNoticesRaw ?? []) as WritingData[]
 
   const teamMembers = membersRaw ?? []
   const memberLatest: Record<number, WritingData | null> = {}
@@ -70,7 +64,7 @@ export async function GET() {
   }
 
   const allPostIds = [
-    ...Object.values(deptPosts).flat().map(p => p.writing_id),
+    ...noticePosts.map(p => p.writing_id),
     ...Object.values(memberLatest).filter(Boolean).map(p => p!.writing_id),
   ]
 
@@ -109,8 +103,7 @@ export async function GET() {
   }
 
   return NextResponse.json({
-    departments: departments ?? [],
-    deptPosts,
+    noticePosts,
     teamMembers,
     memberLatest,
     readsMap:     groupByPostId<PostRead>(allReads as PostRead[]),
