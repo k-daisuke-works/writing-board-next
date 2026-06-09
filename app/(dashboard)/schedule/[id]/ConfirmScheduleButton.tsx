@@ -5,17 +5,11 @@ import { useRouter } from 'next/navigation'
 import { CalendarCheck, X } from 'lucide-react'
 import { confirmScheduleEvent } from '@/actions/calendar'
 import type { ScheduleDate } from '@/types/database'
+import { fmtDatetime } from '@/lib/utils'
 
 type Props = {
   eventId: number
   dates: ScheduleDate[]
-}
-
-function fmtDt(dt: string) {
-  return new Date(dt).toLocaleString('ja-JP', {
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit',
-  })
 }
 
 export default function ConfirmScheduleButton({ eventId, dates }: Props) {
@@ -83,7 +77,7 @@ export default function ConfirmScheduleButton({ eventId, dates }: Props) {
             <option value="">日程を選択...</option>
             {dates.map(d => (
               <option key={d.date_id} value={d.date_id}>
-                {fmtDt(d.candidate_dt)}
+                {fmtDatetime(d.candidate_dt)}
               </option>
             ))}
           </select>

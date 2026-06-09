@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Plus, Clock, ChevronRight, AlertCircle, Megaphone } from 'lucide-react'
 import Link from 'next/link'
-import { relativeTime, isRecent } from '@/lib/utils'
+import { relativeTime, isRecent, fmtShortDate } from '@/lib/utils'
 import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
 import type { WritingData, UserSession, PostRead, PostReaction, PostReply, PostAttachment } from '@/types/database'
 import PostModal from '@/app/(dashboard)/posts/PostModal'
@@ -179,7 +179,7 @@ export default function HomeView({
                   <span className="text-xs text-gray-500">{post.user_name_stamp}</span>
                   {post.display_until && (
                     <span className="text-xs text-red-400 ml-auto">
-                      {new Date(post.display_until).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })}まで
+                      {fmtShortDate(post.display_until)}まで
                     </span>
                   )}
                 </div>
@@ -223,7 +223,7 @@ export default function HomeView({
                     )}
                     {post.display_until && (
                       <span className="text-xs text-blue-500 font-medium ml-auto">
-                        {new Date(post.display_until).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })}まで固定表示
+                        {fmtShortDate(post.display_until)}まで固定表示
                       </span>
                     )}
                   </div>
