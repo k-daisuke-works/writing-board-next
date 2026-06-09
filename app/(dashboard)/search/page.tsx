@@ -3,7 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
 import Link from 'next/link'
-import { Search, Clock, Building2, User } from 'lucide-react'
+import { Search, Clock, Building2 } from 'lucide-react'
 import SearchForm from './SearchForm'
 import { fmtDatetime } from '@/lib/utils'
 
