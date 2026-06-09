@@ -369,10 +369,15 @@ export default function AdminPanel({
   return (
     <div className="anim-fade-in max-w-4xl">
 
-      {toast && (
-        <div className={`fixed top-4 right-4 z-50 anim-slide-down flex items-center gap-2 px-4 py-2.5 rounded-lg shadow-xl text-sm text-white ${toast.ok ? 'bg-gray-900' : 'bg-red-600'}`}>
-          {toast.ok ? <Check className="w-4 h-4 shrink-0" /> : <X className="w-4 h-4 shrink-0" />}
-          {toast.msg}
+      {(isPending || toast) && (
+        <div className={`fixed top-4 right-4 z-50 anim-slide-down flex items-center gap-2 px-4 py-2.5 rounded-lg shadow-xl text-sm text-white ${
+          toast ? (toast.ok ? 'bg-gray-900' : 'bg-red-600') : 'bg-gray-600'
+        }`}>
+          {toast
+            ? (toast.ok ? <Check className="w-4 h-4 shrink-0" /> : <X className="w-4 h-4 shrink-0" />)
+            : <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+          }
+          {toast ? toast.msg : '処理中…'}
         </div>
       )}
 
