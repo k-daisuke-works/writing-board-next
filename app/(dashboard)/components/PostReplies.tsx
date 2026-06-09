@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useTransition, useRef } from 'react'
+import { useState, useTransition, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { mutate } from 'swr'
 import { MessageCircle, ChevronDown, Send } from 'lucide-react'
 import { addReply } from '@/actions/social'
 import { relativeTime } from '@/lib/utils'
@@ -40,28 +41,49 @@ function Avatar({
 
 export default function PostReplies({ postId, replies, myUserKey, myUserName, myAvatarUrl, avatarMap }: Props) {
   const router = useRouter()
-  const [expanded, setExpanded]   = useState(false)
-  const [, startTransition]       = useTransition()
-  const formRef                   = useRef<HTMLFormElement>(null)
+  const [expanded, setExpanded]         = useState(false)
+  const [, startTransition]             = useTransition()
+  const [localReplies, setLocalReplies] = useState(replies)
+  const formRef                         = useRef<HTMLFormElement>(null)
 
-  const total = replies.length
-  const first = replies[0]
+  // サーバーから最新データが届いたら同期
+  useEffect(() => { setLocalReplies(replies) }, [replies])
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    const fd = new FormData(e.currentTarget)
-    if (!String(fd.get('message') ?? '').trim()) return
+    const fd  = new FormData(e.currentTarget)
+    const msg = String(fd.get('message') ?? '').trim()
+    if (!msg) return
+
+    // 楽観的更新：即座に表示
+    const optimistic = {
+      id: -Date.now(),
+      post_id: postId,
+      user_key: myUserKey,
+      user_name_stamp: myUserName,
+      message: msg,
+      created_at: new Date().toISOString(),
+      organization_key: 0,
+    } as unknown as PostReply
+
+    setLocalReplies(prev => [...prev, optimistic])
+    setExpanded(true)
     formRef.current?.reset()
+
     startTransition(async () => {
       await addReply(fd)
+      mutate(key => typeof key === 'string' && key.startsWith('/api/data/'))
       router.refresh()
     })
   }
 
+  const total = localReplies.length
+  const first = localReplies[0]
+
   return (
     <div className="space-y-2">
 
-      {/* コメント数 / 展開トグル（返信がある時のみ） */}
+      {/* コメント数 / 展開トグル */}
       {total > 0 && (
         <button
           onClick={() => setExpanded(v => !v)}
@@ -87,7 +109,7 @@ export default function PostReplies({ postId, replies, myUserKey, myUserName, my
       {/* 全コメント（展開時） */}
       {expanded && (
         <div className="space-y-2.5 pl-1 border-l-2 border-gray-100">
-          {replies.map(r => (
+          {localReplies.map(r => (
             <div key={r.id} className="flex gap-2">
               <Avatar userKey={r.user_key} userName={r.user_name_stamp} myUserKey={myUserKey} myAvatarUrl={myAvatarUrl} avatarMap={avatarMap} />
               <div className="flex-1 min-w-0">

@@ -47,6 +47,7 @@ export default function PostModal({ session, postType = 'board', defaultImportan
   const [message,       setMessage]       = useState('')
   const [pin,           setPin]           = useState('')
   const [loading,       setLoading]       = useState(false)
+  const [submitted,     setSubmitted]     = useState(false)
   const [error,         setError]         = useState('')
   const [uploadProgress, setUploadProgress] = useState<number | null>(null)
   const [isImportant,   setIsImportant]   = useState(defaultImportant)
@@ -138,8 +139,9 @@ export default function PostModal({ session, postType = 'board', defaultImportan
       setLoading(false); setUploadProgress(null); return
     }
 
+    setSubmitted(true)
     mutate(key => typeof key === 'string' && key.startsWith('/api/data/'))
-    onClose()
+    setTimeout(onClose, 800)
   }
 
   const title = postType === 'notice'
@@ -327,11 +329,15 @@ export default function PostModal({ session, postType = 'board', defaultImportan
               className="flex-1 border border-gray-300 text-gray-700 text-sm font-medium py-2.5 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:pointer-events-none">
               キャンセル
             </button>
-            <button type="submit" disabled={loading || !message.trim()}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium py-2.5 rounded-md transition-colors flex items-center justify-center gap-2">
-              {loading
-                ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />送信中…</>
-                : '投稿する'}
+            <button type="submit" disabled={loading || submitted || !message.trim()}
+              className={`flex-1 text-white text-sm font-medium py-2.5 rounded-md transition-colors flex items-center justify-center gap-2 disabled:opacity-50 ${
+                submitted ? 'bg-green-500' : 'bg-blue-600 hover:bg-blue-700'
+              }`}>
+              {submitted
+                ? '投稿しました ✓'
+                : loading
+                  ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />送信中…</>
+                  : '投稿する'}
             </button>
           </div>
         </form>
