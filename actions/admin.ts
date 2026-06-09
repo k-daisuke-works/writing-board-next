@@ -22,7 +22,7 @@ export async function deleteUser(formData: FormData) {
   const userKey = Number(formData.get('userKey'))
   if (userKey === session.userKey) return { error: '自分自身は削除できません。' }
 
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
   if (session.role === 'leader') {
     const { data: target } = await supabase
@@ -53,7 +53,7 @@ export async function deleteDepartment(formData: FormData) {
   if (session?.role !== 'admin') return { error: '管理者権限が必要です。' }
 
   const departmentId = Number(formData.get('departmentId'))
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
   const { count } = await supabase
     .from('user_info')
@@ -80,7 +80,7 @@ export async function deleteJob(formData: FormData) {
   if (session?.role !== 'admin') return { error: '管理者権限が必要です。' }
 
   const jobId = Number(formData.get('jobId'))
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
   const { count } = await supabase
     .from('user_info')
@@ -115,7 +115,7 @@ export async function createDepartment(formData: FormData) {
   if (!departmentName?.trim()) return { error: '部署名を入力してください。' }
   if (departmentName.trim().length > 100) return { error: '部署名は100文字以内で入力してください。' }
 
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
   if (!session) {
     const { count } = await supabase
@@ -154,7 +154,7 @@ export async function createJob(formData: FormData) {
   if (!jobName?.trim()) return { error: '職種名を入力してください。' }
   if (jobName.trim().length > 100) return { error: '職種名は100文字以内で入力してください。' }
 
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
   if (!session) {
     const { count } = await supabase
@@ -188,7 +188,7 @@ export async function updateDepartment(formData: FormData) {
   const departmentName = (formData.get('departmentName') as string)?.trim()
   if (!departmentName) return { error: '部署名を入力してください。' }
 
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
   const { error } = await supabase
     .from('department_data')
     .update({ department_name: departmentName })
@@ -209,7 +209,7 @@ export async function updateJob(formData: FormData) {
   const jobName = (formData.get('jobName') as string)?.trim()
   if (!jobName) return { error: '職種名を入力してください。' }
 
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
   const { error } = await supabase
     .from('job_data')
     .update({ job_name: jobName })
@@ -243,7 +243,7 @@ export async function updateUser(formData: FormData) {
 
   if (!userName) return { error: 'ユーザー名を入力してください。' }
 
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
   if (session.role === 'leader') {
     const { data: target } = await supabase
@@ -326,7 +326,7 @@ export async function registerUser(formData: FormData) {
     }
   }
 
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
   if (!session && isInitialSetup) {
     const { count } = await supabase
@@ -417,9 +417,6 @@ export async function toggleUserActive(formData: FormData) {
   revalidatePath('/admin')
   return { success: true }
 }
-
-// ─── updateUser に position_id / employment_type_id を追加 ──────────────────
-// ※ 既存の updateUser 関数を置き換え済み（下記は上書き分として末尾に追加）
 
 // ─── 役職 CRUD ────────────────────────────────────────────────────────────
 

@@ -6,9 +6,9 @@ import { revalidatePath } from 'next/cache'
 
 export async function createCalendarEvent(formData: FormData) {
   const session = await getSession()
-  if (!session) throw new Error('Unauthorized')
+  if (!session) return { error: '認証が必要です。' }
 
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
   await supabase.from('calendar_events').insert({
     organization_key: session.organizationKey,
@@ -24,13 +24,14 @@ export async function createCalendarEvent(formData: FormData) {
 
   revalidatePath('/schedule/calendar')
   revalidatePath('/schedule/department')
+  return { success: true }
 }
 
 export async function deleteCalendarEvent(id: number) {
   const session = await getSession()
-  if (!session) throw new Error('Unauthorized')
+  if (!session) return { error: '認証が必要です。' }
 
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
   await supabase.from('calendar_events')
     .delete()
@@ -39,18 +40,19 @@ export async function deleteCalendarEvent(id: number) {
 
   revalidatePath('/schedule/calendar')
   revalidatePath('/schedule/department')
+  return { success: true }
 }
 
 export async function confirmScheduleEvent(formData: FormData) {
   const session = await getSession()
-  if (!session) throw new Error('Unauthorized')
+  if (!session) return { error: '認証が必要です。' }
 
   const eventId = Number(formData.get('event_id'))
   const dateId  = Number(formData.get('date_id'))
   const location = (formData.get('location') as string) || null
   const note     = (formData.get('note') as string) || null
 
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
   const [{ data: event }, { data: date }] = await Promise.all([
     supabase.from('schedule_events').select('*')
@@ -63,7 +65,7 @@ export async function confirmScheduleEvent(formData: FormData) {
       .single(),
   ])
 
-  if (!event || !date) throw new Error('Not found')
+  if (!event || !date) return { error: 'イベントが見つかりません。' }
 
   await supabase.from('calendar_events').insert({
     organization_key:   session.organizationKey,
@@ -79,4 +81,5 @@ export async function confirmScheduleEvent(formData: FormData) {
 
   revalidatePath('/schedule/calendar')
   revalidatePath('/schedule/department')
+  return { success: true }
 }

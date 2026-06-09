@@ -2,16 +2,8 @@
 
 import { useState } from 'react'
 import { AlertCircle, X, Clock } from 'lucide-react'
+import { relativeTime } from '@/lib/utils'
 import type { WritingData } from '@/types/database'
-
-function relativeTime(t: string) {
-  const m = Math.floor((Date.now() - new Date(t).getTime()) / 60000)
-  if (m < 1) return 'たった今'
-  if (m < 60) return `${m}分前`
-  const h = Math.floor(m / 60)
-  if (h < 24) return `${h}時間前`
-  return `${Math.floor(h / 24)}日前`
-}
 
 export default function ImportantBanner({ posts }: { posts: WritingData[] }) {
   const [dismissed, setDismissed] = useState<Set<number>>(new Set())

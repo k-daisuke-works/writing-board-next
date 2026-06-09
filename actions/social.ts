@@ -7,7 +7,7 @@ export async function markPostsRead(postIds: number[]) {
   const session = await getSession()
   if (!session || postIds.length === 0) return
 
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
   const { data: valid } = await supabase
     .from('writing_data')
@@ -33,7 +33,7 @@ export async function toggleReaction(postId: number, emoji: string) {
   const session = await getSession()
   if (!session) return
 
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
   const { data: post } = await supabase
     .from('writing_data')
@@ -72,7 +72,7 @@ export async function addReply(formData: FormData) {
   const message = String(formData.get('message') ?? '').trim()
   if (!postId || !message) return
 
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
   const { data: post } = await supabase
     .from('writing_data')

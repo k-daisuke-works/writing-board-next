@@ -6,14 +6,14 @@ import { revalidatePath } from 'next/cache'
 
 export async function updateProfile(formData: FormData) {
   const session = await getSession()
-  if (!session) throw new Error('Unauthorized')
+  if (!session) return { error: '認証が必要です。' }
 
   const targetUserKey = Number(formData.get('user_key'))
   if (targetUserKey !== session.userKey && !session.adminFlag) {
-    throw new Error('Forbidden')
+    return { error: '権限がありません。' }
   }
 
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
   let avatarUrl: string | undefined
 
@@ -46,4 +46,5 @@ export async function updateProfile(formData: FormData) {
 
   revalidatePath(`/member/${targetUserKey}`)
   revalidatePath('/members')
+  return { success: true }
 }
