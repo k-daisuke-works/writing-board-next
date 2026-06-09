@@ -362,3 +362,28 @@ export async function registerUser(formData: FormData) {
   revalidatePath('/admin')
   return { success: true }
 }
+
+/** 管理者によるパスワードリセット — admin のみ */
+export async function resetUserPassword(formData: FormData) {
+  const session = await getSession()
+  if (session?.role !== 'admin') return { error: '管理者権限が必要です。' }
+
+  const userKey     = Number(formData.get('userKey'))
+  const newPassword = (formData.get('newPassword') as string)?.trim()
+
+  if (!userKey || !newPassword) return { error: '必須項目を入力してください。' }
+  if (newPassword.length < 8) return { error: 'パスワードは8文字以上で入力してください。' }
+
+  const supabase = createServiceClient()
+  const hashed   = await bcrypt.hash(newPassword, 10)
+
+  const { error } = await supabase
+    .from('user_info')
+    .update({ password: hashed, must_change_password: true })
+    .eq('user_key', userKey)
+    .eq('organization_key', session.organizationKey)
+
+  if (error) return { error: 'リセットに失敗しました。' }
+  revalidatePath('/admin')
+  return { success: true }
+}

@@ -4,7 +4,7 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import bcrypt from 'bcryptjs'
 import { createServiceClient } from '@/lib/supabase/server'
-import { createSession, deleteSession, createSetupToken } from '@/lib/session'
+import { createSession, deleteSession, createSetupToken, getSession } from '@/lib/session'
 
 // ─── ログイン試行レート制限 ─────────────────────────────────
 // 注: Node.js モジュールスコープの Map のため、同一プロセス内でのみ有効。
@@ -56,7 +56,7 @@ export async function login(formData: FormData) {
     return { error: 'ログイン試行が多すぎます。15分後に再度お試しください。' }
   }
 
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
   const { data: org } = await supabase
     .from('organization_data')
@@ -71,7 +71,7 @@ export async function login(formData: FormData) {
 
   const { data: user } = await supabase
     .from('user_info')
-    .select('user_key, user_id, role, password')
+    .select('user_key, user_id, role, password, must_change_password')
     .eq('user_id', userId)
     .eq('organization_key', org.organization_key)
     .single()
@@ -94,13 +94,56 @@ export async function login(formData: FormData) {
     organizationKey: org.organization_key,
     role:            (user as unknown as { role: string }).role as 'admin' | 'leader' | 'member' ?? 'member',
   })
-  redirect('/home')
+
+  const mustChange = (user as unknown as { must_change_password: boolean }).must_change_password
+  redirect(mustChange ? '/change-password' : '/home')
 }
 
 // ─── ログアウト ─────────────────────────────────────────────
 export async function logout() {
   await deleteSession()
   redirect('/login')
+}
+
+// ─── パスワード変更 ─────────────────────────────────────────
+export async function changePassword(formData: FormData) {
+  const session = await getSession()
+  if (!session) return { error: '認証が必要です。' }
+
+  const currentPassword = formData.get('currentPassword') as string
+  const newPassword     = formData.get('newPassword') as string
+  const confirmPassword = formData.get('confirmPassword') as string
+
+  if (!currentPassword || !newPassword || !confirmPassword)
+    return { error: '全ての項目を入力してください。' }
+  if (newPassword.length < 8)
+    return { error: '新しいパスワードは8文字以上で入力してください。' }
+  if (newPassword !== confirmPassword)
+    return { error: '新しいパスワードが一致しません。' }
+
+  const supabase = createServiceClient()
+
+  const { data: user } = await supabase
+    .from('user_info')
+    .select('password')
+    .eq('user_key', session.userKey)
+    .eq('organization_key', session.organizationKey)
+    .single()
+
+  if (!user) return { error: 'ユーザーが見つかりません。' }
+
+  const isValid = await bcrypt.compare(currentPassword, user.password)
+  if (!isValid) return { error: '現在のパスワードが正しくありません。' }
+
+  const hashed = await bcrypt.hash(newPassword, 10)
+  const { error } = await supabase
+    .from('user_info')
+    .update({ password: hashed, must_change_password: false })
+    .eq('user_key', session.userKey)
+    .eq('organization_key', session.organizationKey)
+
+  if (error) return { error: 'パスワードの変更に失敗しました。' }
+  return { success: true }
 }
 
 // ─── 団体登録 ───────────────────────────────────────────────
@@ -128,7 +171,7 @@ export async function registerOrganization(formData: FormData) {
     return { error: 'サーバー設定エラーが発生しました。' }
   }
 
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
   const { data: existing } = await supabase
     .from('organization_data')

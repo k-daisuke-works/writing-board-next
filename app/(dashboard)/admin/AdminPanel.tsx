@@ -7,12 +7,13 @@ import {
   deleteUser, deleteDepartment, deleteJob,
   createDepartment, createJob,
   updateDepartment, updateJob,
+  resetUserPassword,
 } from '@/actions/admin'
 import type { UserInfo, Department, Job, UserRole } from '@/types/database'
 import UserFormModal from './UserFormModal'
 import {
   ArrowLeft, Users, Building2, Briefcase,
-  Plus, Pencil, Trash2, Check, X, Loader2,
+  Plus, Pencil, Trash2, Check, X, Loader2, KeyRound,
 } from 'lucide-react'
 
 // ─── 型 ──────────────────────────────────────────────────
@@ -31,6 +32,10 @@ type UserModalState =
   | { open: false }
   | { open: true; mode: 'add' }
   | { open: true; mode: 'edit'; user: UserInfo }
+
+type ResetPasswordState =
+  | { open: false }
+  | { open: true; userKey: number; userName: string }
 
 // ─── スタイル定数 ─────────────────────────────────────────
 const addInp = "flex-1 min-w-0 border border-gray-200 rounded-md px-3 py-1.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
@@ -74,6 +79,8 @@ export default function AdminPanel({
 }: Props) {
   const [isPending, startTransition] = useTransition()
   const [userModal, setUserModal]    = useState<UserModalState>({ open: false })
+  const [resetPwModal, setResetPwModal] = useState<ResetPasswordState>({ open: false })
+  const [resetPwInput, setResetPwInput] = useState('')
   const [editDeptId, setEditDeptId]  = useState<number | null>(null)
   const [editJobId,  setEditJobId]   = useState<number | null>(null)
   const [newDept,    setNewDept]     = useState('')
@@ -85,6 +92,22 @@ export default function AdminPanel({
   function showToast(msg: string, ok = true) {
     setToast({ msg, ok })
     setTimeout(() => setToast(null), 3000)
+  }
+
+  // ── パスワードリセット ─────────────────────────────────
+  function handleResetPassword(e: React.FormEvent) {
+    e.preventDefault()
+    if (!resetPwModal.open) return
+    const fd = new FormData()
+    fd.set('userKey', String(resetPwModal.userKey))
+    fd.set('newPassword', resetPwInput)
+    startTransition(async () => {
+      const r = await resetUserPassword(fd)
+      if (r?.error) { showToast(r.error, false); return }
+      showToast(`${resetPwModal.userName} のパスワードをリセットしました。次回ログイン時に変更を促します。`)
+      setResetPwModal({ open: false })
+      setResetPwInput('')
+    })
   }
 
   // ── ユーザー削除 ────────────────────────────────────────
@@ -236,6 +259,15 @@ export default function AdminPanel({
                   >
                     <Pencil className="w-4 h-4" />
                   </button>
+                  {currentUserRole === 'admin' && (
+                    <button
+                      onClick={() => { setResetPwModal({ open: true, userKey: user.user_key, userName: user.user_name }); setResetPwInput('') }}
+                      className="p-2 rounded text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 transition-colors"
+                      title="パスワードリセット"
+                    >
+                      <KeyRound className="w-4 h-4" />
+                    </button>
+                  )}
                   {user.user_key !== currentUserKey ? (
                     <button
                       onClick={() => handleDeleteUser(user.user_key, user.user_name)}
@@ -296,6 +328,15 @@ export default function AdminPanel({
                       >
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
+                      {currentUserRole === 'admin' && (
+                        <button
+                          onClick={() => { setResetPwModal({ open: true, userKey: user.user_key, userName: user.user_name }); setResetPwInput('') }}
+                          className="p-1.5 rounded text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 transition-colors"
+                          title="パスワードリセット"
+                        >
+                          <KeyRound className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                       {user.user_key !== currentUserKey ? (
                         <button
                           onClick={() => handleDeleteUser(user.user_key, user.user_name)}
@@ -480,6 +521,55 @@ export default function AdminPanel({
             router.refresh()
           }}
         />
+      )}
+
+      {/* パスワードリセットモーダル */}
+      {resetPwModal.open && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.45)' }}
+          onClick={(e) => { if (e.target === e.currentTarget) setResetPwModal({ open: false }) }}
+        >
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-sm p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <KeyRound className="w-4 h-4 text-yellow-600" />
+              <h3 className="text-sm font-semibold text-gray-900">
+                パスワードリセット — {resetPwModal.userName}
+              </h3>
+            </div>
+            <p className="text-xs text-gray-500 mb-4">
+              仮パスワードを設定します。ユーザーには次回ログイン時にパスワード変更が求められます。
+            </p>
+            <form onSubmit={handleResetPassword} className="space-y-3">
+              <input
+                type="text"
+                value={resetPwInput}
+                onChange={e => setResetPwInput(e.target.value)}
+                placeholder="仮パスワード（8文字以上）"
+                minLength={8}
+                required
+                autoComplete="off"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors bg-white"
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setResetPwModal({ open: false })}
+                  className="flex-1 border border-gray-300 text-gray-700 text-sm font-medium py-2 rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  キャンセル
+                </button>
+                <button
+                  type="submit"
+                  disabled={isPending || resetPwInput.length < 8}
+                  className="flex-1 bg-yellow-500 hover:bg-yellow-600 disabled:opacity-50 text-white text-sm font-medium py-2 rounded-md transition-colors"
+                >
+                  {isPending ? 'リセット中…' : 'リセット'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
     </div>

@@ -1,5 +1,5 @@
 import {
-  MessageSquare, Users, Settings, Receipt, UserCircle, BookOpen,
+  MessageSquare, Users, Settings, Receipt, UserCircle, BookOpen, KeyRound,
 } from 'lucide-react'
 
 export const STATIC_CARDS = [
@@ -60,6 +60,14 @@ export function buildCards(role: string, userKey: number) {
       desc: '自己紹介やアイコンを設定する',
       iconBg: 'bg-indigo-50',
       iconColor: 'text-indigo-600',
+    },
+    {
+      href: '/change-password',
+      Icon: KeyRound,
+      title: 'パスワード変更',
+      desc: 'ログインパスワードを変更する',
+      iconBg: 'bg-yellow-50',
+      iconColor: 'text-yellow-600',
     },
   ]
 }
