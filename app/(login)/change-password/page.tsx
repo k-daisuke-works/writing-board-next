@@ -17,12 +17,17 @@ export default function ChangePasswordPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    const result = await changePassword(new FormData(e.currentTarget))
-    if (result?.error) {
-      setError(result.error)
+    try {
+      const result = await changePassword(new FormData(e.currentTarget))
+      if (result?.error) {
+        setError(result.error)
+        setLoading(false)
+      } else {
+        router.push('/home')
+      }
+    } catch {
+      setError('エラーが発生しました。もう一度お試しください。')
       setLoading(false)
-    } else {
-      router.push('/home')
     }
   }
 

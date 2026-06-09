@@ -296,11 +296,13 @@ export async function registerUser(formData: FormData) {
 
   const organizationKey = session?.organizationKey ?? orgKeyFromForm
 
-  const userId       = (formData.get('userId') as string)?.normalize('NFKC').trim()
-  const userName     = (formData.get('userName') as string)?.trim()
-  const departmentId = Number(formData.get('departmentId')) || null
-  const jobId        = Number(formData.get('jobId')) || null
-  const password     = formData.get('password') as string
+  const userId           = (formData.get('userId') as string)?.normalize('NFKC').trim()
+  const userName         = (formData.get('userName') as string)?.trim()
+  const departmentId     = Number(formData.get('departmentId'))     || null
+  const jobId            = Number(formData.get('jobId'))            || null
+  const positionId       = Number(formData.get('positionId'))       || null
+  const employmentTypeId = Number(formData.get('employmentTypeId')) || null
+  const password         = formData.get('password') as string
   const roleFromForm = formData.get('role') as string
   const userRole: UserRole = isInitialSetup
     ? 'admin'
@@ -350,6 +352,8 @@ export async function registerUser(formData: FormData) {
     user_name:            userName.trim(),
     department_id:        departmentId,
     job_id:               jobId,
+    position_id:          positionId,
+    employment_type_id:   employmentTypeId,
     role:                 userRole,
     admin_flag:           userRole === 'admin',
     organization_key:     organizationKey,

@@ -172,7 +172,7 @@ export async function changePassword(formData: FormData) {
   const hashed = await bcrypt.hash(newPassword, 10)
   const { error } = await supabase
     .from('user_info')
-    .update({ password: hashed, must_change_password: false })
+    .update({ password: hashed, must_change_password: false, password_changed_at: new Date().toISOString() })
     .eq('user_key', session.userKey)
     .eq('organization_key', session.organizationKey)
 
