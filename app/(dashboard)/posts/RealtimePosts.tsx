@@ -37,7 +37,7 @@ export default function RealtimePosts({
   const supabase = createClient()
 
   useEffect(() => {
-    const ch = supabase.channel('wr')
+    const ch = supabase.channel(`board-${session.organizationKey}`)
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'writing_data',
         filter: `organization_key=eq.${session.organizationKey}`,

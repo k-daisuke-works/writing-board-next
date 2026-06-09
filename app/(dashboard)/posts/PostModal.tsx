@@ -142,7 +142,11 @@ export default function PostModal({ session, postType = 'board', defaultImportan
     onClose()
   }
 
-  const title = postType === 'team' ? 'チームにメッセージ' : postType === 'notice' ? 'お知らせを投稿' : '新規投稿'
+  const title = (postType === 'notice' || (postType === 'team' && defaultImportant))
+    ? 'お知らせを投稿'
+    : postType === 'team'
+      ? 'チームにメッセージ'
+      : '新規投稿'
 
   return (
     <div
@@ -279,15 +283,11 @@ export default function PostModal({ session, postType = 'board', defaultImportan
           </label>
 
           {/* 表示期限 */}
-          {(postType === 'notice' || (isImportant && postType === 'board')) && (
+          {(postType === 'notice' || isImportant) && (
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1.5">
                 表示期限{' '}
-                <span className="text-gray-400 font-normal">
-                  {postType === 'notice'
-                    ? '（この日まで部署のお知らせとして固定表示）'
-                    : '（この日まで重要連絡に表示）'}
-                </span>
+                <span className="text-gray-400 font-normal">（この日まで固定表示）</span>
               </label>
               <input
                 type="date"

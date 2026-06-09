@@ -13,17 +13,10 @@ import RealtimeSocial from '@/app/(dashboard)/components/RealtimeSocial'
 import Link from 'next/link'
 import { ArrowLeft, Clock, Paperclip, User, ChevronDown } from 'lucide-react'
 import type { PostRead, PostReaction, PostReply, PostAttachment } from '@/types/database'
+import { groupByPostId, fmtDatetime } from '@/lib/utils'
 
 type SA = (fd: FormData) => Promise<void>
 const toAction = (fn: (fd: FormData) => unknown) => fn as unknown as SA
-
-function groupByPostId<T extends { post_id: number }>(items: T[] | null): Record<number, T[]> {
-  return (items ?? []).reduce<Record<number, T[]>>((acc, item) => {
-    if (!acc[item.post_id]) acc[item.post_id] = []
-    acc[item.post_id].push(item)
-    return acc
-  }, {})
-}
 
 export default async function DepartmentHistoryPage({
   params,
@@ -35,7 +28,7 @@ export default async function DepartmentHistoryPage({
 
   const { id } = await params
   const deptId   = Number(id)
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
   const { data: department } = await supabase.from('department_data').select('*')
     .eq('department_id', deptId)
@@ -79,13 +72,6 @@ export default async function DepartmentHistoryPage({
     for (const u of avatarData ?? []) avatarMap[u.user_key] = u.avatar_url ?? null
   }
 
-  function fmt(t: string) {
-    return new Date(t).toLocaleString('ja-JP', {
-      year: 'numeric', month: '2-digit', day: '2-digit',
-      hour: '2-digit', minute: '2-digit',
-    })
-  }
-
   return (
     <div className="anim-fade-in max-w-3xl">
       <MarkReadOnMount postIds={postIds} />
@@ -116,7 +102,7 @@ export default async function DepartmentHistoryPage({
                   </div>
                   <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5">
                     <Clock className="w-3 h-3" />
-                    {fmt(post.writing_time)}
+                    {fmtDatetime(post.writing_time)}
                   </div>
                 </div>
               </div>

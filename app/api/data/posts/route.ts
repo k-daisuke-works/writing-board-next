@@ -2,14 +2,7 @@ import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/session'
 import { createServiceClient } from '@/lib/supabase/server'
 import type { WritingData, PostRead, PostReaction, PostReply, PostAttachment } from '@/types/database'
-
-function groupByPostId<T extends { post_id: number }>(items: T[] | null): Record<number, T[]> {
-  return (items ?? []).reduce<Record<number, T[]>>((acc, item) => {
-    if (!acc[item.post_id]) acc[item.post_id] = []
-    acc[item.post_id].push(item)
-    return acc
-  }, {})
-}
+import { groupByPostId } from '@/lib/utils'
 
 export async function GET() {
   const session = await getSession()
@@ -21,7 +14,7 @@ export async function GET() {
     supabase.from('department_data').select('*').eq('organization_key', session.organizationKey).order('department_id'),
     supabase.from('writing_data').select('*')
       .eq('organization_key', session.organizationKey).eq('post_type', 'board')
-      .order('writing_time', { ascending: false }),
+      .order('writing_time', { ascending: false }).limit(1000),
   ])
 
   const latestPosts: Record<number, WritingData> = {}

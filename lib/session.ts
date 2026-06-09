@@ -55,7 +55,7 @@ export const getSession = cache(async (): Promise<UserSession | null> => {
   }
 
   try {
-    const supabase = await createServiceClient()
+    const supabase = createServiceClient()
 
     const [{ data: user }, { data: org }] = await Promise.all([
       supabase
