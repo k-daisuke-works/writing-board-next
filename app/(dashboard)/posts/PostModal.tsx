@@ -126,7 +126,7 @@ export default function PostModal({ session, postType = 'board', defaultImportan
       fd.set('pin', pin)
       fd.set('postType', postType)
       fd.set('isImportant', isImportant ? '1' : '0')
-      if ((isImportant || postType === 'notice') && displayUntil) fd.set('displayUntil', displayUntil)
+      if (isImportant && displayUntil) fd.set('displayUntil', displayUntil)
       fd.set('imagePaths', JSON.stringify(imagePaths))
       fd.set('videoPaths', JSON.stringify(videoPaths))
       fd.set('pdfPaths',   JSON.stringify(pdfPaths))
@@ -142,7 +142,7 @@ export default function PostModal({ session, postType = 'board', defaultImportan
     onClose()
   }
 
-  const title = (postType === 'notice' || (postType === 'team' && defaultImportant))
+  const title = postType === 'notice'
     ? 'お知らせを投稿'
     : postType === 'team'
       ? 'チームにメッセージ'
@@ -282,20 +282,27 @@ export default function PostModal({ session, postType = 'board', defaultImportan
             </div>
           </label>
 
-          {/* 表示期限 */}
-          {(postType === 'notice' || isImportant) && (
+          {/* 表示期限（重要フラグ時のみ） */}
+          {isImportant && (
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1.5">
                 表示期限{' '}
-                <span className="text-gray-400 font-normal">（この日まで固定表示）</span>
+                {postType === 'notice'
+                  ? <span className="text-red-500">*</span>
+                  : <span className="text-gray-400 font-normal">（この日まで固定表示）</span>
+                }
               </label>
               <input
                 type="date"
                 value={displayUntil}
                 min={new Date().toISOString().slice(0, 10)}
                 onChange={(e) => setDisplayUntil(e.target.value)}
+                required={postType === 'notice'}
                 className={inputCls}
               />
+              {postType === 'notice' && (
+                <p className="text-xs text-gray-400 mt-1">重要なお知らせは表示期限の設定が必要です</p>
+              )}
             </div>
           )}
 

@@ -124,7 +124,7 @@ export default function HomeView({
   session, noticePosts, teamMembers, memberLatest,
   readsMap, reactionsMap, repliesMap, allPostIds, importantPosts, avatarMap, attachmentsMap,
 }: Props) {
-  const [modal, setModal] = useState<{ postType: 'team'; defaultImportant?: boolean } | null>(null)
+  const [modal, setModal] = useState<{ postType: 'team' | 'notice'; defaultImportant?: boolean } | null>(null)
 
   const social: SocialMaps = {
     readsMap,
@@ -200,7 +200,7 @@ export default function HomeView({
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-gray-600">部署からのお知らせ</h2>
             <button
-              onClick={() => setModal({ postType: 'team', defaultImportant: true })}
+              onClick={() => setModal({ postType: 'notice' })}
               className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />お知らせを投稿
@@ -215,9 +215,11 @@ export default function HomeView({
               noticePosts.map((post) => (
                 <div key={post.writing_id} className="bg-white border border-gray-200 rounded-lg px-4 py-3">
                   <div className="flex items-center gap-1.5 mb-1.5">
-                    <span className="flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-50 px-1.5 py-0.5 rounded">
-                      <AlertCircle className="w-3 h-3" />重要
-                    </span>
+                    {post.is_important && (
+                      <span className="flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-50 px-1.5 py-0.5 rounded">
+                        <AlertCircle className="w-3 h-3" />重要
+                      </span>
+                    )}
                     {isRecent(post.writing_time) && (
                       <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">NEW</span>
                     )}

@@ -16,22 +16,35 @@ export async function GET() {
 
   const [
     { data: membersRaw },
-    { data: deptNoticesRaw },
+    { data: regularNoticeRaw },
+    { data: importantNoticesRaw },
     { data: teamRecentPosts },
   ] = await Promise.all([
     hasDept
       ? supabase.from('user_info').select('user_key, user_name, avatar_url')
           .eq('department_id', session.departmentId).eq('organization_key', session.organizationKey).order('user_name')
       : Promise.resolve({ data: [] as { user_key: number; user_name: string; avatar_url: string | null }[] }),
-    // 自部署のお知らせ: team+is_important=true（新形式）または post_type='notice'（旧形式後方互換）
+    // 通常お知らせ: 最新1件（7日以内・is_important=false/null）
     hasDept
       ? supabase.from('writing_data').select('*')
           .eq('organization_key', session.organizationKey)
           .eq('department_id', session.departmentId)
-          .or('post_type.eq.notice,and(post_type.eq.team,is_important.eq.true)')
-          .or(`display_until.is.null,display_until.gte.${now}`)
+          .eq('post_type', 'notice')
+          .or('is_important.is.null,is_important.eq.false')
+          .gte('writing_time', sevenDaysAgo)
           .order('writing_time', { ascending: false })
-          .limit(20)
+          .limit(1)
+      : Promise.resolve({ data: [] as WritingData[] }),
+    // 重要お知らせ: 期限内の全件（is_important=true・post_type='notice'または旧形式'team'）
+    hasDept
+      ? supabase.from('writing_data').select('*')
+          .eq('organization_key', session.organizationKey)
+          .eq('department_id', session.departmentId)
+          .eq('is_important', true)
+          .or('post_type.eq.notice,post_type.eq.team')
+          .not('display_until', 'is', null)
+          .gte('display_until', now)
+          .order('writing_time', { ascending: false })
       : Promise.resolve({ data: [] as WritingData[] }),
     hasDept
       ? supabase.from('writing_data').select('*')
@@ -40,7 +53,11 @@ export async function GET() {
       : Promise.resolve({ data: [] as WritingData[] }),
   ])
 
-  const noticePosts = (deptNoticesRaw ?? []) as WritingData[]
+  // 表示順：最新の通常お知らせ1件（上）→ 重要お知らせ全件（下）
+  const noticePosts = [
+    ...((regularNoticeRaw ?? []) as WritingData[]),
+    ...((importantNoticesRaw ?? []) as WritingData[]),
+  ]
 
   const teamMembers = membersRaw ?? []
   const memberLatest: Record<number, WritingData | null> = {}

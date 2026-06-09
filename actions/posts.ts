@@ -37,7 +37,11 @@ export async function createPost(formData: FormData) {
   const isImportant = formData.get('isImportant') === '1' &&
     (session.role === 'admin' || session.role === 'leader')
   const rawDisplayUntil = formData.get('displayUntil') as string | null
-  const displayUntil    = (postType === 'notice' || isImportant) && rawDisplayUntil
+
+  if (postType === 'notice' && isImportant && !rawDisplayUntil)
+    return { error: '重要なお知らせには表示期限の設定が必要です。' }
+
+  const displayUntil = isImportant && rawDisplayUntil
     ? new Date(rawDisplayUntil + 'T23:59:59').toISOString()
     : null
 
