@@ -11,6 +11,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'RoScope',
   description: 'チームの今を、一目で見渡す。',
+  icons: {
+    icon: '/icon.png',
+    apple: '/apple-icon.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
