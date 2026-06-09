@@ -77,8 +77,9 @@ export default function PostReplies({ postId, replies, myUserKey, myUserName, my
     })
   }
 
-  const total = localReplies.length
-  const first = localReplies[0]
+  const total   = localReplies.length
+  const sorted  = [...localReplies].reverse()
+  const first   = sorted[0]
 
   return (
     <div className="space-y-2">
@@ -109,7 +110,7 @@ export default function PostReplies({ postId, replies, myUserKey, myUserName, my
       {/* 全コメント（展開時） */}
       {expanded && (
         <div className="space-y-2.5 pl-1 border-l-2 border-gray-100">
-          {localReplies.map(r => (
+          {sorted.map(r => (
             <div key={r.id} className="flex gap-2">
               <Avatar userKey={r.user_key} userName={r.user_name_stamp} myUserKey={myUserKey} myAvatarUrl={myAvatarUrl} avatarMap={avatarMap} />
               <div className="flex-1 min-w-0">
