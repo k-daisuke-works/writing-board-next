@@ -11,7 +11,7 @@ export async function subscribePush(sub: {
   const session = await getSession()
   if (!session) return
 
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
   await supabase.from('push_subscriptions').upsert(
     {
       user_key: session.userKey,
@@ -28,7 +28,7 @@ export async function unsubscribePush(endpoint: string) {
   const session = await getSession()
   if (!session) return
 
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
   await supabase.from('push_subscriptions')
     .delete()
     .eq('endpoint', endpoint)

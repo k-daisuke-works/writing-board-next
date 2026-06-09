@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { organizationKey, title, body, url } = await req.json()
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
   const { data: subs } = await supabase
     .from('push_subscriptions')

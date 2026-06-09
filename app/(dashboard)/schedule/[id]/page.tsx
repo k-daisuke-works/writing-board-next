@@ -18,7 +18,7 @@ export default async function ScheduleEventPage({
 
   const { id } = await params
   const eventId = Number(id)
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
   const { data: event } = await supabase
     .from('schedule_events')

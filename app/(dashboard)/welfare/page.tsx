@@ -22,7 +22,7 @@ export default async function WelfarePage({
   if (!session) redirect('/login')
 
   const { source } = await searchParams
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
   // 60日以内の記事を最大200件
   const since = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString()

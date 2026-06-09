@@ -5,6 +5,7 @@ import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
 import Link from 'next/link'
 import { Search, Clock, Building2, User } from 'lucide-react'
 import SearchForm from './SearchForm'
+import { fmtDatetime } from '@/lib/utils'
 
 const POST_TYPE_LABEL: Record<string, string> = {
   board: '全体掲示板',
@@ -26,13 +27,6 @@ export default async function SearchPage({
   let results: Awaited<ReturnType<typeof fetchResults>> = []
   if (query.length >= 1) {
     results = await fetchResults(session.organizationKey, query)
-  }
-
-  function fmt(t: string) {
-    return new Date(t).toLocaleString('ja-JP', {
-      year: 'numeric', month: '2-digit', day: '2-digit',
-      hour: '2-digit', minute: '2-digit',
-    })
   }
 
   return (
@@ -76,7 +70,7 @@ export default async function SearchPage({
                     )}
                   </div>
                   <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5">
-                    <Clock className="w-3 h-3" />{fmt(post.writing_time)}
+                    <Clock className="w-3 h-3" />{fmtDatetime(post.writing_time)}
                   </div>
                 </div>
               </div>
@@ -109,7 +103,7 @@ export default async function SearchPage({
 }
 
 async function fetchResults(organizationKey: number, query: string) {
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
   const { data } = await supabase
     .from('writing_data')
     .select('writing_id, user_key, user_name_stamp, job_name_stamp, department_id, department_name_stamp, post_type, message, writing_time')

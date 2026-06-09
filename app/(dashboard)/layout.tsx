@@ -7,7 +7,7 @@ import UserMenu from '@/app/(dashboard)/components/UserMenu'
 import { RoScopeLogo } from '@/app/components/RoScopeLogo'
 
 async function getUnreadCounts(organizationKey: number, userKey: number, departmentId: number) {
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
   const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString()
 
   const [boardResult, teamResult] = await Promise.all([

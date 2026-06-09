@@ -8,7 +8,7 @@ export default async function AdminPage() {
   const session = await getSession()
   if (!session || session.role === 'member') redirect('/home')
 
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
   const orgKey   = session.organizationKey
 
   let usersQuery = supabase

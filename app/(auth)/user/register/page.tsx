@@ -34,7 +34,7 @@ export default async function UserRegisterPage({
 
   if (!organizationKey) redirect('/login')
 
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
   const [{ data: departments }, { data: jobs }] = await Promise.all([
     supabase.from('department_data').select('*').eq('organization_key', organizationKey),
     supabase.from('job_data').select('*').eq('organization_key', organizationKey),
