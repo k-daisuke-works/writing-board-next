@@ -82,9 +82,9 @@ export default async function MemberHistoryPage({
       <MarkReadOnMount postIds={postIds} />
       <RealtimeSocial organizationKey={session.organizationKey} />
 
-      <Link href="/members" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition-colors mb-4 w-fit">
+      <Link href="/home" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition-colors mb-4 w-fit">
         <ArrowLeft className="w-4 h-4" />
-        メンバー一覧に戻る
+        ホームに戻る
       </Link>
 
       {/* プロフィールカード */}
