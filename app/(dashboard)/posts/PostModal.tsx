@@ -267,30 +267,20 @@ export default function PostModal({ session, postType = 'board', defaultImportan
             )}
           </div>
 
-          {/* 重要フラグ — お知らせ投稿から開いた場合は固定表示のみ */}
-          {defaultImportant ? (
-            <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-md border border-red-300 bg-red-50">
-              <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
-              <div>
-                <p className="text-sm font-medium text-red-700">重要なお知らせとして投稿</p>
-                <p className="text-xs text-gray-400">部署からのお知らせに固定表示されます</p>
-              </div>
+          {/* 重要フラグ */}
+          <label className={`flex items-center gap-2.5 px-3 py-2.5 rounded-md border cursor-pointer transition-colors ${isImportant ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+            <input
+              type="checkbox"
+              checked={isImportant}
+              onChange={(e) => { setIsImportant(e.target.checked); if (!e.target.checked) setDisplayUntil('') }}
+              className="w-4 h-4 accent-red-500"
+            />
+            <AlertCircle className={`w-4 h-4 shrink-0 ${isImportant ? 'text-red-500' : 'text-gray-400'}`} />
+            <div>
+              <p className={`text-sm font-medium ${isImportant ? 'text-red-700' : 'text-gray-700'}`}>重要な投稿としてマーク</p>
+              <p className="text-xs text-gray-400">ホーム画面の「重要連絡」に表示されます</p>
             </div>
-          ) : (
-            <label className={`flex items-center gap-2.5 px-3 py-2.5 rounded-md border cursor-pointer transition-colors ${isImportant ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:bg-gray-50'}`}>
-              <input
-                type="checkbox"
-                checked={isImportant}
-                onChange={(e) => { setIsImportant(e.target.checked); if (!e.target.checked) setDisplayUntil('') }}
-                className="w-4 h-4 accent-red-500"
-              />
-              <AlertCircle className={`w-4 h-4 shrink-0 ${isImportant ? 'text-red-500' : 'text-gray-400'}`} />
-              <div>
-                <p className={`text-sm font-medium ${isImportant ? 'text-red-700' : 'text-gray-700'}`}>重要な投稿としてマーク</p>
-                <p className="text-xs text-gray-400">ホーム画面の「重要連絡」に表示されます</p>
-              </div>
-            </label>
-          )}
+          </label>
 
           {/* 表示期限 */}
           {(postType === 'notice' || isImportant) && (
