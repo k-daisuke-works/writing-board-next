@@ -760,7 +760,7 @@ export async function updateMyEmail(formData: FormData) {
   const session = await getSession()
   if (session?.role !== 'admin') return { error: '管理者権限が必要です。' }
 
-  const raw = (formData.get('email') as string)?.normalize('NFKC').trim() ?? ''
+  const raw = (formData.get('email') as string)?.normalize('NFKC').trim().toLowerCase() ?? ''
   const email = raw === '' ? null : raw
 
   if (email !== null) {

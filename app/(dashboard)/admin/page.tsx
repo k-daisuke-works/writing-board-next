@@ -11,9 +11,10 @@ export default async function AdminPage() {
   const supabase = createServiceClient()
   const orgKey   = session.organizationKey
 
+  // password（ハッシュ）・email はクライアントに渡さないためカラムを明示列挙する
   let usersQuery = supabase
     .from('user_info')
-    .select('*, department:department_data(department_name), job:job_data(job_name), position:position_data(position_name), employment_type:employment_type_data(employment_type_name)')
+    .select('user_key, user_id, user_name, job_id, department_id, position_id, employment_type_id, is_active, admin_flag, role, organization_key, password_changed_at, created_at, department:department_data(department_name), job:job_data(job_name), position:position_data(position_name), employment_type:employment_type_data(employment_type_name)')
     .eq('organization_key', orgKey)
     .order('created_at', { ascending: true })
 

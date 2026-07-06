@@ -283,25 +283,26 @@ export async function requestPasswordReset(formData: FormData) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
   const link = `${baseUrl}/reset-password?token=${encodeURIComponent(token)}`
 
-  // 列挙対策: 送信の成否もユーザー応答には反映しない（失敗はログのみ）
-  const sent = await sendMail(
-    user.email,
-    '【RoScope】パスワード再設定のご案内',
-    `${user.user_name} 様\n\nRoScope のパスワード再設定リクエストを受け付けました。\n以下のリンクから30分以内に新しいパスワードを設定してください。\n\n${link}\n\n※このリクエストに心当たりがない場合は、このメールを無視してください。パスワードは変更されません。`,
-  )
-  if (!sent) console.error('[requestPasswordReset] メール送信失敗:', `user:${user.user_key}`)
-
-  // 正当なリクエストが完了したらレート制限をリセット（login と同パターン）
-  if (sent) resetAttempts.delete(ip)
-
-  after(() => logAudit({
-    organizationKey: org.organization_key,
-    actorName: userId,
-    action: 'auth.reset_request',
-    target: `user:${user.user_key}`,
-    detail: { sent },
-    ipAddress: ip,
-  }))
+  // 列挙対策: 送信はレスポンス後に行い（タイミング差の縮小）、成否もユーザー応答には反映しない
+  const email = user.email
+  after(async () => {
+    const sent = await sendMail(
+      email,
+      '【RoScope】パスワード再設定のご案内',
+      `${user.user_name} 様\n\nRoScope のパスワード再設定リクエストを受け付けました。\n以下のリンクから30分以内に新しいパスワードを設定してください。\n\n${link}\n\n※このリクエストに心当たりがない場合は、このメールを無視してください。パスワードは変更されません。`,
+    )
+    if (!sent) console.error('[requestPasswordReset] メール送信失敗:', `user:${user.user_key}`)
+    // 正当なリクエストが完了したらレート制限をリセット（login と同パターン）
+    if (sent) resetAttempts.delete(ip)
+    await logAudit({
+      organizationKey: org.organization_key,
+      actorName: userId,
+      action: 'auth.reset_request',
+      target: `user:${user.user_key}`,
+      detail: { sent },
+      ipAddress: ip,
+    })
+  })
 
   return genericSuccess
 }

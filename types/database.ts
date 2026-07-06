@@ -102,7 +102,8 @@ export type UserInfo = {
   admin_flag: boolean
   role: UserRole
   organization_key: number
-  password: string
+  // password（ハッシュ）はこの型に含めない — クライアントに渡る型のため。
+  // 検証が必要な Server Action では個別に select する
   password_changed_at: string | null
   created_at: string
   department?: Department
