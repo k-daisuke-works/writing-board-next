@@ -30,13 +30,29 @@ export async function createCalendarEvent(formData: FormData) {
 export async function deleteCalendarEvent(id: number) {
   const session = await getSession()
   if (!session) return { error: '認証が必要です。' }
+  if (!Number.isInteger(id) || id <= 0) return { error: '不正なリクエストです。' }
 
   const supabase = createServiceClient()
 
-  await supabase.from('calendar_events')
+  const { data: event } = await supabase.from('calendar_events')
+    .select('created_by, department_id')
+    .eq('id', id)
+    .eq('organization_key', session.organizationKey)
+    .single()
+  if (!event) return { error: 'イベントが見つかりません。' }
+
+  // 削除権限: 管理者 / 作成者本人 / リーダー（自部署イベント）
+  const canDelete =
+    session.role === 'admin' ||
+    event.created_by === String(session.userKey) ||
+    (session.role === 'leader' && event.department_id === session.departmentId)
+  if (!canDelete) return { error: '削除権限がありません。' }
+
+  const { error } = await supabase.from('calendar_events')
     .delete()
     .eq('id', id)
     .eq('organization_key', session.organizationKey)
+  if (error) return { error: '削除に失敗しました。' }
 
   revalidatePath('/schedule/calendar')
   revalidatePath('/schedule/department')

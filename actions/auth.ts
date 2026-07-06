@@ -364,7 +364,29 @@ export async function resetPasswordWithToken(formData: FormData) {
 }
 
 // ─── 団体登録 ───────────────────────────────────────────────
+
+// 未認証で叩ける組織作成エンドポイントのスパム対策（IP単位 3回/1時間）
+const registerAttempts = new Map<string, { count: number; resetAt: number }>()
+const REGISTER_RATE = { MAX: 3, WINDOW_MS: 60 * 60 * 1000 }
+
+function isRegisterRateLimited(ip: string): boolean {
+  const now = Date.now()
+  const entry = registerAttempts.get(ip)
+  if (!entry || now >= entry.resetAt) {
+    registerAttempts.set(ip, { count: 1, resetAt: now + REGISTER_RATE.WINDOW_MS })
+    return false
+  }
+  entry.count += 1
+  return entry.count > REGISTER_RATE.MAX
+}
+
 export async function registerOrganization(formData: FormData) {
+  const headerStore = await headers()
+  const registerIp = headerStore.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  if (isRegisterRateLimited(registerIp)) {
+    return { error: '登録リクエストが多すぎます。しばらくしてから再度お試しください。' }
+  }
+
   const organizationId       = (formData.get('organizationId') as string)?.trim()
   const organizationName     = (formData.get('organizationName') as string)?.trim()
   const organizationPassword = formData.get('organizationPassword') as string

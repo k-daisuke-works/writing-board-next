@@ -9,7 +9,8 @@ export async function GET(req: NextRequest) {
   const path = req.nextUrl.searchParams.get('path')
   if (!path) return NextResponse.json({ error: 'Missing path' }, { status: 400 })
 
-  if (!path.startsWith(`${session.organizationKey}/`)) {
+  // 組織プレフィックス必須＋パストラバーサル拒否
+  if (!path.startsWith(`${session.organizationKey}/`) || path.includes('..')) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 

@@ -151,6 +151,16 @@ export async function updatePost(formData: FormData) {
 
   if (!post) return { error: '投稿が見つかりません。' }
 
+  // 編集権限: 管理者 / リーダー（自部署 or 本人） / 投稿者本人（deletePost と同ロジック）
+  const canEdit =
+    session.role === 'admin' ||
+    (session.role === 'leader' && (
+      post.department_id === session.departmentId ||
+      post.user_key === session.userKey
+    )) ||
+    post.user_key === session.userKey
+  if (!canEdit) return { error: '編集権限がありません。' }
+
   if (post.pin) {
     const ok = await bcrypt.compare(pin?.trim() ?? '', post.pin)
     if (!ok) return { error: 'PINが一致しません。' }
@@ -242,7 +252,7 @@ export async function deletePost(formData: FormData) {
 export async function getPdfSignedUrl(pdfPath: string) {
   const session = await getSession()
   if (!session) return null
-  if (!pdfPath.startsWith(`${session.organizationKey}/`)) return null
+  if (!pdfPath.startsWith(`${session.organizationKey}/`) || pdfPath.includes('..')) return null
   const supabase = createServiceClient()
   const { data } = await supabase.storage.from('pdfs').createSignedUrl(pdfPath, 60)
   return data?.signedUrl ?? null
