@@ -141,7 +141,7 @@ export default function HomeView({
   return (
     <div className="anim-fade-in space-y-6">
       <MarkReadOnMount postIds={allPostIds} />
-      <RealtimeSocial organizationKey={session.organizationKey} />
+      <RealtimeSocial channel={session.realtimeChannel} />
 
       <div className="flex items-start justify-between gap-4">
         <div>

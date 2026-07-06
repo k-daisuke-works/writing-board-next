@@ -4,6 +4,7 @@ import { after } from 'next/server'
 import { getSession } from '@/lib/session'
 import { createServiceClient } from '@/lib/supabase/server'
 import { sendPush } from '@/lib/push'
+import { broadcastRefresh } from '@/lib/realtime'
 
 export async function markPostsRead(postIds: number[]) {
   const session = await getSession()
@@ -64,6 +65,8 @@ export async function toggleReaction(postId: number, emoji: string) {
       emoji,
     })
   }
+
+  after(() => broadcastRefresh(session.organizationKey))
 }
 
 export async function addReply(formData: FormData) {
@@ -105,4 +108,6 @@ export async function addReply(formData: FormData) {
       }
     ))
   }
+
+  after(() => broadcastRefresh(session.organizationKey))
 }

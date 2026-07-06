@@ -23,19 +23,16 @@
 
 ---
 
-## 優先度1: Realtime のブロードキャスト方式への移行（未着手・要検証）
+## 優先度1: Realtime のブロードキャスト方式への移行（✅ 2026-07-07 対応済み）
 
-**症状**: `RealtimePosts.tsx` / `RealtimeSocial.tsx` は anon キーで `postgres_changes` を購読しているが、対象テーブル（writing_data / post_reactions / post_replies）に anon の SELECT ポリシーがないため、**イベントが購読者に届いていない可能性が高い**（Realtime は購読者の RLS SELECT 権限でイベントを絞る）。
+**旧症状**: `postgres_changes` を anon キーで購読していたが、対象テーブルに anon SELECT ポリシーがなく（かつ `writing_data` はパブリケーション未登録）、イベントが購読者に届いていなかった。掲示板・リアクション・コメントのリアルタイム更新が全滅していた。
 
-**やってはいけない修正**: `supabase/rls.sql` にある `anon USING (true)` の SELECT ポリシー適用。anon キーは公開情報なので、組織を横断して全投稿が読める穴になる（ファイル内コメント自身が警告している）。
+**実装した解決策**: Broadcast 方式へ移行。
+- `lib/realtime.ts` の `broadcastRefresh(orgKey)` が service role で REST（`/realtime/v1/api/broadcast`）に「refresh」シグナルを送信（ペイロード空）。Server Action の `after()` から呼ぶ（posts 作成/更新/削除、reaction、reply、api/posts/create）。
+- クライアントは `RealtimeSocial.tsx` が組織チャンネル `rt-${orgKey}` の broadcast を購読し、受信時に `/api/data/*` の SWR キャッシュを再検証。全ページ（home/posts/department/member/notices）にマウント済み。
+- `RealtimePosts.tsx` の postgres_changes 購読は撤去。データは SWR 再取得由来に一本化。
 
-**推奨方針**: Realtime Broadcast 方式へ移行する。
-1. まず現状確認: 本番でリアルタイム反映が本当に死んでいるかを、2セッションで投稿→即時反映の有無で検証する（SWR のポーリングで動いて見えている可能性もある）
-2. 移行する場合:
-   - サーバー側（Server Action の `after()` 内）から service role で `supabase.channel(...).send({ type: 'broadcast', ... })` を発火
-   - クライアントは既存の組織スコープ命名 `social-${organizationKey}` の broadcast イベントを購読し、`router.refresh()` する（現行実装の更新粒度を踏襲）
-   - `postgres_changes` 購読と `supabase_realtime` パブリケーション設定（schema.sql 末尾）は移行完了後に撤去
-3. 完了条件: 2ブラウザ間で投稿・リアクション・コメントが数秒内に反映される。anon キーで他組織のデータが読めないこと
+**残る注意点**: broadcast チャンネルは匿名購読可能な public チャンネル。ペイロードは空のシグナルのみ（実データは organization_key スコープ済みの `/api/data/*` から取得）だが、orgKey を推測すれば「その組織で更新があった時刻」は外部から観測可能（軽微なメタデータ漏れ）。完全な購読制限には Supabase Auth 導入＋Realtime Authorization（`realtime.messages` の RLS）が必要。旧 `supabase_realtime` パブリケーション（post_reactions/post_replies）は未使用のまま残置（無害）。
 
 ## 優先度2: schema.sql の実DB同期（陳腐化の解消）
 

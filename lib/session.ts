@@ -2,6 +2,7 @@ import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 import { cache } from 'react'
 import { createServiceClient } from '@/lib/supabase/server'
+import { realtimeTopic } from '@/lib/realtime'
 import type { UserSession, UserRole } from '@/types/database'
 
 const SECRET      = new TextEncoder().encode(process.env.JWT_SECRET!)
@@ -92,6 +93,7 @@ export const getSession = cache(async (): Promise<UserSession | null> => {
       role:             ((user as unknown as { role: string }).role ?? 'member') as UserRole,
       adminFlag:        ((user as unknown as { role: string }).role ?? 'member') === 'admin',
       avatarUrl:        (user as unknown as { avatar_url: string | null }).avatar_url ?? null,
+      realtimeChannel:  realtimeTopic(user.organization_key),
     }
   } catch {
     return null

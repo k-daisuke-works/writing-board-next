@@ -80,7 +80,7 @@ export default async function MemberHistoryPage({
   return (
     <div className="anim-fade-in max-w-3xl">
       <MarkReadOnMount postIds={postIds} />
-      <RealtimeSocial organizationKey={session.organizationKey} />
+      <RealtimeSocial channel={session.realtimeChannel} />
 
       <Link href="/home" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition-colors mb-4 w-fit">
         <ArrowLeft className="w-4 h-4" />

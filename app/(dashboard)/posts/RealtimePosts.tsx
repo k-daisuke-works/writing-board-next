@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useState } from 'react'
 import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
 import { relativeTime, isRecent } from '@/lib/utils'
 import type { Department, WritingData, UserSession, PostRead, PostReaction, PostReply, PostAttachment } from '@/types/database'
@@ -31,41 +30,10 @@ export default function RealtimePosts({
   initialPosts, departments, session,
   initialReadsMap, initialReactionsMap, initialRepliesMap, initialAvatarMap, initialAttachmentsMap,
 }: Props) {
-  const [latestPosts, setLatestPosts] = useState(initialPosts)
-  const [showModal, setShowModal]     = useState(false)
-  const [toast, setToast]             = useState<string | null>(null)
-  const supabase = createClient()
-
-  useEffect(() => {
-    const ch = supabase.channel(`board-${session.organizationKey}`)
-      .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'writing_data',
-        filter: `organization_key=eq.${session.organizationKey}`,
-      }, (payload) => {
-        const p = (payload.new ?? payload.old) as WritingData
-        if (p.post_type && p.post_type !== 'board') return
-
-        if (payload.eventType === 'INSERT') {
-          const post = payload.new as WritingData
-          setLatestPosts((prev) => {
-            const cur = prev[post.department_id!]
-            return (!cur || post.writing_time > cur.writing_time)
-              ? { ...prev, [post.department_id!]: post }
-              : prev
-          })
-          setToast(`${post.department_name_stamp}に新しい連絡があります`)
-          setTimeout(() => setToast(null), 4000)
-        }
-        if (payload.eventType === 'DELETE') {
-          const d = payload.old as WritingData
-          setLatestPosts((prev) => {
-            if (prev[d.department_id!]?.writing_id !== d.writing_id) return prev
-            const next = { ...prev }; delete next[d.department_id!]; return next
-          })
-        }
-      }).subscribe()
-    return () => { supabase.removeChannel(ch) }
-  }, [session.organizationKey])
+  // 表示データは SWR 由来の props。broadcast 受信時に親が /api/data/posts を
+  // 再取得し、key={fetchedAt} で本コンポーネントが最新 props で再マウントされる。
+  const latestPosts = initialPosts
+  const [showModal, setShowModal] = useState(false)
 
   const postIds = Object.values(latestPosts).map(p => p.writing_id)
   const newCount = departments.filter((d) => isRecent(latestPosts[d.department_id]?.writing_time ?? null)).length
@@ -73,16 +41,7 @@ export default function RealtimePosts({
   return (
     <>
       <MarkReadOnMount postIds={postIds} />
-      <RealtimeSocial organizationKey={session.organizationKey} />
-
-      {toast && (
-        <div className="fixed top-4 right-4 z-50 anim-slide-down">
-          <div className="bg-gray-900 text-white text-sm px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2.5">
-            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse shrink-0" />
-            {toast}
-          </div>
-        </div>
-      )}
+      <RealtimeSocial channel={session.realtimeChannel} />
 
       <div className="flex items-center justify-between mb-5">
         <div>

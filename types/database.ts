@@ -17,6 +17,7 @@ export type UserSession = {
   role: UserRole
   adminFlag: boolean   // computed: role === 'admin'
   avatarUrl: string | null
+  realtimeChannel: string   // 推測困難な Realtime broadcast チャンネル名（HMAC由来）
 }
 
 // -----------------------------------------------

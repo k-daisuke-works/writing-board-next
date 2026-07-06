@@ -17,6 +17,7 @@ type Props = {
 
 export default function CalendarView({ events, session, mode }: Props) {
   const router = useRouter()
+  const canEdit = session.role === 'admin' || session.role === 'leader'
   const now = new Date()
   const [year, setYear]   = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth() + 1)
@@ -104,13 +105,15 @@ export default function CalendarView({ events, session, mode }: Props) {
             <ChevronRight className="w-4 h-4 text-gray-600" />
           </button>
         </div>
-        <button
-          onClick={() => openAdd(now.getDate())}
-          className="flex items-center gap-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          追加
-        </button>
+        {canEdit && (
+          <button
+            onClick={() => openAdd(now.getDate())}
+            className="flex items-center gap-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            追加
+          </button>
+        )}
       </div>
 
       {/* カレンダーグリッド */}
@@ -135,10 +138,10 @@ export default function CalendarView({ events, session, mode }: Props) {
             return (
               <div
                 key={i}
-                onClick={() => day && openAdd(day)}
+                onClick={() => canEdit && day && openAdd(day)}
                 className={`min-h-[70px] sm:min-h-[90px] border-r border-b border-gray-100 p-1 ${
                   col === 6 ? 'border-r-0' : ''
-                } ${day ? 'cursor-pointer hover:bg-gray-50' : 'bg-gray-50/40'} transition-colors`}
+                } ${day && canEdit ? 'cursor-pointer hover:bg-gray-50' : day ? '' : 'bg-gray-50/40'} transition-colors`}
               >
                 {day && (
                   <>
@@ -159,12 +162,14 @@ export default function CalendarView({ events, session, mode }: Props) {
                           title={ev.location ? `${ev.title} @ ${ev.location}` : ev.title}
                         >
                           <span className="truncate flex-1 leading-tight">{ev.title}</span>
-                          <button
-                            onClick={() => handleDelete(ev.id)}
-                            className="opacity-0 group-hover:opacity-100 shrink-0 hover:text-red-500 transition-all"
-                          >
-                            <X className="w-2.5 h-2.5" />
-                          </button>
+                          {canEdit && (
+                            <button
+                              onClick={() => handleDelete(ev.id)}
+                              className="opacity-0 group-hover:opacity-100 shrink-0 hover:text-red-500 transition-all"
+                            >
+                              <X className="w-2.5 h-2.5" />
+                            </button>
+                          )}
                         </div>
                       ))}
                       {dayEvs.length > 3 && (

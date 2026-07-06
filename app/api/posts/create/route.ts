@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/session'
 import { sendPush } from '@/lib/push'
+import { broadcastRefresh } from '@/lib/realtime'
 
 const MAX_MESSAGE_LENGTH = 5000
 
@@ -106,5 +107,6 @@ export async function POST(req: NextRequest) {
     }))
   }
 
+  after(() => broadcastRefresh(session.organizationKey))
   return NextResponse.json({ success: true })
 }

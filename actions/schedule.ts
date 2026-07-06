@@ -17,7 +17,8 @@ export async function createScheduleEvent(formData: FormData) {
 
   if (!title) return { error: 'タイトルを入力してください。' }
   if (scope === 'department' && !targetDeptId) return { error: '対象部署を選択してください。' }
-  const validDates = dates.filter(d => d.trim())
+  // 有効な日時（パース可能）のみ採用
+  const validDates = dates.filter(d => d.trim() && !Number.isNaN(Date.parse(d)))
   if (!validDates.length) return { error: '候補日時を1つ以上入力してください。' }
 
   const supabase = createServiceClient()
@@ -46,7 +47,14 @@ export async function createScheduleEvent(formData: FormData) {
   }))
 
   const { error: dateError } = await supabase.from('schedule_dates').insert(dateRows)
-  if (dateError) return { error: '候補日時の登録に失敗しました。' }
+  if (dateError) {
+    // 候補日の登録に失敗したら、候補日ゼロの孤児イベントを残さないよう本体を削除
+    await supabase.from('schedule_events')
+      .delete()
+      .eq('event_id', event.event_id)
+      .eq('organization_key', session.organizationKey)
+    return { error: '候補日時の登録に失敗しました。' }
+  }
 
   revalidatePath('/schedule')
   revalidatePath('/schedule/calendar')

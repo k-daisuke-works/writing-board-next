@@ -1,25 +1,27 @@
 'use client'
 
 import { useEffect } from 'react'
-import { mutate } from 'swr'
+import { useSWRConfig } from 'swr'
 import { createClient } from '@/lib/supabase/client'
 
-export default function RealtimeSocial({ organizationKey }: { organizationKey: number }) {
-  const supabase = createClient()
+/**
+ * 組織チャンネルの broadcast を購読し、更新シグナルを受けたら
+ * /api/data/* の SWR キャッシュを再検証する。
+ * 投稿・リアクション・コメントすべての更新をこの1経路でカバーする。
+ */
+export default function RealtimeSocial({ channel }: { channel: string }) {
+  const { mutate } = useSWRConfig()
 
   useEffect(() => {
-    const ch = supabase.channel(`social-${organizationKey}`)
-      .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'post_reactions',
-        filter: `organization_key=eq.${organizationKey}`,
-      }, () => mutate(key => typeof key === 'string' && key.startsWith('/api/data/')))
-      .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'post_replies',
-        filter: `organization_key=eq.${organizationKey}`,
-      }, () => mutate(key => typeof key === 'string' && key.startsWith('/api/data/')))
+    const supabase = createClient()
+    const ch = supabase
+      .channel(channel)
+      .on('broadcast', { event: 'refresh' }, () => {
+        mutate((key) => typeof key === 'string' && key.startsWith('/api/data/'))
+      })
       .subscribe()
     return () => { supabase.removeChannel(ch) }
-  }, [organizationKey])
+  }, [channel, mutate])
 
   return null
 }

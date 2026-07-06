@@ -75,7 +75,7 @@ export default async function DepartmentHistoryPage({
   return (
     <div className="anim-fade-in max-w-3xl">
       <MarkReadOnMount postIds={postIds} />
-      <RealtimeSocial organizationKey={session.organizationKey} />
+      <RealtimeSocial channel={session.realtimeChannel} />
 
       <div className="mb-6">
         <Link href="/posts" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition-colors mb-3 w-fit">

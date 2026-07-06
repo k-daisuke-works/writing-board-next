@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/session'
 import { sendPush } from '@/lib/push'
+import { broadcastRefresh } from '@/lib/realtime'
 
 const MAX_MESSAGE_LENGTH = 5000
 const MAX_PDF_SIZE_BYTES = 10 * 1024 * 1024
@@ -122,6 +123,7 @@ export async function createPost(formData: FormData) {
     }))
   }
 
+  after(() => broadcastRefresh(session.organizationKey))
   return { success: true }
 }
 
@@ -193,6 +195,7 @@ export async function updatePost(formData: FormData) {
     revalidatePath('/posts')
     revalidatePath(`/department/${post.department_id}`)
   }
+  after(() => broadcastRefresh(session.organizationKey))
   return { success: true }
 }
 
@@ -246,6 +249,7 @@ export async function deletePost(formData: FormData) {
     revalidatePath('/posts')
     revalidatePath(`/department/${post.department_id}`)
   }
+  after(() => broadcastRefresh(session.organizationKey))
   return { success: true }
 }
 

@@ -86,7 +86,7 @@ export default async function ScheduleEventPage({
         session={session}
       />
 
-      {(session.userKey === event.created_by || session.adminFlag) && event.status === 'open' && (
+      {(session.role === 'admin' || session.role === 'leader') && event.status === 'open' && (
         <ConfirmScheduleButton eventId={eventId} dates={dates ?? []} />
       )}
     </div>
