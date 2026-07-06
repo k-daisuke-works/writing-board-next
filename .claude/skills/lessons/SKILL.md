@@ -95,6 +95,8 @@ if (unknownKeys.length > 0) { /* 不足分だけ追加クエリ */ }
 ### SELECT カラムの明示列挙
 `avatar_url` を DB に追加したが `select('user_key, user_name')` のままで、アバターがずっと表示されなかった。表示用ユーザー情報は `user_name` だけでなく `avatar_url` も一緒に扱う。コンポーネントに渡す型にも `avatarUrl` 等の拡張余地を最初から持たせる。
 
+**セキュリティ面の実害も起きた**: 管理画面が `user_info` を `select('*')` で取得しクライアントコンポーネントに渡していたため、bcryptパスワードハッシュが全ユーザー分ブラウザに送出されていた。さらに `email` カラムを追加した際、`select('*')` の範囲が自動で広がり漏洩が拡大した。**機密カラムを持つテーブル（user_info・organization_data）でクライアントに渡すデータは必ずカラム明示列挙**。クライアントに渡る型（`UserInfo` 等）には `password` を含めない。
+
 ### Optional FK
 `<select>` 未選択 `''` → `Number('') === 0` → FK違反でユーザー登録がフリーズした。
 
