@@ -69,7 +69,7 @@ function BrowserFrame({ children, className = '' }: { children: React.ReactNode;
         <span className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
         <span className="w-2.5 h-2.5 rounded-full bg-green-400" />
         <div className="ml-2 flex-1 bg-white rounded px-2 py-0.5 text-[10px] text-gray-400 font-mono">
-          gyomu-renraku.vercel.app
+          roscope.vercel.app
         </div>
       </div>
       {children}
@@ -309,22 +309,27 @@ export default function LandingPage() {
       <section className="relative overflow-hidden" style={{ background: 'linear-gradient(160deg,#1e3a8a 0%,#1d4ed8 55%,#3b82f6 100%)' }}>
         <div className="absolute inset-0 opacity-10"
           style={{ backgroundImage: 'radial-gradient(circle at 70% 50%, white 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
-        <div className="relative max-w-6xl mx-auto px-5 py-16 lg:py-24 flex flex-col lg:flex-row items-center gap-12">
+        <div className="relative max-w-6xl mx-auto px-5 py-16 lg:py-28 flex flex-col lg:flex-row items-center gap-12">
           {/* テキスト */}
-          <div className="flex-1 text-center lg:text-left">
-            <p className="text-blue-300 text-sm font-medium mb-3 tracking-wide">チームの今を、一目で見渡す。</p>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight mb-5">
-              チームの情報共有を<br />もっとスムーズに
+          <div className="flex-1 text-center lg:text-left anim-fade-in">
+            <span className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 text-blue-100 text-xs font-medium px-3 py-1 rounded-full mb-5 backdrop-blur">
+              <Sparkles className="w-3.5 h-3.5 text-blue-200" />
+              福祉施設チーム向け 業務連絡システム
+            </span>
+            <h1 className="text-3xl sm:text-4xl lg:text-[3.25rem] font-bold text-white leading-[1.15] tracking-tight mb-5">
+              チームの情報共有を<br />
+              <span className="bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">もっとスムーズに</span>
             </h1>
-            <p className="text-blue-100 text-base leading-relaxed mb-8 max-w-lg mx-auto lg:mx-0">
+            <p className="text-blue-100/90 text-base sm:text-lg leading-relaxed mb-8 max-w-lg mx-auto lg:mx-0">
               部署間の情報共有・スケジュール管理・日程調整・福祉最新情報の収集まで、日常業務に必要な機能をひとつにまとめました。
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center gap-2 bg-white text-blue-700 font-semibold px-6 py-3 rounded-lg hover:bg-blue-50 transition-colors shadow-md"
+                className="group inline-flex items-center justify-center gap-2 bg-white text-blue-700 font-semibold px-6 py-3 rounded-lg hover:bg-blue-50 transition-all shadow-lg shadow-blue-950/20 hover:shadow-xl hover:-translate-y-0.5"
               >
-                ログインして始める <ArrowRight className="w-4 h-4" />
+                ログインして始める
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </Link>
             </div>
             <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 justify-center lg:justify-start">
@@ -336,8 +341,11 @@ export default function LandingPage() {
             </div>
           </div>
           {/* モックアップ */}
-          <div className="flex-1 w-full max-w-lg">
-            <HomeMockup />
+          <div className="flex-1 w-full max-w-lg relative">
+            <div className="absolute -inset-6 bg-blue-400/25 blur-3xl rounded-full pointer-events-none" aria-hidden />
+            <div className="relative">
+              <HomeMockup />
+            </div>
           </div>
         </div>
       </section>
@@ -351,8 +359,11 @@ export default function LandingPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {FEATURES.map(({ Icon, color, title, desc }) => (
-              <div key={title} className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
-                <div className={`w-10 h-10 ${color} rounded-lg flex items-center justify-center mb-3`}>
+              <div
+                key={title}
+                className="group bg-white rounded-2xl border border-gray-200 p-6 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-900/5 hover:-translate-y-1 transition-all duration-200"
+              >
+                <div className={`w-11 h-11 ${color} rounded-xl flex items-center justify-center mb-4 ring-1 ring-inset ring-black/5 group-hover:scale-110 transition-transform`}>
                   <Icon className="w-5 h-5" strokeWidth={1.75} />
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-1.5">{title}</h3>
@@ -445,17 +456,18 @@ export default function LandingPage() {
                 desc: '重要マーク付きの投稿は未読バナーとプッシュ通知でお知らせ。見逃しを防いで連絡の抜け漏れをなくします。',
               },
             ].map(({ img, alt, label, desc }) => (
-              <div key={label} className="rounded-2xl overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow group">
-                <div className="overflow-hidden h-48">
+              <div key={label} className="rounded-2xl overflow-hidden border border-gray-200 bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                <div className="relative overflow-hidden h-48">
                   <img
                     src={img}
                     alt={alt}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" aria-hidden />
+                  <h3 className="absolute bottom-3 left-4 right-4 text-white font-semibold text-base drop-shadow-sm">{label}</h3>
                 </div>
                 <div className="p-5">
-                  <h3 className="font-semibold text-gray-900 mb-2">{label}</h3>
                   <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
                 </div>
               </div>
@@ -506,17 +518,20 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 lg:py-20" style={{ background: 'linear-gradient(135deg,#1e3a8a,#2563eb)' }}>
-        <div className="max-w-2xl mx-auto px-5 text-center">
+      <section className="relative overflow-hidden py-16 lg:py-24" style={{ background: 'linear-gradient(135deg,#1e3a8a,#2563eb)' }}>
+        <div className="absolute inset-0 opacity-10" aria-hidden
+          style={{ backgroundImage: 'radial-gradient(circle at 50% 40%, white 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+        <div className="relative max-w-2xl mx-auto px-5 text-center">
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
             さっそく使ってみましょう
           </h2>
           <p className="text-blue-200 mb-8">団体ID・ユーザーID・パスワードを入力するだけですぐに始められます</p>
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 bg-white text-blue-700 font-semibold px-8 py-3.5 rounded-lg hover:bg-blue-50 transition-colors shadow-lg text-base"
+            className="group inline-flex items-center gap-2 bg-white text-blue-700 font-semibold px-8 py-3.5 rounded-lg hover:bg-blue-50 transition-all shadow-xl shadow-blue-950/30 hover:-translate-y-0.5 text-base"
           >
-            ログインページへ <ArrowRight className="w-4 h-4" />
+            ログインページへ
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </div>
       </section>
