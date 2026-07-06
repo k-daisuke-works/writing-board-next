@@ -1,8 +1,9 @@
-# writing-board-next 開発コンテキスト
-
-このスキルを呼んだら、以下のコンテキストを前提に開発を進めてください。
-
 ---
+name: context
+description: writing-board-next のプロジェクト構成リファレンス（DBスキーマ・ルーティング・主要ファイル・認可パターン・UI規約）。新機能の実装、既存機能の修正、テーブルやルートの確認が必要なときに読む。
+---
+
+# writing-board-next 開発コンテキスト
 
 ## プロジェクト概要
 
@@ -10,23 +11,12 @@
 
 **スタック:** Next.js App Router / Supabase（service role key、RLS未使用）/ Vercel / TypeScript / Tailwind CSS
 
----
+**認証:** Supabase Auth は使っていない — 独自JWT（`lib/session.ts`）。全ページ冒頭で:
 
-## 最重要ルール
-
-1. **全DBクエリに `.eq('organization_key', session.organizationKey)` 必須**
-   - RLSなし＝アプリ側フィルタが唯一の防衛線
-   - 特に削除・更新系アクションで漏れやすい（過去に Critical 修正あり）
-
-2. **全ページ冒頭で認証チェック**
-   ```typescript
-   const session = await getSession()
-   if (!session) redirect('/login')
-   ```
-
-3. **Supabase Auth は使っていない** — 独自JWT（`lib/session.ts`）
-
----
+```typescript
+const session = await getSession()
+if (!session) redirect('/login')
+```
 
 ## DBテーブル
 
@@ -45,14 +35,13 @@
 
 **Storage バケット:** `images` / `videos` / `pdfs` / `avatars`（public）
 
----
-
 ## ルーティング
 
 ```
 /login /setup
 /home                         ホーム（部署カード＋メンバーカード、HomeMenuDropdown）
 /posts                        連絡ボード
+/notices                      お知らせ履歴
 /department/[id]              部署投稿
 /member/[id]                  メンバー詳細・プロフィール・投稿履歴
 /members                      メンバー一覧
@@ -65,8 +54,6 @@
 /expenses                     活動費請求（Googleフォーム）
 /admin                        管理（adminFlagのみ）
 ```
-
----
 
 ## 主要ファイル
 
@@ -97,8 +84,6 @@ app/(dashboard)/
     calendar/CalendarView.tsx  カレンダーグリッドUI
 ```
 
----
-
 ## 認可パターン
 
 ```typescript
@@ -112,19 +97,7 @@ if (targetUserKey !== session.userKey && !session.adminFlag) throw new Error('Fo
 if (respondentType === 'department' && respondentId !== session.departmentId) return { error: ... }
 ```
 
----
-
-## UI規約
-
-- Tailwind CSS のみ（外部UIライブラリなし）
-- アイコン: `lucide-react`
-- アニメーション: `anim-fade-in` クラス（ページ入場）
-- モーダル: 固定オーバーレイ + 白カード、`onClick={e => e.stopPropagation()}`
-- コメントは最小限（WHYだけ書く、WHATは書かない）
-
----
-
-## よくあるパターン（Server Action）
+## Server Action の定型
 
 ```typescript
 'use server'
@@ -133,6 +106,14 @@ export async function someAction(formData: FormData) {
   if (!session) throw new Error('Unauthorized')
   // adminFlag チェック（必要な場合）
   // organization_key フィルタ付きDBクエリ
-  // revalidatePath
+  // revalidatePath（影響ページを全列挙）
 }
 ```
+
+## UI規約
+
+- Tailwind CSS のみ（外部UIライブラリなし）
+- アイコン: `lucide-react`
+- アニメーション: `anim-fade-in` クラス（ページ入場）
+- モーダル: 固定オーバーレイ + 白カード、`onClick={e => e.stopPropagation()}`
+- コメントは最小限（WHYだけ書く、WHATは書かない）
