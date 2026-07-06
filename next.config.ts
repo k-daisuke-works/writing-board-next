@@ -1,6 +1,29 @@
 import type { NextConfig } from 'next'
 
+const isDev = process.env.NODE_ENV === 'development'
+
+// Content-Security-Policy（ISO27001 A.8.26 アプリケーションセキュリティ要件）
+// - script-src: Next.js のインラインスクリプトに 'unsafe-inline' が必要。'unsafe-eval' は開発時のみ
+// - frame-src: ユニゾンプラザ空き状況・Google フォームの埋め込みのみ許可
+// - connect-src: 自オリジンと Supabase（REST / Storage / Realtime WebSocket）のみ
+const csp = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https://*.supabase.co",
+  "media-src 'self' blob: https://*.supabase.co",
+  "font-src 'self' data:",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+  "frame-src https://www.unisonplaza-member.jp https://docs.google.com",
+  "worker-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join('; ')
+
 const securityHeaders = [
+  { key: 'Content-Security-Policy', value: csp },
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },

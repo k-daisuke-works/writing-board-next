@@ -2,7 +2,7 @@ import { getSession } from '@/lib/session'
 import { createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import AdminPanel from './AdminPanel'
-import type { UserInfo, Department, Job, Position, EmploymentType, Group, LoginHistoryEntry, PasswordPolicy } from '@/types/database'
+import type { UserInfo, Department, Job, Position, EmploymentType, Group, LoginHistoryEntry, PasswordPolicy, AuditLogEntry } from '@/types/database'
 
 export default async function AdminPage() {
   const session = await getSession()
@@ -35,15 +35,17 @@ export default async function AdminPage() {
   let employmentTypes: EmploymentType[] = []
   let groups:          Group[]          = []
   let loginHistory:    LoginHistoryEntry[] = []
+  let auditLogs:       AuditLogEntry[] = []
   let passwordPolicy:  PasswordPolicy | null = null
   let attachmentCounts = { image: 0, video: 0, pdf: 0 }
 
   if (session.role === 'admin') {
-    const [posRes, etRes, grpRes, lhRes, ppRes, attRes] = await Promise.all([
+    const [posRes, etRes, grpRes, lhRes, alRes, ppRes, attRes] = await Promise.all([
       supabase.from('position_data').select('*').eq('organization_key', orgKey).order('position_id'),
       supabase.from('employment_type_data').select('*').eq('organization_key', orgKey).order('employment_type_id'),
       supabase.from('group_data').select('*, members:user_group_members(user_key, user_info(user_name))').eq('organization_key', orgKey).order('group_id'),
       supabase.from('login_history').select('*').eq('organization_key', orgKey).order('logged_at', { ascending: false }).limit(50),
+      supabase.from('audit_logs').select('*').eq('organization_key', orgKey).order('created_at', { ascending: false }).limit(50),
       supabase.from('password_policy').select('*').eq('organization_key', orgKey).maybeSingle(),
       supabase.from('post_attachments').select('file_type').eq('organization_key', orgKey),
     ])
@@ -62,6 +64,7 @@ export default async function AdminPage() {
     }))
 
     loginHistory  = (lhRes.data ?? []) as unknown as LoginHistoryEntry[]
+    auditLogs     = (alRes.data ?? []) as unknown as AuditLogEntry[]
     passwordPolicy = ppRes.data as PasswordPolicy | null
 
     const counts = { image: 0, video: 0, pdf: 0 }
@@ -93,6 +96,7 @@ export default async function AdminPage() {
       employmentTypes={employmentTypes}
       groups={groups}
       loginHistory={loginHistory}
+      auditLogs={auditLogs}
       passwordPolicy={passwordPolicy}
       attachmentCounts={attachmentCounts}
       currentUserKey={session.userKey}

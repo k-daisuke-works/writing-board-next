@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>オフライン - RoScope</title>
+  <style>
+    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+           font-family: system-ui, -apple-system, sans-serif; background: #f5f5f5; color: #374151; }
+    .card { text-align: center; padding: 2rem; }
+    .icon { font-size: 3rem; margin-bottom: 1rem; }
+    h1 { font-size: 1.25rem; margin: 0 0 .5rem; color: #111827; }
+    p { font-size: .875rem; margin: 0 0 1.5rem; color: #6b7280; }
+    button { background: #2563eb; color: #fff; border: none; border-radius: 6px;
+             padding: .75rem 2rem; font-size: .875rem; font-weight: 500; cursor: pointer; }
+    button:hover { background: #1d4ed8; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">📡</div>
+    <h1>オフラインです</h1>
+    <p>インターネットに接続されていません。<br>接続を確認してから再読み込みしてください。</p>
+    <button onclick="location.reload()">再読み込み</button>
+  </div>
+</body>
+</html>

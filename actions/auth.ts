@@ -2,9 +2,11 @@
 
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { after } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { createServiceClient } from '@/lib/supabase/server'
 import { createSession, deleteSession, createSetupToken, getSession } from '@/lib/session'
+import { logAudit } from '@/lib/audit'
 
 // ─── ログイン試行レート制限 ─────────────────────────────────
 // 注: Node.js モジュールスコープの Map のため、同一プロセス内でのみ有効。
@@ -69,6 +71,16 @@ export async function login(formData: FormData) {
     return { error: 'ログインに失敗しました。' }
   }
 
+  // ログイン失敗の監査記録（組織が特定できた場合のみ）
+  const auditLoginFailure = (reason: string) =>
+    after(() => logAudit({
+      organizationKey: org.organization_key,
+      actorName: userId,
+      action: 'auth.login_failed',
+      detail: { reason },
+      ipAddress: ip,
+    }))
+
   const { data: user } = await supabase
     .from('user_info')
     .select('user_key, user_id, role, password, must_change_password, is_active, password_changed_at')
@@ -78,6 +90,7 @@ export async function login(formData: FormData) {
 
   if (!user) {
     recordFailedAttempt(key)
+    auditLoginFailure('unknown_user')
     return { error: 'ログインに失敗しました。' }
   }
 
@@ -90,12 +103,14 @@ export async function login(formData: FormData) {
 
   if (!u.is_active) {
     recordFailedAttempt(key)
+    auditLoginFailure('account_frozen')
     return { error: 'このアカウントは凍結されています。管理者にお問い合わせください。' }
   }
 
   const isValid = await bcrypt.compare(password, user.password)
   if (!isValid) {
     recordFailedAttempt(key)
+    auditLoginFailure('wrong_password')
     return { error: 'ログインに失敗しました。' }
   }
 
@@ -150,19 +165,30 @@ export async function changePassword(formData: FormData) {
 
   if (!currentPassword || !newPassword || !confirmPassword)
     return { error: '全ての項目を入力してください。' }
-  if (newPassword.length < 8)
-    return { error: '新しいパスワードは8文字以上で入力してください。' }
   if (newPassword !== confirmPassword)
     return { error: '新しいパスワードが一致しません。' }
+  if (newPassword === currentPassword)
+    return { error: '現在と同じパスワードは使用できません。' }
 
   const supabase = createServiceClient()
 
-  const { data: user } = await supabase
-    .from('user_info')
-    .select('password')
-    .eq('user_key', session.userKey)
-    .eq('organization_key', session.organizationKey)
-    .single()
+  const [{ data: user }, { data: policy }] = await Promise.all([
+    supabase
+      .from('user_info')
+      .select('password')
+      .eq('user_key', session.userKey)
+      .eq('organization_key', session.organizationKey)
+      .single(),
+    supabase
+      .from('password_policy')
+      .select('min_length')
+      .eq('organization_key', session.organizationKey)
+      .maybeSingle(),
+  ])
+
+  const minLength = policy?.min_length ?? 8
+  if (newPassword.length < minLength)
+    return { error: `新しいパスワードは${minLength}文字以上で入力してください。` }
 
   if (!user) return { error: 'ユーザーが見つかりません。' }
 
@@ -177,6 +203,15 @@ export async function changePassword(formData: FormData) {
     .eq('organization_key', session.organizationKey)
 
   if (error) return { error: 'パスワードの変更に失敗しました。' }
+
+  after(() => logAudit({
+    organizationKey: session.organizationKey,
+    actorUserKey: session.userKey,
+    actorName: session.userName,
+    action: 'auth.password_change',
+    target: `user:${session.userKey}`,
+  }))
+
   return { success: true }
 }
 

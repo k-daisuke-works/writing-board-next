@@ -1,7 +1,9 @@
 'use server'
 
+import { after } from 'next/server'
 import { getSession } from '@/lib/session'
 import { createServiceClient } from '@/lib/supabase/server'
+import { sendPush } from '@/lib/push'
 
 export async function markPostsRead(postIds: number[]) {
   const session = await getSession()
@@ -76,17 +78,31 @@ export async function addReply(formData: FormData) {
 
   const { data: post } = await supabase
     .from('writing_data')
-    .select('writing_id')
+    .select('writing_id, user_key, post_type')
     .eq('writing_id', postId)
     .eq('organization_key', session.organizationKey)
     .single()
   if (!post) return
 
-  await supabase.from('post_replies').insert({
+  const { error } = await supabase.from('post_replies').insert({
     post_id: postId,
     user_key: session.userKey,
     user_name_stamp: session.userName,
     organization_key: session.organizationKey,
     message,
   })
+
+  // 投稿者にコメント通知（自分の投稿への自コメントは除く）
+  if (!error && post.user_key && post.user_key !== session.userKey) {
+    const url = post.post_type === 'board' ? '/posts' : '/home'
+    after(() => sendPush(
+      { organizationKey: session.organizationKey, userKeys: [post.user_key] },
+      {
+        title: 'コメントが届きました',
+        body: `${session.userName}: ${message.slice(0, 80)}`,
+        url,
+        tag: `reply-${postId}`,
+      }
+    ))
+  }
 }

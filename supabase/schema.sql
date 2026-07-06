@@ -166,6 +166,23 @@ CREATE TABLE IF NOT EXISTS calendar_events (
   created_at         TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 監査ログテーブル（ISO27001 A.8.15。migrations/20260706_audit_logs.sql と同一）
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id               BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  organization_key INTEGER NOT NULL
+    REFERENCES organization_data(organization_key) ON DELETE CASCADE,
+  actor_user_key   INTEGER,
+  actor_name       TEXT NOT NULL,
+  action           TEXT NOT NULL,
+  target           TEXT,
+  detail           JSONB,
+  ip_address       TEXT,
+  created_at       TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_org_time
+  ON audit_logs (organization_key, created_at DESC);
+
 -- 福祉情報キャッシュテーブル（全組織共通）
 CREATE TABLE IF NOT EXISTS welfare_news (
   id           SERIAL PRIMARY KEY,
@@ -212,3 +229,4 @@ ALTER TABLE schedule_dates     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE schedule_responses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE calendar_events    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE welfare_news       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE audit_logs         ENABLE ROW LEVEL SECURITY;

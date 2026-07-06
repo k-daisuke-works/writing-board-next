@@ -1,9 +1,11 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { after } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/session'
+import { logAudit } from '@/lib/audit'
 import type { UserRole } from '@/types/database'
 
 // ─── ヘルパー ────────────────────────────────────────────
@@ -43,6 +45,15 @@ export async function deleteUser(formData: FormData) {
     .eq('organization_key', session.organizationKey)
 
   if (error) return { error: '削除に失敗しました。' }
+
+  after(() => logAudit({
+    organizationKey: session.organizationKey,
+    actorUserKey: session.userKey,
+    actorName: session.userName,
+    action: 'user.delete',
+    target: `user:${userKey}`,
+  }))
+
   revalidatePath('/admin')
   return { success: true }
 }
@@ -276,6 +287,16 @@ export async function updateUser(formData: FormData) {
     .eq('organization_key', session.organizationKey)
 
   if (error) return { error: '更新に失敗しました。' }
+
+  after(() => logAudit({
+    organizationKey: session.organizationKey,
+    actorUserKey: session.userKey,
+    actorName: session.userName,
+    action: 'user.update',
+    target: `user:${userKey}`,
+    detail: { role: newRole, passwordChanged: Boolean(newPassword) },
+  }))
+
   revalidatePath('/admin')
   return { success: true }
 }
@@ -368,6 +389,15 @@ export async function registerUser(formData: FormData) {
     return { error: `登録に失敗しました。(${error.code ?? 'unknown'})` }
   }
 
+  after(() => logAudit({
+    organizationKey,
+    actorUserKey: session?.userKey ?? null,
+    actorName: session?.userName ?? '初期セットアップ',
+    action: 'user.create',
+    target: `user:${userId}`,
+    detail: { role: userRole },
+  }))
+
   revalidatePath('/admin')
   return { success: true }
 }
@@ -393,6 +423,15 @@ export async function resetUserPassword(formData: FormData) {
     .eq('organization_key', session.organizationKey)
 
   if (error) return { error: 'リセットに失敗しました。' }
+
+  after(() => logAudit({
+    organizationKey: session.organizationKey,
+    actorUserKey: session.userKey,
+    actorName: session.userName,
+    action: 'user.password_reset',
+    target: `user:${userKey}`,
+  }))
+
   revalidatePath('/admin')
   return { success: true }
 }
@@ -414,6 +453,15 @@ export async function toggleUserActive(formData: FormData) {
     .eq('organization_key', session.organizationKey)
 
   if (error) return { error: '更新に失敗しました。' }
+
+  after(() => logAudit({
+    organizationKey: session.organizationKey,
+    actorUserKey: session.userKey,
+    actorName: session.userName,
+    action: isActive ? 'user.unfreeze' : 'user.freeze',
+    target: `user:${userKey}`,
+  }))
+
   revalidatePath('/admin')
   return { success: true }
 }
@@ -662,6 +710,15 @@ export async function updateOrgPassword(formData: FormData) {
     .update({ organization_password: hashed })
     .eq('organization_key', session.organizationKey)
   if (error) return { error: '更新に失敗しました。' }
+
+  after(() => logAudit({
+    organizationKey: session.organizationKey,
+    actorUserKey: session.userKey,
+    actorName: session.userName,
+    action: 'org.password_change',
+    target: 'organization',
+  }))
+
   return { success: true }
 }
 
@@ -682,6 +739,16 @@ export async function upsertPasswordPolicy(formData: FormData) {
     expiry_days:      expiryDays,
   })
   if (error) return { error: '更新に失敗しました。' }
+
+  after(() => logAudit({
+    organizationKey: session.organizationKey,
+    actorUserKey: session.userKey,
+    actorName: session.userName,
+    action: 'policy.update',
+    target: 'password_policy',
+    detail: { minLength, expiryDays },
+  }))
+
   revalidatePath('/admin')
   return { success: true }
 }

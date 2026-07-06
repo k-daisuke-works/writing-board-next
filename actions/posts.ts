@@ -1,9 +1,11 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { after } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/session'
+import { sendPush } from '@/lib/push'
 
 const MAX_MESSAGE_LENGTH = 5000
 const MAX_PDF_SIZE_BYTES = 10 * 1024 * 1024
@@ -97,21 +99,27 @@ export async function createPost(formData: FormData) {
     revalidatePath('/posts')
   }
 
-  if (isImportant) {
-    const internalSecret = process.env.INTERNAL_SECRET
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL
-    if (internalSecret && baseUrl) {
-      fetch(`${baseUrl}/api/push/send`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-internal-secret': internalSecret },
-        body: JSON.stringify({
-          organizationKey: session.organizationKey,
-          title: '重要なお知らせ',
-          body: `${session.userName}: ${message.slice(0, 80)}`,
-          url: postType === 'board' ? '/posts' : '/home',
-        }),
-      }).catch(() => {})
-    }
+  // 新着投稿を通知（team投稿は部署メンバーのみ、board/noticeは組織全体。送信者は除外）
+  const pushTarget =
+    postType === 'team'
+      ? session.departmentId
+        ? { organizationKey: session.organizationKey, departmentId: session.departmentId, excludeUserKey: session.userKey }
+        : null
+      : { organizationKey: session.organizationKey, excludeUserKey: session.userKey }
+
+  if (pushTarget) {
+    const title =
+      isImportant          ? '【重要】お知らせ'
+      : postType === 'notice' ? '新しいお知らせ'
+      : postType === 'team'   ? `${session.departmentName}に新着投稿`
+      :                         '連絡ボードに新着投稿'
+    const url = postType === 'board' ? '/posts' : postType === 'notice' ? '/notices' : '/home'
+    after(() => sendPush(pushTarget, {
+      title,
+      body: `${session.userName}: ${message.slice(0, 80)}`,
+      url,
+      tag: `post-${insertedPost.writing_id}`,
+    }))
   }
 
   return { success: true }

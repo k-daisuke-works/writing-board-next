@@ -10,6 +10,7 @@ const labelCls = "block text-sm font-medium text-gray-700 mb-1.5"
 export default function LoginPage() {
   const [error, setError]     = useState('')
   const [loading, setLoading] = useState(false)
+  const [showForgot, setShowForgot] = useState(false)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -57,7 +58,30 @@ export default function LoginPage() {
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-gray-500">
+      <div className="mt-4 text-center">
+        <button
+          type="button"
+          onClick={() => setShowForgot(v => !v)}
+          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+        >
+          パスワードをお忘れですか？
+        </button>
+        {showForgot && (
+          <div className="anim-fade-in mt-3 text-left bg-blue-50 border border-blue-200 rounded-md px-4 py-3 text-sm text-gray-700 space-y-2">
+            <p className="font-medium text-gray-900">パスワードの再設定手順</p>
+            <ol className="list-decimal list-inside space-y-1 text-gray-600">
+              <li>所属団体の<span className="font-medium">管理者</span>にパスワードのリセットを依頼してください。</li>
+              <li>管理者が発行した<span className="font-medium">仮パスワード</span>でログインします。</li>
+              <li>ログイン後、新しいパスワードの設定画面が自動で表示されます。</li>
+            </ol>
+            <p className="text-xs text-gray-500">
+              ※管理者ご自身がパスワードを忘れた場合は、他の管理者に依頼してください。
+            </p>
+          </div>
+        )}
+      </div>
+
+      <p className="mt-4 text-center text-sm text-gray-500">
         団体アカウントをお持ちでない方は{' '}
         <Link href="/register" className="text-blue-600 hover:text-blue-800 font-medium">新規登録</Link>
       </p>

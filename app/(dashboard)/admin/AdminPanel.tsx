@@ -14,7 +14,7 @@ import {
 } from '@/actions/admin'
 import type {
   UserInfo, Department, Job, Position, EmploymentType,
-  Group, LoginHistoryEntry, PasswordPolicy, UserRole,
+  Group, LoginHistoryEntry, PasswordPolicy, UserRole, AuditLogEntry,
 } from '@/types/database'
 import UserFormModal from './UserFormModal'
 import GroupModal from './GroupModal'
@@ -33,6 +33,7 @@ type Props = {
   employmentTypes: EmploymentType[]
   groups:          Group[]
   loginHistory:    LoginHistoryEntry[]
+  auditLogs:       AuditLogEntry[]
   passwordPolicy:  PasswordPolicy | null
   attachmentCounts: { image: number; video: number; pdf: number }
   currentUserKey:  number
@@ -47,6 +48,19 @@ type Props = {
 type UserModalState   = { open: false } | { open: true; mode: 'add' } | { open: true; mode: 'edit'; user: UserInfo }
 type GroupModalState  = { open: false } | { open: true; group: Group }
 type ResetPwState     = { open: false } | { open: true; userKey: number; userName: string }
+
+const AUDIT_ACTION_LABELS: Record<string, string> = {
+  'auth.login_failed':    'ログイン失敗',
+  'auth.password_change': 'パスワード変更',
+  'user.create':          'ユーザー作成',
+  'user.update':          'ユーザー更新',
+  'user.delete':          'ユーザー削除',
+  'user.password_reset':  'パスワードリセット',
+  'user.freeze':          'アカウント凍結',
+  'user.unfreeze':        '凍結解除',
+  'org.password_change':  '団体パス変更',
+  'policy.update':        'ポリシー変更',
+}
 
 const addInp = "flex-1 min-w-0 border border-gray-200 rounded-md px-3 py-1.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
 const formInp = "w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
@@ -133,7 +147,7 @@ function MasterSection<T extends { id: number; name: string }>({
 // ─── メインコンポーネント ─────────────────────────────────────
 export default function AdminPanel({
   users, departments, jobs, positions, employmentTypes, groups,
-  loginHistory, passwordPolicy, attachmentCounts,
+  loginHistory, auditLogs, passwordPolicy, attachmentCounts,
   currentUserKey, currentUserRole, deptCnt, jobCnt, posCnt, etCnt, orgName,
 }: Props) {
   const [isPending, startTransition] = useTransition()
@@ -709,6 +723,51 @@ export default function AdminPanel({
                   ))}
                   {loginHistory.length === 0 && (
                     <tr><td colSpan={3} className="px-5 py-8 text-center text-sm text-gray-400">履歴がありません</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+
+        {/* ── 監査ログ（admin のみ） ──────────────────────────── */}
+        {currentUserRole === 'admin' && (
+          <section className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div className={sectionHdr}>
+              <Shield className="w-4 h-4 text-gray-400" strokeWidth={1.75} />
+              <span className="text-sm font-semibold text-gray-900">監査ログ</span>
+              <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">直近50件</span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[480px]">
+                <thead className="bg-gray-50 border-b border-gray-100">
+                  <tr>
+                    {['日時', '操作者', '操作', '対象'].map(h => (
+                      <th key={h} className="text-left px-5 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {auditLogs.map(entry => (
+                    <tr key={entry.id} className="hover:bg-gray-50/70 transition-colors">
+                      <td className="px-5 py-2.5 text-gray-500 whitespace-nowrap">
+                        {new Date(entry.created_at).toLocaleString('ja-JP', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                      </td>
+                      <td className="px-5 py-2.5 text-gray-700 font-medium whitespace-nowrap">{entry.actor_name}</td>
+                      <td className="px-5 py-2.5 whitespace-nowrap">
+                        <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
+                          entry.action === 'auth.login_failed' ? 'bg-red-50 text-red-700'
+                          : entry.action.includes('delete') || entry.action.includes('freeze') ? 'bg-yellow-50 text-yellow-700'
+                          : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {AUDIT_ACTION_LABELS[entry.action] ?? entry.action}
+                        </span>
+                      </td>
+                      <td className="px-5 py-2.5 text-gray-400 font-mono text-xs">{entry.target ?? '—'}</td>
+                    </tr>
+                  ))}
+                  {auditLogs.length === 0 && (
+                    <tr><td colSpan={4} className="px-5 py-8 text-center text-sm text-gray-400">ログがありません</td></tr>
                   )}
                 </tbody>
               </table>

@@ -78,6 +78,18 @@ export type PasswordPolicy = {
   expiry_days: number | null
 }
 
+export type AuditLogEntry = {
+  id: number
+  organization_key: number
+  actor_user_key: number | null
+  actor_name: string
+  action: string
+  target: string | null
+  detail: Record<string, unknown> | null
+  ip_address: string | null
+  created_at: string
+}
+
 export type UserInfo = {
   user_key: number
   user_id: string
