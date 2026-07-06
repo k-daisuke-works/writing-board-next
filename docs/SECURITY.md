@@ -30,7 +30,8 @@ RoScope（writing-board-next）の技術的・運用的セキュリティ管理�
 | パスワードハッシュ化 | bcrypt（コスト10）。平文保存なし | `actions/auth.ts` 他 |
 | パスワードポリシー | 組織ごとに最低文字数（8〜32）・有効期限（90/180/365日/無期限）を設定可能 | `password_policy` テーブル / 管理画面 |
 | 初回・リセット時の強制変更 | `must_change_password` フラグでログイン後に変更画面へ強制遷移 | `actions/auth.ts` |
-| パスワードリセット | 管理者が仮パスワードを発行 → 本人が初回ログインで変更（メール基盤不要のクローズド運用） | `resetUserPassword` |
+| パスワードリセット（メンバー） | 管理者が仮パスワードを発行 → 本人が初回ログインで変更 | `resetUserPassword` |
+| パスワードリセット（管理者） | 登録済みメール宛の署名付きリンク（30分有効・パスワード変更で自動失効・ユーザー列挙防止の一律応答・レート制限 5回/15分） | `requestPasswordReset` / `resetPasswordWithToken` |
 | 同一パスワード再利用拒否 | 現行と同じパスワードへの変更を拒否 | `changePassword` |
 | ブルートフォース対策 | ログイン試行を IP+団体ID 単位で 15分10回 に制限 | `actions/auth.ts` |
 
@@ -65,7 +66,8 @@ RoScope（writing-board-next）の技術的・運用的セキュリティ管理�
 
 ### 運用側で実施すべき事項
 - バックアップ: Supabase の自動バックアップ設定（Pro プランで日次・PITR）の有効化確認（A.8.13）
-- `JWT_SECRET` / `SUPABASE_SERVICE_ROLE_KEY` / `VAPID_PRIVATE_KEY` / `INTERNAL_SECRET` の定期ローテーション手順の策定（A.5.17）
+- `JWT_SECRET` / `SUPABASE_SERVICE_ROLE_KEY` / `VAPID_PRIVATE_KEY` / `INTERNAL_SECRET` / `SMTP_PASS` の定期ローテーション手順の策定（A.5.17）
+- 管理者メールアドレスは個人情報のため、退職時のアカウント削除で確実に消去する（A.5.34）
 
 ## 5. 開発セキュリティ（A.8.25 – A.8.29）
 

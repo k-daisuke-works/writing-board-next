@@ -75,7 +75,9 @@ export default function LoginPage() {
               <li>ログイン後、新しいパスワードの設定画面が自動で表示されます。</li>
             </ol>
             <p className="text-xs text-gray-500">
-              ※管理者ご自身がパスワードを忘れた場合は、他の管理者に依頼してください。
+              ※管理者の方は、メールアドレス登録済みであれば{' '}
+              <Link href="/forgot-password" className="text-blue-600 hover:text-blue-800 font-medium">メールで再設定</Link>
+              できます。
             </p>
           </div>
         )}

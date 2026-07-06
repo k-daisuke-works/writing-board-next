@@ -752,3 +752,41 @@ export async function upsertPasswordPolicy(formData: FormData) {
   revalidatePath('/admin')
   return { success: true }
 }
+
+// ─── 管理者メールアドレス（パスワード再設定用） ───────────────────────────
+
+/** 自分（管理者）のメールアドレスを登録・変更・解除する */
+export async function updateMyEmail(formData: FormData) {
+  const session = await getSession()
+  if (session?.role !== 'admin') return { error: '管理者権限が必要です。' }
+
+  const raw = (formData.get('email') as string)?.normalize('NFKC').trim() ?? ''
+  const email = raw === '' ? null : raw
+
+  if (email !== null) {
+    if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return { error: 'メールアドレスの形式が正しくありません。' }
+    }
+  }
+
+  const supabase = createServiceClient()
+  const { error } = await supabase
+    .from('user_info')
+    .update({ email })
+    .eq('user_key', session.userKey)
+    .eq('organization_key', session.organizationKey)
+
+  if (error) return { error: '更新に失敗しました。' }
+
+  after(() => logAudit({
+    organizationKey: session.organizationKey,
+    actorUserKey: session.userKey,
+    actorName: session.userName,
+    action: 'user.email_change',
+    target: `user:${session.userKey}`,
+    detail: { registered: email !== null },
+  }))
+
+  revalidatePath('/admin')
+  return { success: true }
+}

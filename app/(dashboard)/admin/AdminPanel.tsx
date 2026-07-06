@@ -10,7 +10,7 @@ import {
   createEmploymentType, updateEmploymentType, deleteEmploymentType,
   createGroup, updateGroup, deleteGroup,
   toggleUserActive, resetUserPassword,
-  updateOrgName, updateOrgPassword, upsertPasswordPolicy,
+  updateOrgName, updateOrgPassword, upsertPasswordPolicy, updateMyEmail,
 } from '@/actions/admin'
 import type {
   UserInfo, Department, Job, Position, EmploymentType,
@@ -35,6 +35,7 @@ type Props = {
   loginHistory:    LoginHistoryEntry[]
   auditLogs:       AuditLogEntry[]
   passwordPolicy:  PasswordPolicy | null
+  myEmail:         string | null
   attachmentCounts: { image: number; video: number; pdf: number }
   currentUserKey:  number
   currentUserRole: UserRole
@@ -52,6 +53,9 @@ type ResetPwState     = { open: false } | { open: true; userKey: number; userNam
 const AUDIT_ACTION_LABELS: Record<string, string> = {
   'auth.login_failed':    'ログイン失敗',
   'auth.password_change': 'パスワード変更',
+  'auth.reset_request':   'メール再設定リクエスト',
+  'auth.reset_complete':  'メール再設定完了',
+  'user.email_change':    'メールアドレス変更',
   'user.create':          'ユーザー作成',
   'user.update':          'ユーザー更新',
   'user.delete':          'ユーザー削除',
@@ -147,7 +151,7 @@ function MasterSection<T extends { id: number; name: string }>({
 // ─── メインコンポーネント ─────────────────────────────────────
 export default function AdminPanel({
   users, departments, jobs, positions, employmentTypes, groups,
-  loginHistory, auditLogs, passwordPolicy, attachmentCounts,
+  loginHistory, auditLogs, passwordPolicy, myEmail, attachmentCounts,
   currentUserKey, currentUserRole, deptCnt, jobCnt, posCnt, etCnt, orgName,
 }: Props) {
   const [isPending, startTransition] = useTransition()
@@ -177,6 +181,7 @@ export default function AdminPanel({
   const [currentOrgPw,    setCurrentOrgPw]    = useState('')
   const [newOrgPw,        setNewOrgPw]        = useState('')
   const [confirmOrgPw,    setConfirmOrgPw]    = useState('')
+  const [myEmailInput,    setMyEmailInput]    = useState(myEmail ?? '')
 
   // パスワードポリシーフォーム
   const [minLength,   setMinLength]   = useState(passwordPolicy?.min_length ?? 8)
@@ -364,6 +369,16 @@ export default function AdminPanel({
       const r = await updateOrgPassword(fd)
       if (r?.error) showToast(r.error, false)
       else { showToast('団体パスを変更しました'); setCurrentOrgPw(''); setNewOrgPw(''); setConfirmOrgPw('') }
+    })
+  }
+
+  const handleUpdateMyEmail = (e: React.FormEvent) => {
+    e.preventDefault()
+    const fd = new FormData(); fd.set('email', myEmailInput.trim())
+    startTransition(async () => {
+      const r = await updateMyEmail(fd)
+      if (r?.error) { showToast(r.error, false) }
+      else { showToast(myEmailInput.trim() ? 'メールアドレスを登録しました' : 'メールアドレスを解除しました') }
     })
   }
 
@@ -641,6 +656,23 @@ export default function AdminPanel({
                   className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
                   団体パスを変更
                 </button>
+              </form>
+
+              {/* パスワード再設定用メールアドレス */}
+              <form onSubmit={handleUpdateMyEmail} className="space-y-2">
+                <label className="block text-xs font-medium text-gray-700">パスワード再設定用メールアドレス（自分用）</label>
+                <p className="text-xs text-gray-400">
+                  登録すると、パスワードを忘れたときにログイン画面の「メールで再設定」が使えます。空欄で保存すると解除されます。
+                </p>
+                <div className="flex gap-2">
+                  <input type="email" value={myEmailInput} onChange={e => setMyEmailInput(e.target.value)}
+                    placeholder="admin@example.com" maxLength={254} autoComplete="email" lang="en"
+                    className={`${formInp} flex-1`} />
+                  <button type="submit" disabled={isPending || myEmailInput.trim() === (myEmail ?? '')}
+                    className="shrink-0 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                    保存
+                  </button>
+                </div>
               </form>
 
               {/* ストレージ使用状況 */}

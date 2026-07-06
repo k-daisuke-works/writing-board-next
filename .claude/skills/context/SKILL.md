@@ -40,7 +40,7 @@ if (targetUserKey !== session.userKey && session.role !== 'admin') return { erro
 | テーブル | 主要カラム / 用途 |
 |---|---|
 | `organization_data` | organization_key, organization_id, organization_name, organization_password |
-| `user_info` | user_key, user_id, user_name, department_id, job_id, position_id, employment_type_id, role, admin_flag, is_active, must_change_password, password_changed_at, organization_key, profile, affiliation, avatar_url |
+| `user_info` | user_key, user_id, user_name, department_id, job_id, position_id, employment_type_id, role, admin_flag, is_active, must_change_password, password_changed_at, email（管理者の再設定用・任意）, organization_key, profile, affiliation, avatar_url |
 | `department_data` / `job_data` / `position_data` / `employment_type_data` | 各マスタ（organization_key 付き） |
 | `group_data` + `user_group_members` | 任意グループとメンバー |
 | `writing_data` | writing_id, user_key, organization_key, message, post_type('board'/'team'/'notice'), is_important, display_until, pin, pdf_url, image_url, video_url |
@@ -122,4 +122,4 @@ after(() => logAudit({ organizationKey, actorUserKey, actorName, action, target 
 
 ## 環境変数
 
-`JWT_SECRET` / `SUPABASE_SERVICE_ROLE_KEY` / `NEXT_PUBLIC_SUPABASE_URL` / `VAPID_SUBJECT` / `NEXT_PUBLIC_VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `INTERNAL_SECRET` / `NEXT_PUBLIC_APP_URL`
+`JWT_SECRET` / `SUPABASE_SERVICE_ROLE_KEY` / `NEXT_PUBLIC_SUPABASE_URL` / `VAPID_SUBJECT` / `NEXT_PUBLIC_VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `INTERNAL_SECRET` / `NEXT_PUBLIC_APP_URL` / `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `MAIL_FROM`（メール再設定用・未設定時は機能が無効化されるだけで安全）

@@ -134,3 +134,35 @@ export async function verifySetupToken(token: string): Promise<number | null> {
     return null
   }
 }
+
+// ─── パスワード再設定用ワンタイムトークン ──────────────────
+/**
+ * メールで送るパスワード再設定トークン。
+ * - 有効期限 30 分・署名付き
+ * - `pwh`（現在のパスワードハッシュのフィンガープリント）を含み、
+ *   パスワードが変わると検証に失敗する = 実質ワンタイム
+ */
+export async function createPasswordResetToken(
+  userKey: number,
+  organizationKey: number,
+  passwordHashFingerprint: string,
+): Promise<string> {
+  return new SignJWT({ sub: 'pwreset', userKey, organizationKey, pwh: passwordHashFingerprint })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setExpirationTime('30m')
+    .sign(SECRET)
+}
+
+export async function verifyPasswordResetToken(
+  token: string,
+): Promise<{ userKey: number; organizationKey: number; pwh: string } | null> {
+  try {
+    const { payload } = await jwtVerify(token, SECRET)
+    if (payload.sub !== 'pwreset') return null
+    const { userKey, organizationKey, pwh } = payload as Record<string, unknown>
+    if (typeof userKey !== 'number' || typeof organizationKey !== 'number' || typeof pwh !== 'string') return null
+    return { userKey, organizationKey, pwh }
+  } catch {
+    return null
+  }
+}

@@ -37,10 +37,11 @@ export default async function AdminPage() {
   let loginHistory:    LoginHistoryEntry[] = []
   let auditLogs:       AuditLogEntry[] = []
   let passwordPolicy:  PasswordPolicy | null = null
+  let myEmail:         string | null = null
   let attachmentCounts = { image: 0, video: 0, pdf: 0 }
 
   if (session.role === 'admin') {
-    const [posRes, etRes, grpRes, lhRes, alRes, ppRes, attRes] = await Promise.all([
+    const [posRes, etRes, grpRes, lhRes, alRes, ppRes, attRes, meRes] = await Promise.all([
       supabase.from('position_data').select('*').eq('organization_key', orgKey).order('position_id'),
       supabase.from('employment_type_data').select('*').eq('organization_key', orgKey).order('employment_type_id'),
       supabase.from('group_data').select('*, members:user_group_members(user_key, user_info(user_name))').eq('organization_key', orgKey).order('group_id'),
@@ -48,6 +49,7 @@ export default async function AdminPage() {
       supabase.from('audit_logs').select('*').eq('organization_key', orgKey).order('created_at', { ascending: false }).limit(50),
       supabase.from('password_policy').select('*').eq('organization_key', orgKey).maybeSingle(),
       supabase.from('post_attachments').select('file_type').eq('organization_key', orgKey),
+      supabase.from('user_info').select('email').eq('user_key', session.userKey).eq('organization_key', orgKey).single(),
     ])
 
     positions       = (posRes.data ?? []) as unknown as Position[]
@@ -66,6 +68,7 @@ export default async function AdminPage() {
     loginHistory  = (lhRes.data ?? []) as unknown as LoginHistoryEntry[]
     auditLogs     = (alRes.data ?? []) as unknown as AuditLogEntry[]
     passwordPolicy = ppRes.data as PasswordPolicy | null
+    myEmail       = (meRes.data as { email: string | null } | null)?.email ?? null
 
     const counts = { image: 0, video: 0, pdf: 0 }
     for (const row of (attRes.data ?? []) as { file_type: string }[]) {
@@ -98,6 +101,7 @@ export default async function AdminPage() {
       loginHistory={loginHistory}
       auditLogs={auditLogs}
       passwordPolicy={passwordPolicy}
+      myEmail={myEmail}
       attachmentCounts={attachmentCounts}
       currentUserKey={session.userKey}
       currentUserRole={session.role}

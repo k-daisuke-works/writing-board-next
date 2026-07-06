@@ -1,12 +1,17 @@
 'use server'
 
+import { createHash } from 'crypto'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { after } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { createServiceClient } from '@/lib/supabase/server'
-import { createSession, deleteSession, createSetupToken, getSession } from '@/lib/session'
+import {
+  createSession, deleteSession, createSetupToken, getSession,
+  createPasswordResetToken, verifyPasswordResetToken,
+} from '@/lib/session'
 import { logAudit } from '@/lib/audit'
+import { sendMail, isMailConfigured } from '@/lib/email'
 
 // ─── ログイン試行レート制限 ─────────────────────────────────
 // 注: Node.js モジュールスコープの Map のため、同一プロセス内でのみ有効。
@@ -210,6 +215,148 @@ export async function changePassword(formData: FormData) {
     actorName: session.userName,
     action: 'auth.password_change',
     target: `user:${session.userKey}`,
+  }))
+
+  return { success: true }
+}
+
+// ─── パスワード再設定（管理者・メール経由） ─────────────────
+
+const resetAttempts = new Map<string, { count: number; resetAt: number }>()
+const RESET_RATE = { MAX: 5, WINDOW_MS: 15 * 60 * 1000 }
+
+function isResetRateLimited(ip: string): boolean {
+  const now = Date.now()
+  const entry = resetAttempts.get(ip)
+  if (!entry || now >= entry.resetAt) {
+    resetAttempts.set(ip, { count: 1, resetAt: now + RESET_RATE.WINDOW_MS })
+    return false
+  }
+  entry.count += 1
+  return entry.count > RESET_RATE.MAX
+}
+
+/** 現在のパスワードハッシュのフィンガープリント（トークンのワンタイム性の担保） */
+function passwordFingerprint(passwordHash: string): string {
+  return createHash('sha256').update(passwordHash).digest('hex').slice(0, 16)
+}
+
+/** 再設定メールの送信リクエスト。ユーザーの存在有無を漏らさないため常に同じ応答を返す */
+export async function requestPasswordReset(formData: FormData) {
+  const organizationId = (formData.get('organizationId') as string)?.normalize('NFKC').trim()
+  const userId         = (formData.get('userId') as string)?.normalize('NFKC').trim()
+
+  if (!organizationId || !userId) return { error: '必須項目を入力してください。' }
+
+  if (!isMailConfigured()) {
+    return { error: 'メール再設定は現在利用できません。他の管理者にリセットを依頼してください。' }
+  }
+
+  const headerStore = await headers()
+  const ip = headerStore.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  if (isResetRateLimited(ip)) {
+    return { error: 'リクエストが多すぎます。しばらくしてから再度お試しください。' }
+  }
+
+  const genericSuccess = { success: true }
+
+  const supabase = createServiceClient()
+  const { data: org } = await supabase
+    .from('organization_data')
+    .select('organization_key')
+    .eq('organization_id', organizationId)
+    .single()
+  if (!org) return genericSuccess
+
+  const { data: user } = await supabase
+    .from('user_info')
+    .select('user_key, user_name, password, email, role, is_active')
+    .eq('user_id', userId)
+    .eq('organization_key', org.organization_key)
+    .single()
+
+  // 管理者・有効・メール登録済みの場合のみ送信（結果は外に漏らさない）
+  if (!user || user.role !== 'admin' || !user.is_active || !user.email) return genericSuccess
+
+  const token = await createPasswordResetToken(
+    user.user_key, org.organization_key, passwordFingerprint(user.password))
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  const link = `${baseUrl}/reset-password?token=${encodeURIComponent(token)}`
+
+  // 列挙対策: 送信の成否もユーザー応答には反映しない（失敗はログのみ）
+  const sent = await sendMail(
+    user.email,
+    '【RoScope】パスワード再設定のご案内',
+    `${user.user_name} 様\n\nRoScope のパスワード再設定リクエストを受け付けました。\n以下のリンクから30分以内に新しいパスワードを設定してください。\n\n${link}\n\n※このリクエストに心当たりがない場合は、このメールを無視してください。パスワードは変更されません。`,
+  )
+  if (!sent) console.error('[requestPasswordReset] メール送信失敗:', `user:${user.user_key}`)
+
+  // 正当なリクエストが完了したらレート制限をリセット（login と同パターン）
+  if (sent) resetAttempts.delete(ip)
+
+  after(() => logAudit({
+    organizationKey: org.organization_key,
+    actorName: userId,
+    action: 'auth.reset_request',
+    target: `user:${user.user_key}`,
+    detail: { sent },
+    ipAddress: ip,
+  }))
+
+  return genericSuccess
+}
+
+/** メールのトークンで新しいパスワードを設定する */
+export async function resetPasswordWithToken(formData: FormData) {
+  const token           = formData.get('token') as string
+  const newPassword     = formData.get('newPassword') as string
+  const confirmPassword = formData.get('confirmPassword') as string
+
+  if (!token || !newPassword || !confirmPassword) return { error: '全ての項目を入力してください。' }
+  if (newPassword !== confirmPassword) return { error: '新しいパスワードが一致しません。' }
+
+  const claims = await verifyPasswordResetToken(token)
+  if (!claims) return { error: 'リンクが無効か期限切れです。再度お手続きください。' }
+
+  const supabase = createServiceClient()
+  const [{ data: user }, { data: policy }] = await Promise.all([
+    supabase
+      .from('user_info')
+      .select('user_key, user_name, password')
+      .eq('user_key', claims.userKey)
+      .eq('organization_key', claims.organizationKey)
+      .single(),
+    supabase
+      .from('password_policy')
+      .select('min_length')
+      .eq('organization_key', claims.organizationKey)
+      .maybeSingle(),
+  ])
+
+  // パスワードが既に変わっていればトークンは使用済み扱い
+  if (!user || passwordFingerprint(user.password) !== claims.pwh) {
+    return { error: 'リンクが無効か期限切れです。再度お手続きください。' }
+  }
+
+  const minLength = policy?.min_length ?? 8
+  if (newPassword.length < minLength)
+    return { error: `新しいパスワードは${minLength}文字以上で入力してください。` }
+
+  const hashed = await bcrypt.hash(newPassword, 10)
+  const { error } = await supabase
+    .from('user_info')
+    .update({ password: hashed, must_change_password: false, password_changed_at: new Date().toISOString() })
+    .eq('user_key', claims.userKey)
+    .eq('organization_key', claims.organizationKey)
+
+  if (error) return { error: 'パスワードの再設定に失敗しました。' }
+
+  after(() => logAudit({
+    organizationKey: claims.organizationKey,
+    actorUserKey: claims.userKey,
+    actorName: user.user_name,
+    action: 'auth.reset_complete',
+    target: `user:${claims.userKey}`,
   }))
 
   return { success: true }
