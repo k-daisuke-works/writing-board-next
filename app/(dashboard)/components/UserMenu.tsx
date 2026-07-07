@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { Users, Receipt, BookOpen, Settings, UserCircle, LogOut } from 'lucide-react'
+import { Users, Receipt, BookOpen, Settings, UserCircle, LogOut, Newspaper, Search } from 'lucide-react'
 import { logout } from '@/actions/auth'
 import type { UserSession } from '@/types/database'
 
@@ -10,6 +10,8 @@ const MENU_ITEMS = [
   { href: '/members',  Icon: Users,       label: 'メンバー一覧',      adminOnly: false },
   { href: '/expenses', Icon: Receipt,     label: '活動費請求',        adminOnly: false },
   { href: '/manual',   Icon: BookOpen,    label: '使い方マニュアル',  adminOnly: false },
+  { href: '/welfare',  Icon: Newspaper,   label: '福祉情報',          adminOnly: false },
+  { href: '/search',   Icon: Search,      label: '検索',              adminOnly: false },
   { href: '/admin',    Icon: Settings,    label: '組織管理',          adminOnly: true  },
 ]
 
@@ -32,7 +34,7 @@ export default function UserMenu({ session }: { session: UserSession }) {
       {/* アバターボタン */}
       <button
         onClick={() => setOpen(v => !v)}
-        className="w-8 h-8 rounded-full overflow-hidden border-2 border-transparent hover:border-blue-400 transition-colors focus:outline-none"
+        className="h-11 w-11 overflow-hidden rounded-full border-2 border-transparent transition-colors hover:border-blue-400 focus:outline-none sm:h-8 sm:w-8"
         aria-label="個人メニュー"
       >
         {session.avatarUrl ? (

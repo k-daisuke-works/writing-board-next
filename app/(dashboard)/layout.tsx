@@ -46,18 +46,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-gray-100">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-6">
+      <header className="sticky top-0 z-40 overflow-x-clip border-b border-gray-200 bg-white">
+        <div className="mx-auto flex h-14 w-full max-w-screen-xl items-center gap-2 px-3 sm:gap-6 sm:px-6">
 
-          <Link href="/home" className="shrink-0">
+          <Link href="/home" className="w-[26px] shrink-0 overflow-hidden sm:w-auto" aria-label="RoScope ホーム">
             <RoScopeLogo size="sm" />
           </Link>
 
           <div className="w-px h-5 bg-gray-200 hidden sm:block" />
 
-          <nav className="flex items-center gap-1 flex-1">
+          <nav className="flex min-w-0 flex-1 items-center justify-center gap-0 sm:justify-start sm:gap-1" aria-label="メインナビゲーション">
             <Link href="/home"
-              className="relative flex items-center gap-1.5 px-3 py-1.5 rounded text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors">
+              className="relative flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded text-sm text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 sm:min-h-0 sm:min-w-0 sm:px-3 sm:py-1.5">
               <LayoutGrid className="w-4 h-4" />
               <span className="hidden sm:inline">ホーム</span>
               {unread.team > 0 && (
@@ -65,7 +65,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               )}
             </Link>
             <Link href="/posts"
-              className="relative flex items-center gap-1.5 px-3 py-1.5 rounded text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors">
+              className="relative flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded text-sm text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 sm:min-h-0 sm:min-w-0 sm:px-3 sm:py-1.5">
               <MessageSquare className="w-4 h-4" />
               <span className="hidden sm:inline">全体掲示板</span>
               {unread.board > 0 && (
@@ -73,23 +73,23 @@ export default async function DashboardLayout({ children }: { children: React.Re
               )}
             </Link>
             <Link href="/schedule/calendar"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors">
+              className="flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded text-sm text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 sm:min-h-0 sm:min-w-0 sm:px-3 sm:py-1.5">
               <Calendar className="w-4 h-4" />
               <span className="hidden sm:inline">スケジュール</span>
             </Link>
             <Link href="/welfare"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors">
+              className="hidden items-center gap-1.5 rounded px-3 py-1.5 text-sm text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 sm:flex">
               <Newspaper className="w-4 h-4" />
               <span className="hidden sm:inline">福祉情報</span>
             </Link>
             <Link href="/search"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors">
+              className="hidden items-center gap-1.5 rounded px-3 py-1.5 text-sm text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 sm:flex">
               <Search className="w-4 h-4" />
               <span className="hidden sm:inline">検索</span>
             </Link>
           </nav>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex shrink-0 items-center gap-3">
             <div className="hidden md:flex flex-col items-end">
               <span className="text-xs font-medium text-gray-800 leading-none">{session.userName}</span>
               <span className="text-xs text-gray-400 leading-none mt-0.5">{session.departmentName || session.organizationName}</span>
