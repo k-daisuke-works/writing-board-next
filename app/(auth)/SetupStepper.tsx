@@ -6,19 +6,18 @@ const STEPS = [
 
 export function SetupStepper({ current }: { current: 1 | 2 | 3 }) {
   return (
-    <div className="flex items-start w-full max-w-xs mb-10">
+    <div className="mb-9 flex w-full max-w-md items-start">
       {STEPS.map((step, i) => {
         const done    = step.n < current
         const active  = step.n === current
-        const pending = step.n > current
         return (
           <div key={step.n} className="flex items-start flex-1">
             {/* ステップ本体 */}
             <div className="flex flex-col items-center gap-1.5 shrink-0">
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-colors ${
-                done    ? 'bg-blue-600 text-white' :
-                active  ? 'bg-blue-600 text-white ring-4 ring-blue-100' :
-                          'bg-gray-100 text-gray-400'
+              <div className={`flex size-8 items-center justify-center rounded-xl text-xs font-bold transition-all ${
+                done    ? 'bg-emerald-500 text-white' :
+                active  ? 'bg-gradient-to-br from-teal-500 to-indigo-600 text-white shadow-md shadow-indigo-200 ring-4 ring-indigo-50' :
+                          'bg-slate-100 text-slate-400'
               }`}>
                 {done ? (
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -27,17 +26,17 @@ export function SetupStepper({ current }: { current: 1 | 2 | 3 }) {
                 ) : step.n}
               </div>
               <span className={`text-xs leading-tight text-center ${
-                active  ? 'text-blue-600 font-medium' :
-                done    ? 'text-gray-500' :
-                          'text-gray-300'
+                active  ? 'font-bold text-indigo-600' :
+                done    ? 'text-slate-500' :
+                          'text-slate-300'
               }`}>
                 {step.label}
               </span>
             </div>
             {/* コネクター線 */}
             {i < STEPS.length - 1 && (
-              <div className={`flex-1 h-px mt-3.5 mx-1 transition-colors ${
-                step.n < current ? 'bg-blue-600' : 'bg-gray-200'
+              <div className={`mx-2 mt-4 h-0.5 flex-1 rounded-full transition-colors ${
+                step.n < current ? 'bg-emerald-400' : 'bg-slate-200'
               }`} />
             )}
           </div>

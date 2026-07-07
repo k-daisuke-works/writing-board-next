@@ -6,6 +6,7 @@ import { registerUser } from '@/actions/admin'
 import Link from 'next/link'
 import { Users, ArrowLeft, CheckCircle, AlertCircle, Info } from 'lucide-react'
 import { SetupStepper } from '../../SetupStepper'
+import { SetupSubmitButton } from '../../SetupSubmitButton'
 
 export default async function UserRegisterPage({
   searchParams,
@@ -52,14 +53,15 @@ export default async function UserRegisterPage({
   const labelCls = "block text-sm font-medium text-gray-700 mb-1.5"
 
   return (
-    <div className="anim-fade-in w-full max-w-sm">
+    <div className="anim-fade-in w-full max-w-lg rounded-3xl border border-white/80 bg-white/85 p-6 shadow-xl shadow-slate-200/60 backdrop-blur sm:p-8">
       {isInitial && <SetupStepper current={3} />}
 
       <div className="mb-6">
         {isInitial ? (
           <>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1.5">管理者を登録</h1>
-            <p className="text-sm text-gray-500">このIDとパスワードでログインします</p>
+            <p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-indigo-600">Final step</p>
+            <h1 className="mb-1.5 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">管理者アカウントを作成</h1>
+            <p className="text-sm text-slate-500">このIDとパスワードが最初のログイン情報になります</p>
           </>
         ) : (
           <>
@@ -153,10 +155,7 @@ export default async function UserRegisterPage({
           </div>
         )}
         <div className="pt-1">
-          <button type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2.5 rounded-md transition-colors flex items-center justify-center gap-2">
-            {isInitial ? 'ユーザーを作成してログインへ' : '登録する'}
-          </button>
+          <SetupSubmitButton idleLabel={isInitial ? 'アカウントを作成して完了' : '登録する'} pendingLabel="アカウントを作成中…" />
         </div>
       </form>
 

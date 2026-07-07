@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import SWRProvider from './SWRProvider'
 import ServiceWorkerRegistration from './components/ServiceWorkerRegistration'
+import InstallPrompt from './components/InstallPrompt'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen antialiased">
         <SWRProvider>{children}</SWRProvider>
         <ServiceWorkerRegistration />
+        <InstallPrompt />
       </body>
     </html>
   )

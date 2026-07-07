@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { after } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { createServiceClient } from '@/lib/supabase/server'
-import { getSession } from '@/lib/session'
+import { getSession, verifySetupToken } from '@/lib/session'
 import { logAudit } from '@/lib/audit'
 import type { UserRole } from '@/types/database'
 
@@ -115,12 +115,13 @@ export async function deleteJob(formData: FormData) {
 /** 部署登録 — 管理者のみ（初回セットアップは例外） */
 export async function createDepartment(formData: FormData) {
   const session = await getSession()
-  const orgKeyFromForm = Number(formData.get('organizationKey') || 0)
+  const setupToken = String(formData.get('setupToken') || '')
+  const orgKeyFromToken = setupToken ? await verifySetupToken(setupToken) : null
 
   if (session && session.role !== 'admin') return { error: '管理者権限が必要です。' }
-  if (!session && !orgKeyFromForm) return { error: '権限がありません。' }
+  if (!session && !orgKeyFromToken) return { error: '権限がありません。' }
 
-  const organizationKey = session?.organizationKey ?? orgKeyFromForm
+  const organizationKey = session?.organizationKey ?? orgKeyFromToken!
   const departmentName = formData.get('departmentName') as string
 
   if (!departmentName?.trim()) return { error: '部署名を入力してください。' }
@@ -136,10 +137,10 @@ export async function createDepartment(formData: FormData) {
     if ((count ?? 0) > 0) return { error: '権限がありません。' }
   }
 
-  const { error } = await supabase.from('department_data').insert({
-    department_name:  departmentName.trim(),
-    organization_key: organizationKey,
-  })
+  const { data, error } = await supabase.from('department_data')
+    .insert({ department_name: departmentName.trim(), organization_key: organizationKey })
+    .select('department_id, department_name')
+    .single()
 
   if (error) {
     console.error('[createDepartment] error:', error)
@@ -147,19 +148,19 @@ export async function createDepartment(formData: FormData) {
   }
 
   revalidatePath('/admin')
-  revalidatePath('/departmentjob/register')
-  return { success: true }
+  return { success: true, item: data }
 }
 
 /** 職種登録 — 管理者のみ（初回セットアップは例外） */
 export async function createJob(formData: FormData) {
   const session = await getSession()
-  const orgKeyFromForm = Number(formData.get('organizationKey') || 0)
+  const setupToken = String(formData.get('setupToken') || '')
+  const orgKeyFromToken = setupToken ? await verifySetupToken(setupToken) : null
 
   if (session && session.role !== 'admin') return { error: '管理者権限が必要です。' }
-  if (!session && !orgKeyFromForm) return { error: '権限がありません。' }
+  if (!session && !orgKeyFromToken) return { error: '権限がありません。' }
 
-  const organizationKey = session?.organizationKey ?? orgKeyFromForm
+  const organizationKey = session?.organizationKey ?? orgKeyFromToken!
   const jobName = formData.get('jobName') as string
 
   if (!jobName?.trim()) return { error: '職種名を入力してください。' }
@@ -175,10 +176,10 @@ export async function createJob(formData: FormData) {
     if ((count ?? 0) > 0) return { error: '権限がありません。' }
   }
 
-  const { error } = await supabase.from('job_data').insert({
-    job_name:         jobName.trim(),
-    organization_key: organizationKey,
-  })
+  const { data, error } = await supabase.from('job_data')
+    .insert({ job_name: jobName.trim(), organization_key: organizationKey })
+    .select('job_id, job_name')
+    .single()
 
   if (error) {
     console.error('[createJob] error:', error)
@@ -186,8 +187,7 @@ export async function createJob(formData: FormData) {
   }
 
   revalidatePath('/admin')
-  revalidatePath('/departmentjob/register')
-  return { success: true }
+  return { success: true, item: data }
 }
 
 /** 部署名更新 — 管理者のみ */

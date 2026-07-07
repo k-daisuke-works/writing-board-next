@@ -6,8 +6,8 @@ import Link from 'next/link'
 import { registerOrganization } from '@/actions/auth'
 import { SetupStepper } from '../SetupStepper'
 
-const inputCls = "w-full border border-gray-200 rounded-md px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
-const labelCls = "block text-sm font-medium text-gray-700 mb-1.5"
+const inputCls = "w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-100"
+const labelCls = "mb-1.5 block text-sm font-semibold text-slate-700"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -25,15 +25,16 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="anim-fade-in w-full max-w-sm">
+    <div className="anim-fade-in w-full max-w-md rounded-3xl border border-white/80 bg-white/85 p-6 shadow-xl shadow-slate-200/60 backdrop-blur sm:p-8">
       {/* ステッパー */}
       <SetupStepper current={1} />
 
       {/* タイトル */}
       <div className="mb-7">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1.5">団体を登録</h1>
-        <p className="text-sm text-gray-500">
-          あなたの組織のアカウントを作成します
+        <p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-indigo-600">Welcome to RoScope</p>
+        <h1 className="mb-1.5 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">組織のスペースを作成</h1>
+        <p className="text-sm leading-6 text-slate-500">
+          まずは団体の基本情報を入力してください
         </p>
       </div>
 
@@ -66,7 +67,7 @@ export default function RegisterPage() {
         <div className="pt-1">
           <button
             type="submit" disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-medium py-2.5 rounded-md text-sm transition-colors flex items-center justify-center gap-2"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-500 to-indigo-600 py-3 text-sm font-bold text-white shadow-md shadow-indigo-200 transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-wait disabled:translate-y-0 disabled:opacity-60"
           >
             {loading
               ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />登録中…</>
