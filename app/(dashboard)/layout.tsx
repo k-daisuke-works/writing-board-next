@@ -45,7 +45,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const unread = await getUnreadCounts(session.organizationKey, session.userKey, session.departmentId)
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100">
+    <div className="flex min-h-[100dvh] flex-col bg-gray-100">
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-6">
 
@@ -99,7 +99,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
       </header>
 
-      <main className="flex-1 max-w-screen-xl w-full mx-auto px-4 sm:px-6 py-5 sm:py-7">
+      <main className="safe-pb mx-auto w-full max-w-screen-xl flex-1 px-3 py-4 sm:px-6 sm:py-7">
         {children}
       </main>
     </div>

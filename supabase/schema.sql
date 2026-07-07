@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS user_info (
   avatar_url       TEXT,
   profile          TEXT,
   affiliation      TEXT,
+  social_worker_member_id TEXT,
   created_at       TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(user_id, organization_key)
 );

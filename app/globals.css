@@ -2,6 +2,9 @@
 
 html { scroll-behavior: smooth; }
 
+.safe-pt { padding-top: max(0.75rem, env(safe-area-inset-top)); }
+.safe-pb { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
+
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 9999px; }
@@ -27,6 +30,7 @@ html { scroll-behavior: smooth; }
 .anim-overlay   { animation: overlay-in 0.15s ease-out both; }
 
 body {
+  min-height: 100dvh;
   background-color: #f5f5f5;
   color: #1f2937;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont,

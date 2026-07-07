@@ -62,7 +62,7 @@ export const getSession = cache(async (): Promise<UserSession | null> => {
       supabase
         .from('user_info')
         .select(`
-          user_key, user_id, user_name, admin_flag, role, organization_key, avatar_url,
+          user_key, user_id, user_name, admin_flag, role, organization_key, avatar_url, must_change_password,
           department:department_data(department_id, department_name),
           job:job_data(job_id, job_name)
         `)
@@ -93,6 +93,7 @@ export const getSession = cache(async (): Promise<UserSession | null> => {
       role:             ((user as unknown as { role: string }).role ?? 'member') as UserRole,
       adminFlag:        ((user as unknown as { role: string }).role ?? 'member') === 'admin',
       avatarUrl:        (user as unknown as { avatar_url: string | null }).avatar_url ?? null,
+      mustChangePassword: (user as unknown as { must_change_password: boolean }).must_change_password ?? false,
       realtimeChannel:  realtimeTopic(user.organization_key),
     }
   } catch {

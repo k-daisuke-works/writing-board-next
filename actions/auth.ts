@@ -168,19 +168,16 @@ export async function changePassword(formData: FormData) {
   const newPassword     = formData.get('newPassword') as string
   const confirmPassword = formData.get('confirmPassword') as string
 
-  if (!currentPassword || !newPassword || !confirmPassword)
+  if (!newPassword || !confirmPassword)
     return { error: '全ての項目を入力してください。' }
   if (newPassword !== confirmPassword)
     return { error: '新しいパスワードが一致しません。' }
-  if (newPassword === currentPassword)
-    return { error: '現在と同じパスワードは使用できません。' }
-
   const supabase = createServiceClient()
 
   const [{ data: user }, { data: policy }] = await Promise.all([
     supabase
       .from('user_info')
-      .select('password')
+      .select('password, must_change_password')
       .eq('user_key', session.userKey)
       .eq('organization_key', session.organizationKey)
       .single(),
@@ -197,8 +194,15 @@ export async function changePassword(formData: FormData) {
 
   if (!user) return { error: 'ユーザーが見つかりません。' }
 
-  const isValid = await bcrypt.compare(currentPassword, user.password)
-  if (!isValid) return { error: '現在のパスワードが正しくありません。' }
+  const isForcedChange = Boolean(user.must_change_password)
+  if (!isForcedChange) {
+    if (!currentPassword) return { error: '現在のパスワードを入力してください。' }
+    const isValid = await bcrypt.compare(currentPassword, user.password)
+    if (!isValid) return { error: '現在のパスワードが正しくありません。' }
+  }
+
+  const isSamePassword = await bcrypt.compare(newPassword, user.password)
+  if (isSamePassword) return { error: '現在と同じパスワードは使用できません。' }
 
   const hashed = await bcrypt.hash(newPassword, 10)
   const { error } = await supabase

@@ -152,27 +152,27 @@ export default function PostModal({ session, postType = 'board', defaultImportan
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 anim-overlay"
+      className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4 anim-overlay"
       style={{ background: 'rgba(0,0,0,0.45)' }}
       onClick={(e) => { if (e.target === e.currentTarget && !loading) onClose() }}
     >
-      <div className="bg-white rounded-t-2xl sm:rounded-lg shadow-2xl w-full sm:max-w-lg flex flex-col max-h-[92dvh] sm:max-h-[90vh] anim-slide-down">
+      <div className="flex h-[100dvh] w-full flex-col bg-white shadow-2xl sm:h-auto sm:max-h-[90dvh] sm:max-w-lg sm:rounded-xl anim-slide-down">
 
         {/* ヘッダー */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 shrink-0 relative">
-          <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-gray-300 rounded-full sm:hidden" />
-          <div className="mt-1 sm:mt-0">
+        <div className="safe-pt relative flex shrink-0 items-center justify-between border-b border-gray-200 px-4 pb-3 pt-3 sm:px-5 sm:py-4">
+          <div>
             <h2 className="text-sm font-semibold text-gray-900">{title}</h2>
             <p className="text-xs text-gray-400 mt-0.5">{session.departmentName} · {session.userName}</p>
           </div>
           <button onClick={onClose} disabled={loading}
-            className="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-30 disabled:pointer-events-none">
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:pointer-events-none disabled:opacity-30 sm:min-h-0 sm:min-w-0 sm:w-7 sm:h-7">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* フォーム */}
-        <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-3 sm:space-y-4 sm:p-5">
           {error && (
             <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-600 rounded-md px-3 py-2.5 text-sm">
               {error}
@@ -186,8 +186,8 @@ export default function PostModal({ session, postType = 'board', defaultImportan
             </label>
             <textarea
               value={message} onChange={(e) => setMessage(e.target.value)}
-              rows={5} placeholder={postType === 'team' ? 'チームへのメッセージを入力…' : postType === 'notice' ? 'お知らせの内容を入力してください…' : '全体掲示板の内容を入力してください…'}
-              className="w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
+              rows={4} placeholder={postType === 'team' ? 'チームへのメッセージを入力…' : postType === 'notice' ? 'お知らせの内容を入力してください…' : '全体掲示板の内容を入力してください…'}
+              className="h-24 w-full resize-none rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:h-32 sm:py-2.5"
             />
             <p className="text-right text-xs text-gray-400 mt-1">{message.length}文字</p>
           </div>
@@ -323,14 +323,16 @@ export default function PostModal({ session, postType = 'board', defaultImportan
             </div>
           )}
 
-          {/* ボタン */}
-          <div className="flex gap-2.5 pt-1 pb-safe">
+          </div>
+
+          {/* 常に画面内に残る操作ボタン */}
+          <div className="safe-pb flex shrink-0 gap-2.5 border-t border-gray-200 bg-white px-4 pb-3 pt-3 sm:p-5 sm:pt-4">
             <button type="button" onClick={onClose} disabled={loading}
-              className="flex-1 border border-gray-300 text-gray-700 text-sm font-medium py-2.5 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:pointer-events-none">
+              className="min-h-11 flex-1 rounded-md border border-gray-300 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-40">
               キャンセル
             </button>
             <button type="submit" disabled={loading || submitted || !message.trim()}
-              className={`flex-1 text-white text-sm font-medium py-2.5 rounded-md transition-colors flex items-center justify-center gap-2 disabled:opacity-50 ${
+              className={`flex min-h-11 flex-1 items-center justify-center gap-2 rounded-md text-sm font-medium text-white transition-colors disabled:opacity-50 ${
                 submitted ? 'bg-green-500' : 'bg-blue-600 hover:bg-blue-700'
               }`}>
               {submitted

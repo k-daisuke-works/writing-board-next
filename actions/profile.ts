@@ -31,6 +31,13 @@ export async function updateProfile(formData: FormData) {
   if (!targetUser) return { error: '対象ユーザーが見つかりません。' }
 
   let avatarUrl: string | undefined
+  const socialWorkerMemberId = ((formData.get('social_worker_member_id') as string) ?? '')
+    .normalize('NFKC')
+    .trim()
+  if (socialWorkerMemberId.length > 50) return { error: '社会福祉士会IDは50文字以内で入力してください。' }
+  if (socialWorkerMemberId && !/^[a-zA-Z0-9_-]+$/.test(socialWorkerMemberId)) {
+    return { error: '社会福祉士会IDは英数字・ハイフン・アンダースコアで入力してください。' }
+  }
 
   const avatarFile = formData.get('avatar') as File | null
   if (avatarFile && avatarFile.size > 0) {
@@ -56,15 +63,19 @@ export async function updateProfile(formData: FormData) {
   const updates: Record<string, string | null> = {
     affiliation: (formData.get('affiliation') as string) || null,
     profile:     (formData.get('profile') as string) || null,
+    social_worker_member_id: socialWorkerMemberId || null,
   }
   if (avatarUrl !== undefined) updates.avatar_url = avatarUrl
 
-  await supabase.from('user_info')
+  const { error: updateError } = await supabase.from('user_info')
     .update(updates)
     .eq('user_key', targetUserKey)
     .eq('organization_key', session.organizationKey)
 
+  if (updateError) return { error: 'プロフィールの保存に失敗しました。' }
+
   revalidatePath(`/member/${targetUserKey}`)
   revalidatePath('/members')
+  revalidatePath('/expenses')
   return { success: true }
 }

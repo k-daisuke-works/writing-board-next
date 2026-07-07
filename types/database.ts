@@ -17,6 +17,7 @@ export type UserSession = {
   role: UserRole
   adminFlag: boolean   // computed: role === 'admin'
   avatarUrl: string | null
+  mustChangePassword: boolean
   realtimeChannel: string   // 推測困難な Realtime broadcast チャンネル名（HMAC由来）
 }
 
@@ -103,6 +104,7 @@ export type UserInfo = {
   admin_flag: boolean
   role: UserRole
   organization_key: number
+  social_worker_member_id: string | null
   // password（ハッシュ）はこの型に含めない — クライアントに渡る型のため。
   // 検証が必要な Server Action では個別に select する
   password_changed_at: string | null

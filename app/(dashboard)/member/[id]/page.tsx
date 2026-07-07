@@ -76,6 +76,13 @@ export default async function MemberHistoryPage({
   }
 
   const canEdit = session.userKey === userId || session.adminFlag
+  const { data: privateProfile } = canEdit
+    ? await supabase.from('user_info')
+        .select('social_worker_member_id')
+        .eq('user_key', userId)
+        .eq('organization_key', session.organizationKey)
+        .single()
+    : { data: null }
 
   return (
     <div className="anim-fade-in max-w-3xl">
@@ -117,6 +124,7 @@ export default async function MemberHistoryPage({
                   currentAffiliation={member.affiliation}
                   currentProfile={member.profile}
                   currentAvatarUrl={member.avatar_url}
+                  currentSocialWorkerMemberId={privateProfile?.social_worker_member_id ?? null}
                 />
               )}
             </div>
@@ -219,4 +227,3 @@ export default async function MemberHistoryPage({
     </div>
   )
 }
-
