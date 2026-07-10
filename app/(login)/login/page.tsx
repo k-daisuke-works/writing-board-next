@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { login } from '@/actions/auth'
 import Link from 'next/link'
 
-const inputCls = "w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+const inputCls = "w-full border border-gray-300 rounded-md px-3 py-2.5 min-h-[44px] text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
 const labelCls = "block text-sm font-medium text-gray-700 mb-1.5"
 
 export default function LoginPage() {
@@ -50,7 +50,7 @@ export default function LoginPage() {
 
         <button
           type="submit" disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-medium py-2.5 rounded-md text-sm transition-colors flex items-center justify-center gap-2"
+          className="pressable w-full bg-blue-600 hover:bg-blue-700 hover:shadow-md hover:shadow-blue-200 disabled:opacity-60 text-white font-medium py-2.5 rounded-md text-sm transition-colors flex items-center justify-center gap-2"
         >
           {loading
             ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />ログイン中…</>

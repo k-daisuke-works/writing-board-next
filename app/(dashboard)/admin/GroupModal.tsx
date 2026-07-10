@@ -38,17 +38,17 @@ export default function GroupModal({ group, allUsers, onClose, onSuccess }: Prop
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 anim-overlay"
       style={{ background: 'rgba(0,0,0,0.45)' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="bg-white rounded-t-2xl sm:rounded-lg shadow-2xl w-full sm:max-w-md flex flex-col max-h-[80dvh]">
+      <div className="bg-white rounded-t-2xl sm:rounded-lg shadow-2xl w-full sm:max-w-md flex flex-col max-h-[80dvh] anim-sheet-up">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 shrink-0">
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-gray-400" />
             <h2 className="text-sm font-semibold text-gray-900">{group.group_name} — メンバー設定</h2>
           </div>
-          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 transition-colors">
+          <button onClick={onClose} aria-label="閉じる" className="pressable w-10 h-10 -m-1.5 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>

@@ -24,7 +24,7 @@ export default function ScheduleList({ events, departments }: Props) {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors"
+          className="pressable flex items-center gap-1.5 min-h-[44px] bg-blue-600 hover:bg-blue-700 hover:shadow-md hover:shadow-blue-200 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors"
         >
           <Plus className="w-4 h-4" />新しいイベント
         </button>

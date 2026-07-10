@@ -56,7 +56,7 @@ export default function ProfileEditModal({
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-blue-600 border border-gray-200 hover:border-blue-300 px-3 py-1.5 rounded transition-colors"
+        className="pressable flex items-center gap-1.5 min-h-[44px] text-xs text-gray-500 hover:text-blue-600 border border-gray-200 hover:border-blue-300 px-3 py-2.5 rounded-md transition-colors"
       >
         <Pencil className="w-3.5 h-3.5" />
         プロフィール編集
@@ -64,11 +64,11 @@ export default function ProfileEditModal({
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4 anim-overlay"
           onClick={() => setOpen(false)}
         >
           <div
-            className="safe-pb max-h-[95dvh] w-full max-w-sm overflow-y-auto rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-xl"
+            className="safe-pb max-h-[95dvh] w-full max-w-sm overflow-y-auto rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-xl anim-sheet-up"
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">

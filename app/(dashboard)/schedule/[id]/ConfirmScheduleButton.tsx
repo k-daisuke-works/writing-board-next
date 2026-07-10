@@ -51,7 +51,7 @@ export default function ConfirmScheduleButton({ eventId, dates }: Props) {
       {!open ? (
         <button
           onClick={() => setOpen(true)}
-          className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 px-3 py-1.5 rounded transition-colors"
+          className="pressable flex items-center gap-1.5 min-h-[44px] text-sm text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 px-3 py-2.5 rounded-md transition-colors"
         >
           <CalendarCheck className="w-4 h-4" />
           日程を確定してスケジュールに追加

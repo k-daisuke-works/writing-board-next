@@ -21,6 +21,8 @@ export default function PostReactions({ postId, reactions, myUserKey, myUserName
   const [, startTransition]                   = useTransition()
   const [pickerOpen, setPickerOpen]           = useState(false)
   const [localReactions, setLocalReactions]   = useState(reactions)
+  // 直近でトグルした絵文字（key を変えて anim-pop を再発火させる）
+  const [popped, setPopped]                   = useState<string | null>(null)
   const pickerRef                             = useRef<HTMLDivElement>(null)
 
   // サーバーから最新データが届いたら同期
@@ -36,6 +38,7 @@ export default function PostReactions({ postId, reactions, myUserKey, myUserName
 
   function handleToggle(emoji: string) {
     setPickerOpen(false)
+    setPopped(`${emoji}-${Date.now()}`)
 
     // 楽観的更新：即座にトグル
     setLocalReactions(prev => {
@@ -77,32 +80,43 @@ export default function PostReactions({ postId, reactions, myUserKey, myUserName
           key={emoji}
           onClick={() => handleToggle(emoji)}
           title={users.join('、')}
-          className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border transition-colors ${
+          className={`pressable flex items-center gap-1 px-2.5 py-1 min-h-[30px] rounded-full text-xs border transition-colors ${
             mine
-              ? 'bg-blue-50 border-blue-300 text-blue-700'
+              ? 'bg-blue-50 border-blue-300 text-blue-700 shadow-sm shadow-blue-100'
               : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
           }`}
         >
-          {emoji} {count}
+          <span
+            key={popped?.startsWith(`${emoji}-`) ? popped : emoji}
+            className="anim-pop inline-block"
+          >
+            {emoji}
+          </span>
+          <span className="tabular-nums">{count}</span>
         </button>
       ))}
 
       <div ref={pickerRef} className="relative">
         <button
           onClick={() => setPickerOpen(v => !v)}
-          className="w-6 h-6 flex items-center justify-center rounded-full border border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors"
+          aria-label="リアクションを追加"
+          className={`pressable w-[30px] h-[30px] flex items-center justify-center rounded-full border transition-all ${
+            pickerOpen
+              ? 'border-blue-300 bg-blue-50 text-blue-500'
+              : 'border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-600'
+          }`}
         >
-          <Plus className="w-3 h-3" />
+          <Plus className={`w-3.5 h-3.5 transition-transform duration-200 ${pickerOpen ? 'rotate-45' : ''}`} />
         </button>
 
         {pickerOpen && (
-          <div className="absolute bottom-full mb-1.5 left-0 bg-white border border-gray-200 rounded-xl shadow-lg p-2 z-20 w-52">
+          <div className="absolute bottom-full mb-1.5 left-0 w-52 origin-bottom-left max-[420px]:fixed max-[420px]:inset-x-4 max-[420px]:bottom-6 max-[420px]:w-auto max-[420px]:origin-bottom bg-white border border-gray-200 rounded-xl shadow-xl p-2 z-30 anim-scale-in">
             <div className="grid grid-cols-8 gap-0.5">
               {EMOJIS.map(e => (
                 <button
                   key={e}
                   onClick={() => handleToggle(e)}
-                  className="w-6 h-6 flex items-center justify-center text-base hover:bg-gray-100 rounded transition-colors"
+                  className="h-8 max-[420px]:h-10 flex items-center justify-center text-base rounded transition-transform duration-100 hover:scale-125 hover:bg-gray-100 active:scale-90"
                 >
                   {e}
                 </button>

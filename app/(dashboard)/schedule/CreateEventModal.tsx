@@ -94,13 +94,13 @@ export default function CreateEventModal({ departments, onClose }: Props) {
       style={{ background: 'rgba(0,0,0,0.45)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="bg-white rounded-t-2xl sm:rounded-lg shadow-2xl w-full sm:max-w-lg flex flex-col max-h-[92dvh] anim-slide-down">
+      <div className="bg-white rounded-t-2xl sm:rounded-lg shadow-2xl w-full sm:max-w-lg flex flex-col max-h-[92dvh] anim-sheet-up">
 
         {/* ヘッダー */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 shrink-0 relative">
           <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-gray-300 rounded-full sm:hidden" />
           <h2 className="text-sm font-semibold text-gray-900 mt-1 sm:mt-0">新しいイベントを作成</h2>
-          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+          <button onClick={onClose} aria-label="閉じる" className="pressable w-10 h-10 -m-1.5 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>

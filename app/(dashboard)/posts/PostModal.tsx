@@ -156,7 +156,7 @@ export default function PostModal({ session, postType = 'board', defaultImportan
       style={{ background: 'rgba(0,0,0,0.45)' }}
       onClick={(e) => { if (e.target === e.currentTarget && !loading) onClose() }}
     >
-      <div className="flex h-[100dvh] w-full flex-col bg-white shadow-2xl sm:h-auto sm:max-h-[90dvh] sm:max-w-lg sm:rounded-xl anim-slide-down">
+      <div className="flex h-[100dvh] w-full flex-col bg-white shadow-2xl sm:h-auto sm:max-h-[90dvh] sm:max-w-lg sm:rounded-xl anim-sheet-up">
 
         {/* ヘッダー */}
         <div className="safe-pt relative flex shrink-0 items-center justify-between border-b border-gray-200 px-4 pb-3 pt-3 sm:px-5 sm:py-4">
@@ -332,8 +332,8 @@ export default function PostModal({ session, postType = 'board', defaultImportan
               キャンセル
             </button>
             <button type="submit" disabled={loading || submitted || !message.trim()}
-              className={`flex min-h-11 flex-1 items-center justify-center gap-2 rounded-md text-sm font-medium text-white transition-colors disabled:opacity-50 ${
-                submitted ? 'bg-green-500' : 'bg-blue-600 hover:bg-blue-700'
+              className={`pressable flex min-h-11 flex-1 items-center justify-center gap-2 rounded-md text-sm font-medium text-white transition-colors disabled:opacity-50 ${
+                submitted ? 'bg-green-500' : 'bg-blue-600 hover:bg-blue-700 hover:shadow-md hover:shadow-blue-200'
               }`}>
               {submitted
                 ? '投稿しました ✓'

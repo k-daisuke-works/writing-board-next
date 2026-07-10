@@ -65,7 +65,7 @@ export default function UserFormModal({ mode, user, departments, jobs, positions
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       {/* モーダル本体: モバイルは画面下から、sm以上はカード */}
-      <div className="bg-white rounded-t-2xl sm:rounded-lg shadow-2xl w-full sm:max-w-md flex flex-col max-h-[92dvh] sm:max-h-[90vh] anim-slide-down">
+      <div className="bg-white rounded-t-2xl sm:rounded-lg shadow-2xl w-full sm:max-w-md flex flex-col max-h-[92dvh] sm:max-h-[90vh] anim-sheet-up">
 
         {/* ヘッダー */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 shrink-0">
@@ -76,7 +76,7 @@ export default function UserFormModal({ mode, user, departments, jobs, positions
           </h2>
           <button
             onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+            className="pressable w-10 h-10 -m-1.5 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>

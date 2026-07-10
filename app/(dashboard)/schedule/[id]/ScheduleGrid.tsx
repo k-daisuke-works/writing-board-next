@@ -42,6 +42,8 @@ export default function ScheduleGrid({ event, dates, responses, rows, session }:
   })
   const [, startTransition] = useTransition()
   const [closing, setClosing] = useState(false)
+  // 直近で回答したセル（key を変えて anim-pop を再発火させる）
+  const [popped, setPopped] = useState<string | null>(null)
 
   const myType = event.scope === 'all_departments' ? 'department' : 'user'
   const myId   = event.scope === 'all_departments' ? session.departmentId : session.userKey
@@ -55,6 +57,7 @@ export default function ScheduleGrid({ event, dates, responses, rows, session }:
     const current = resMap[dateId]?.[row.id] ?? null
     const next = current === null ? 'ok' : CYCLE[(CYCLE.indexOf(current) + 1) % CYCLE.length]
 
+    setPopped(`${dateId}-${Date.now()}`)
     setResMap(prev => ({
       ...prev,
       [dateId]: { ...prev[dateId], [row.id]: next },
@@ -144,15 +147,20 @@ export default function ScheduleGrid({ event, dates, responses, rows, session }:
                             onClick={() => handleCell(d.date_id, row)}
                             disabled={!editable}
                             title={editable ? 'クリックして変更' : undefined}
-                            className={`w-10 h-8 rounded border text-sm font-bold transition-all ${
+                            className={`w-11 h-10 rounded border text-sm font-bold transition-all ${
                               disp
-                                ? `${disp.cellCls} ${editable ? 'hover:opacity-70 cursor-pointer' : 'cursor-default'}`
+                                ? `${disp.cellCls} ${editable ? 'hover:opacity-70 cursor-pointer active:scale-90' : 'cursor-default'}`
                                 : editable
-                                  ? 'border-dashed border-gray-300 text-gray-300 hover:border-blue-400 hover:text-blue-400 cursor-pointer'
+                                  ? 'border-dashed border-gray-300 text-gray-300 hover:border-blue-400 hover:text-blue-400 cursor-pointer active:scale-90'
                                   : 'border-dashed border-gray-200 text-gray-200 cursor-default'
                             }`}
                           >
-                            {disp ? disp.label : '–'}
+                            <span
+                              key={isMe && popped?.startsWith(`${d.date_id}-`) ? popped : `${d.date_id}-static`}
+                              className={isMe ? 'anim-pop inline-block' : undefined}
+                            >
+                              {disp ? disp.label : '–'}
+                            </span>
                           </button>
                         </td>
                       )
