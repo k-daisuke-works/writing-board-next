@@ -108,7 +108,7 @@ export default async function UserRegisterPage({
         if (isInitial) redirect('/login')
         else redirect('/user/register?success=true')
       }} className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={labelCls}>ユーザーID <span className="text-red-500">*</span></label>
             <input type="text" name="userId" required placeholder="例: USER001" className={inputCls} />
@@ -118,7 +118,7 @@ export default async function UserRegisterPage({
             <input type="text" name="userName" required placeholder="例: 山田太郎" className={inputCls} />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={labelCls}>部署</label>
             <select name="departmentId" className={inputCls}>
@@ -154,6 +154,26 @@ export default async function UserRegisterPage({
             </select>
           </div>
         )}
+        <label className="flex items-start gap-2.5 text-xs text-gray-600 leading-relaxed cursor-pointer pt-1">
+          <input type="checkbox" name="consent" value="agreed" required className="mt-0.5 w-5 h-5 shrink-0 accent-blue-600" />
+          <span>
+            {isInitial
+              ? <>
+                  <Link href="/terms" target="_blank" className="underline hover:text-gray-800">利用規約</Link>
+                  と
+                  <Link href="/privacy" target="_blank" className="underline hover:text-gray-800">プライバシーポリシー</Link>
+                  に同意します
+                </>
+              : <>
+                  登録する本人に
+                  <Link href="/terms" target="_blank" className="underline hover:text-gray-800">利用規約</Link>
+                  ・
+                  <Link href="/privacy" target="_blank" className="underline hover:text-gray-800">プライバシーポリシー</Link>
+                  の内容を説明し、同意を得ています
+                </>
+            }
+          </span>
+        </label>
         <div className="pt-1">
           <SetupSubmitButton idleLabel={isInitial ? 'アカウントを作成して完了' : '登録する'} pendingLabel="アカウントを作成中…" />
         </div>

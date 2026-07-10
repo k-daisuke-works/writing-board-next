@@ -59,6 +59,13 @@ export default function LoginPage() {
               ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />ログイン中…</>
               : 'ログイン'}
           </button>
+          <p className="text-sm text-gray-400 text-center leading-relaxed">
+            ログインすると、
+            <Link href="/terms" className="underline hover:text-gray-600">利用規約</Link>
+            と
+            <Link href="/privacy" className="underline hover:text-gray-600">プライバシーポリシー</Link>
+            に同意したものとみなされます
+          </p>
         </form>
 
         <div className="mt-4 text-center">

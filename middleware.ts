@@ -12,6 +12,8 @@ const PUBLIC_PATHS = [
   '/user/register',
   '/forgot-password',
   '/reset-password',
+  '/privacy',
+  '/terms',
 ]
 
 export async function middleware(request: NextRequest) {

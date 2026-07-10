@@ -186,6 +186,18 @@ export default function UserFormModal({ mode, user, departments, jobs, positions
             </select>
           </div>
 
+          {mode === 'add' && (
+            <label className="flex items-start gap-2.5 text-xs text-gray-600 leading-relaxed cursor-pointer">
+              <input type="checkbox" name="consent" value="agreed" required className="mt-0.5 w-5 h-5 shrink-0 accent-blue-600" />
+              <span>
+                登録する本人に
+                <a href="/terms" target="_blank" className="underline hover:text-gray-800">利用規約</a>
+                ・
+                <a href="/privacy" target="_blank" className="underline hover:text-gray-800">プライバシーポリシー</a>
+                の内容を説明し、同意を得ています
+              </span>
+            </label>
+          )}
           <div className="flex gap-2.5 pt-1 pb-safe">
             <button
               type="button" onClick={onClose}

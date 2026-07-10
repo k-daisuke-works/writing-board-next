@@ -315,6 +315,11 @@ export async function registerUser(formData: FormData) {
   if (session && !isAdminOrLeader(session.role)) return { error: '権限がありません。' }
   if (!session && !(isInitialSetup && orgKeyFromForm)) return { error: '権限がありません。' }
 
+  // 利用規約・プライバシーポリシーへの同意（本人同意 or 登録者による説明・同意取得の確認）
+  if (formData.get('consent') !== 'agreed') {
+    return { error: '利用規約・プライバシーポリシーへの同意の確認が必要です。' }
+  }
+
   const organizationKey = session?.organizationKey ?? orgKeyFromForm
 
   const userId           = (formData.get('userId') as string)?.normalize('NFKC').trim()

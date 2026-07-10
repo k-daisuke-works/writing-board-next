@@ -5,6 +5,7 @@ import { after } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/session'
+import { logAudit } from '@/lib/audit'
 import { sendPush } from '@/lib/push'
 import { broadcastRefresh } from '@/lib/realtime'
 
@@ -229,9 +230,23 @@ export async function deletePost(formData: FormData) {
 
   if (!canDelete) return { error: '削除権限がありません。' }
 
-  if (post.pin) {
+  // 管理者は利用規約に基づく削除対応（権利侵害・規約違反投稿等）のため PIN を確認せず削除できる
+  const pinBypassed = Boolean(post.pin) && session.role === 'admin'
+  if (post.pin && session.role !== 'admin') {
     const ok = await bcrypt.compare(pin?.trim() ?? '', post.pin)
     if (!ok) return { error: 'PINが一致しません。' }
+  }
+
+  // PIN保護を無効化した強制削除は追跡性のため監査ログに残す
+  if (pinBypassed) {
+    after(() => logAudit({
+      organizationKey: session.organizationKey,
+      actorUserKey: session.userKey,
+      actorName: session.userName,
+      action: 'post.force_delete',
+      target: `post:${writingId}`,
+      detail: { postType: post.post_type, postOwnerUserKey: post.user_key },
+    }))
   }
 
   const { error } = await supabase

@@ -356,7 +356,11 @@ export default function LandingPage() {
       <footer className="py-9 text-center" style={{ background: NAVY }}>
         <div className="max-w-5xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <RoScopeLogo size="sm" variant="light" />
-          <p className="font-maru text-xs tracking-widest text-[#9fb0d4]">&copy; 2026 RoScope. All rights reserved.</p>
+          <div className="flex items-center gap-5 text-xs text-[#9fb0d4]">
+            <Link href="/terms" className="hover:text-white transition-colors min-h-[44px] inline-flex items-center">利用規約</Link>
+            <Link href="/privacy" className="hover:text-white transition-colors min-h-[44px] inline-flex items-center">プライバシーポリシー</Link>
+            <span className="font-maru tracking-widest">&copy; 2026 RoScope</span>
+          </div>
         </div>
       </footer>
     </div>

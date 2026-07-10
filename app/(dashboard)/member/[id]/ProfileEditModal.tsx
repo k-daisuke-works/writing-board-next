@@ -149,6 +149,12 @@ export default function ProfileEditModal({
                 className="w-full text-sm border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
               />
 
+              <p className="text-xs text-gray-400 leading-relaxed">
+                入力した情報の取扱いは
+                <a href="/privacy" target="_blank" className="underline hover:text-gray-600">プライバシーポリシー</a>
+                をご覧ください
+              </p>
+
               <div className="flex gap-2">
                 <button
                   type="submit"

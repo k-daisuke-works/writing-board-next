@@ -18,6 +18,7 @@ export type AuditAction =
   | 'user.email_change'
   | 'org.password_change'
   | 'policy.update'
+  | 'post.force_delete'
 
 export type AuditEntry = {
   organizationKey: number
