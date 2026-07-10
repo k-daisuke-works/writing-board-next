@@ -29,11 +29,25 @@
 
 **注意点**: broadcast チャンネルは匿名購読可能。実データは流れないが、orgKey を推測すれば更新タイミングは外部観測可能（軽微なメタデータ漏れ）。完全な購読制限には Supabase Auth＋Realtime Authorization が必要。
 
-## 優先度1: schema.sql の実DB同期（陳腐化の解消）
+## 優先度1: Supabase 東京リージョン移行（個人情報の国内化）🔴最優先
 
-`supabase/schema.sql` は実DBより古い。**存在しない定義**: position_data / employment_type_data / group_data / user_group_members / login_history / password_policy、user_info の追加カラム（role, is_active, must_change_password, password_changed_at, position_id, employment_type_id）、writing_data.display_until 等。
+**背景**: 現DBはシンガポール（ap-southeast-1。db ホストの IPv6 プレフィックス 2406:da12 で確認済み）。会員情報・要配慮個人情報の取り扱いを見据え、国内（東京 ap-northeast-1）へ移す。**データ量が少ない今のうちに実施する**（2026-07-10 ユーザー決定。ローカル環境で実行予定）。Vercel 関数は現在 sin1 固定（DB隣接のため）— 移行完了時に hnd1 へ変更する。
 
-**方針**: Management API で `information_schema` から実スキーマをダンプし、schema.sql を「実DBと一致する新規構築スクリプト」として再生成する。適用済みマイグレーション（migrations/*.sql）の内容も統合する。再生成後、`.claude/skills/context/SKILL.md` のテーブル表と食い違いがないか照合する。
+**手順**（作業1〜2時間＋切替メンテ数分。夜間推奨）:
+
+1. **東京で新プロジェクト作成**: Supabase ダッシュボード → New Project → Region: Northeast Asia (Tokyo)。DBパスワードを控える。無料プランでも2プロジェクト並行可
+2. **スキーマ移行**: 旧DBから `pg_dump --schema-only`（または `supabase db dump`）→ 東京へ適用。**このダンプで旧優先度タスク「schema.sql の実DB同期」も同時に解消する**（ダンプ結果を `supabase/schema.sql` として再生成し、`.claude/skills/context/SKILL.md` のテーブル表と照合）
+3. **データ移行**: `pg_dump --data-only --disable-triggers` → 東京へ restore。`push_subscriptions`・`audit_logs`・`login_history` も忘れず対象に
+4. **Storage 移行**: バケット4つを再作成（`images`/`videos`/`avatars` = public、`pdfs` = 非公開）→ ファイルをコピー
+5. **保存済みURLの書き換え**: `writing_data.image_url/video_url/pdf_url`・`post_attachments.url`・`user_info.avatar_url` に旧プロジェクトドメインの完全URLが入っている場合、新ドメインへ一括置換:
+   `UPDATE ... SET url = replace(url, 'ajyyoifxatincvflzcpb.supabase.co', '<新ref>.supabase.co')`
+6. **Vercel 環境変数差し替え**（Production）: `NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` を新プロジェクトの値に
+7. **vercel.json の regions を `["sin1"]` → `["hnd1"]`** に変更してデプロイ（関数もDBも東京になり現状よりさらに速くなる）
+8. `next.config.ts` の remotePatterns は `*.supabase.co` ワイルドカードなので変更不要（念のため確認）
+9. **動作確認**: ログイン / 投稿＋画像添付 / アバター表示 / PDF署名URL / プッシュ通知 / 日程調整 / リアルタイム更新（broadcast はコード側チャンネルなので設定不要）/ 監査ログ記録
+10. 旧プロジェクトは数日残し、問題なければ削除（それまでは env を戻すだけでロールバック可能）
+
+**注意**: 切替の瞬間の書き込みは失われるため、事前に掲示板でメンテ告知を。HANDOFF 冒頭の環境情報表（ref: ajyyoifxatincvflzcpb）も移行後に更新すること。
 
 ## 優先度2: ISO27001 残課題（docs/SECURITY.md §7 と同期）
 
