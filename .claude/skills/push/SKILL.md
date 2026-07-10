@@ -11,7 +11,8 @@ description: 実装完了後の検証→コミット→プッシュの完了パ�
 |---|---|
 | 1〜2ファイルの小変更 | `npx tsc --noEmit` を直接実行 |
 | 複数ファイル・設定/依存変更 | **build-check エージェント**（haiku）に委譲 |
-| Server Action・DBクエリ・API追加/変更 | **tenant-audit エージェント**（sonnet）で監査 |
+| DBクエリを含む変更（全件必須） | `npm run check:tenant`（機械検査・数秒。CIでも実行される） |
+| Server Action・DBクエリ・API追加/変更 | 上記に加えて **tenant-audit エージェント**（sonnet）で意味的監査 |
 | TSXコンポーネント追加/変更 | **mobile-review エージェント**（haiku）で監査 |
 | 個人情報の項目・表示・外部送信・保管場所、投稿系機能、外部サービスを追加/変更 | **legal-check エージェント**（sonnet）で監査 |
 

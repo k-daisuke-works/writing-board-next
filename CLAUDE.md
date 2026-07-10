@@ -32,7 +32,7 @@
 
 ## 🔴 絶対ルール（違反すると本番事故）
 
-1. **全DBクエリに `.eq('organization_key', session.organizationKey)`** — RLSなしのためアプリ側フィルタが唯一の防衛線。特に UPDATE / DELETE で漏れやすい。書いたら全クエリの `.eq()` チェーンを目視確認。
+1. **全DBクエリに `.eq('organization_key', session.organizationKey)`** — RLSなしのためアプリ側フィルタが唯一の防衛線。特に UPDATE / DELETE で漏れやすい。書いたら `npm run check:tenant`（機械検査。CIでも必ず実行される）。organization_key カラムがないテーブル等の正当な例外は `// tenant-ok: 理由` を同じ行か直前行に付ける。
 2. **未認証セットアップ系アクションは組織の既存ユーザー数を確認**してから実行（organizationKey 推測による不正登録防止）。
 3. **`middleware.ts` の名前・配置を変えない**（変えると認証ガードが無音で無効化）。matcher から `manifest.webmanifest` を除外。PUBLIC_PATHS の `'/'` は `===` 完全一致。
 4. **ID系入力は Server Action 冒頭で `.normalize('NFKC').trim()`**（IME全角入力対策）。
@@ -41,7 +41,7 @@
 
 ## 🟡 実装時チェック（詳細・コード例は `/lessons`）
 
-- SELECT は使うカラムを明示列挙（`select('*')` 禁止）。表示用ユーザー情報は `avatar_url` も一緒に取得。
+- 機密カラムを持つテーブル（`user_info`・`organization_data`）は `select('*')` 禁止・カラム明示列挙（パスワードハッシュのクライアント送出事故が実際に起きた）。コンテンツ系テーブル（writing_data・post_* 等）は `select('*')` 可。表示用ユーザー情報は `avatar_url` も一緒に取得。
 - Optional な FK は `Number(x) || null`（`''` → `0` でFK違反）。
 - 独立クエリは `Promise.all` 並列化。「エンティティごとに最新1件」は1クエリ＋JSグルーピング（N+1禁止）。
 - Server Action には影響する全ページの `revalidatePath` を列挙（`'layout'` 型の広域無効化は避ける）。

@@ -651,9 +651,19 @@ export async function setGroupMembers(formData: FormData) {
     .single()
   if (!group) return { error: '権限がありません。' }
 
+  // tenant-ok: user_group_members に organization_key カラムなし。group_id は直上で組織検証済み
   await supabase.from('user_group_members').delete().eq('group_id', groupId)
 
   if (userKeys.length > 0) {
+    // user_key が自組織のユーザーであることを検証（他組織 user_key の混入防止）
+    const { data: orgUsers } = await supabase
+      .from('user_info')
+      .select('user_key')
+      .in('user_key', userKeys)
+      .eq('organization_key', session.organizationKey)
+    if ((orgUsers ?? []).length !== new Set(userKeys).size) return { error: '不正なユーザーが含まれています。' }
+
+    // tenant-ok: group_id・user_key とも直上で組織検証済み
     const { error } = await supabase.from('user_group_members').insert(
       userKeys.map(uk => ({ group_id: groupId, user_key: uk }))
     )

@@ -11,7 +11,8 @@ CLAUDE.md の要約ルールに対応する、実際のコード例と発生経�
 
 ### organization_key フィルタ漏れの実例
 過去に漏れた箇所：`deleteUser` / `deleteDepartment` / `deleteJob` / `confirmScheduleEvent` / `department/[id]` / `schedule` ページ。
-削除・更新系は SELECT より意識が薄れて漏れやすい。新しい Server Action を書くたびに全クエリの `.eq()` チェーンを目視確認する。
+さらに2026-07の全数機械検査で、返信著者のアバター補完クエリ（`.in('user_key', replyUserKeys)` のみで org フィルタなし）が **home/posts/notices/department/member の5箇所**で同時に見つかった。コピペで同じ漏れが広がる典型例。
+削除・更新系と「取得済みキーでの補助クエリ」は意識が薄れて漏れやすい。目視に頼らず `npm run check:tenant`（`scripts/check-tenant-isolation.mjs`）で機械検査する（CIでも実行される）。organization_key カラムを持たないテーブル（`schedule_dates` / `schedule_responses` / `user_group_members`）へのクエリは、org 検証済みの親ID経由であることを確認して `// tenant-ok: 理由` を同じ行か直前行に付ける。
 
 ### 未認証セットアップの組織存在チェック
 `organizationKey` を推測して第2ユーザーを不正作成される恐れがある。

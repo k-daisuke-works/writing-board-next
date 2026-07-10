@@ -82,6 +82,7 @@ export async function sendPush(target: PushTarget, payload: PushPayload): Promis
       .filter((e): e is string => e !== null)
     if (deadEndpoints.length > 0) {
       await supabase.from('push_subscriptions').delete().in('endpoint', deadEndpoints)
+        .eq('organization_key', target.organizationKey)
     }
 
     return results.filter(r => r.status === 'fulfilled').length

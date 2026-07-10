@@ -92,6 +92,7 @@ export async function createPost(formData: FormData) {
     ...pdfUrls.map(url => ({ post_id: insertedPost.writing_id, organization_key: session.organizationKey, file_type: 'pdf' as const, url })),
   ]
   if (attachments.length > 0) {
+    // tenant-ok: attachments の各要素に organization_key を含む（直上で構築）
     await supabase.from('post_attachments').insert(attachments)
   }
 

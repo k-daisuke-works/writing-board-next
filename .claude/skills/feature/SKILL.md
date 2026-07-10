@@ -59,7 +59,7 @@ after(() => sendPush(
 
 1. 冒頭で `getSession()` → なければ `redirect('/login')`
 2. 独立クエリは `Promise.all` で並列化
-3. SELECT は使うカラムを明示列挙（表示用ユーザー情報は `avatar_url` も）
+3. 機密カラムを持つテーブル（`user_info`・`organization_data`）はカラム明示列挙・`select('*')` 禁止。コンテンツ系は `select('*')` 可（表示用ユーザー情報は `avatar_url` も）
 4. 「エンティティごとに最新1件」は1クエリ＋JSグルーピング（N+1禁止）
 5. UI は `/mobile` チェックリスト準拠（幅375px起点）
 
@@ -74,6 +74,6 @@ after(() => sendPush(
 
 1. 小さい変更: `npx tsc --noEmit` を直接実行
 2. 大きい変更（複数ファイル・ビルド影響あり）: **build-check エージェント**に委譲（ビルドログをメイン会話に持ち込まない）
-3. Server Action・DBクエリ・APIを触った: **tenant-audit エージェント**で監査
+3. DBクエリを触った: `npm run check:tenant`（機械検査）＋ **tenant-audit エージェント**で意味的監査
 4. TSX を触った: **mobile-review エージェント**で監査
 5. `/push` でコミット＆プッシュ

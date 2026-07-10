@@ -52,10 +52,12 @@ export async function toggleReaction(postId: number, emoji: string) {
     .eq('post_id', postId)
     .eq('user_key', session.userKey)
     .eq('emoji', emoji)
+    .eq('organization_key', session.organizationKey)
     .maybeSingle()
 
   if (existing) {
     await supabase.from('post_reactions').delete().eq('id', existing.id)
+      .eq('organization_key', session.organizationKey)
   } else {
     await supabase.from('post_reactions').insert({
       post_id: postId,

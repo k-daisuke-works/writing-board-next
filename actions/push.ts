@@ -33,4 +33,5 @@ export async function unsubscribePush(endpoint: string) {
     .delete()
     .eq('endpoint', endpoint)
     .eq('user_key', session.userKey)
+    .eq('organization_key', session.organizationKey)
 }

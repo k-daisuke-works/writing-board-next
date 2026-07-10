@@ -1,0 +1,28 @@
+# CI: 型チェック・Lint・テナント分離の機械検査
+# ビルドは Vercel（実環境変数あり）が担うため、ここでは実行しない
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: 型チェック
+        run: npm run typecheck
+      - name: テナント分離検査（organization_key フィルタ全数チェック）
+        run: npm run check:tenant
+      # 既存コードに react-hooks v6 由来のエラー6件が残っているため当面は非ブロッキング
+      # （解消したら continue-on-error を外す。HANDOFF 優先度3参照）
+      - name: Lint（非ブロッキング）
+        run: npm run lint
+        continue-on-error: true

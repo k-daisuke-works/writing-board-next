@@ -30,6 +30,7 @@ async function getUnreadCounts(organizationKey: number, userKey: number, departm
 
   const { data: reads } = await supabase
     .from('post_reads').select('post_id')
+    .eq('organization_key', organizationKey)
     .eq('user_key', userKey).in('post_id', allIds)
 
   const readSet = new Set((reads ?? []).map(r => r.post_id))

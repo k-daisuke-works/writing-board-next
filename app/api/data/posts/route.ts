@@ -37,7 +37,8 @@ export async function GET() {
   const avatarMap: Record<number, string | null> = {}
   const replyUserKeys = [...new Set((allReplies ?? []).map(r => (r as PostReply).user_key))]
   if (replyUserKeys.length > 0) {
-    const { data: avatarData } = await supabase.from('user_info').select('user_key, avatar_url').in('user_key', replyUserKeys)
+    const { data: avatarData } = await supabase.from('user_info').select('user_key, avatar_url')
+      .eq('organization_key', session.organizationKey).in('user_key', replyUserKeys)
     for (const u of avatarData ?? []) avatarMap[u.user_key] = u.avatar_url ?? null
   }
 

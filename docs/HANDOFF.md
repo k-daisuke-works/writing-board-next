@@ -65,11 +65,13 @@
 1. **RLS ポリシーの本格導入**（多層防御）: 現状は「anon 全拒否」のみ。アプリ層のフィルタ漏れに備えた組織スコープのポリシー導入は、Supabase Auth 移行（前提の変更）が必要なため、**ユーザーの明示的な承認を得てから**設計すること
 2. **レート制限の永続化**: `actions/auth.ts` のログインレート制限はプロセス内 Map。Vercel でインスタンスが分かれると効果が薄れる。Upstash Redis（Vercel Marketplace で導入可）+ `@upstash/ratelimit` へ移行
 3. **パスワード履歴**: 過去N世代の再利用禁止（`password_history` テーブル追加）
-4. **依存脆弱性の自動監視**: GitHub リポジトリで Dependabot を有効化（`.github/dependabot.yml` 追加）
+4. ~~依存脆弱性の自動監視~~ → **解消済み（2026-07-10）**: `.github/dependabot.yml` 追加（npm / github-actions 週次）
 5. **バックアップ確認**: Supabase の自動バックアップ設定の有効化状態を確認し、SECURITY.md に記載
 
 ## 優先度3: 品質改善バックログ（余力があれば）
 
+- **既存 lint エラー6件の解消**（react-hooks v6 厳格ルール: `PostReactions.tsx`・`welfare/page.tsx`・`InteractiveDemo.tsx` の setState-in-effect / Date.now-in-render）。解消後、`.github/workflows/ci.yml` の Lint ステップから `continue-on-error: true` を外してブロッキング化する
+- `setGroupMembers`（グループメンバー変更＝実質的な権限操作）に `logAudit()` がない（既存ギャップ。2026-07-10 の tenant-audit で指摘）
 - プッシュ通知のユーザー別設定（通知種別のオン/オフ。現状は購読するか否かの二択）
 - 監査ログの保持期間ポリシー（例: 1年経過分の自動削除 Cron）と CSV エクスポート
 - `vercel env ls` で Preview 環境に VAPID 系が未設定（Production のみ設定済み）。プレビューで通知テストが必要になったら追加
@@ -79,7 +81,7 @@
 ## 作業の進め方（必須手順）
 
 1. 実装前に `/context`・`/feature` スキルを読む（Claude Code 以外のツールの場合は `.claude/skills/*/SKILL.md` を直接読む）
-2. Server Action・DBクエリを触ったら、コミット前に organization_key フィルタと認可チェックを全数確認（Claude Code なら `tenant-audit` エージェントに委譲）
+2. Server Action・DBクエリを触ったら、コミット前に `npm run check:tenant`（organization_key フィルタの機械検査。CI でも実行される）＋認可チェックの確認（Claude Code なら `tenant-audit` エージェントに委譲）。正当な例外は `// tenant-ok: 理由` 注釈
 3. DBスキーマ変更は必ず `supabase/migrations/` にファイルを残してから適用する
 4. セキュリティに関わる変更をしたら `docs/SECURITY.md` を更新する
 5. 完了の定義 = 型チェック/ビルド通過 → コミット → プッシュ（`git add .` 禁止、ファイル明示）

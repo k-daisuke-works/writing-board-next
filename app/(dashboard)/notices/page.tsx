@@ -52,7 +52,8 @@ export default async function NoticesPage() {
   const avatarMap: Record<number, string | null> = { [session.userKey]: session.avatarUrl ?? null }
   if (replyUserKeys.length > 0) {
     const { data: avatarData } = await supabase
-      .from('user_info').select('user_key, avatar_url').in('user_key', replyUserKeys)
+      .from('user_info').select('user_key, avatar_url')
+      .eq('organization_key', session.organizationKey).in('user_key', replyUserKeys)
     for (const u of avatarData ?? []) avatarMap[u.user_key] = u.avatar_url ?? null
   }
 

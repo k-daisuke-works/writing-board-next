@@ -67,7 +67,7 @@ export async function login(formData: FormData) {
 
   const { data: org } = await supabase
     .from('organization_data')
-    .select('*')
+    .select('organization_key')
     .eq('organization_id', organizationId)
     .single()
 

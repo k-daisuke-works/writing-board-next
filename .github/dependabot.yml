@@ -1,0 +1,12 @@
+# 依存脆弱性の自動監視（ISO27001 残課題 / docs/SECURITY.md 参照）
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
