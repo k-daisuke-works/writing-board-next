@@ -5,14 +5,11 @@ import Link from 'next/link'
 import { Calendar, Plus, Building2, Users, ChevronRight, Clock } from 'lucide-react'
 import type { ScheduleEvent, Department } from '@/types/database'
 import CreateEventModal from './CreateEventModal'
+import { fmtShortDate } from '@/lib/utils'
 
 type Props = {
   events: ScheduleEvent[]
   departments: Department[]
-}
-
-function fmtDate(dt: string) {
-  return new Date(dt).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })
 }
 
 export default function ScheduleList({ events, departments }: Props) {
@@ -60,7 +57,7 @@ export default function ScheduleList({ events, departments }: Props) {
                     : <span className="flex items-center gap-1"><Users className="w-3 h-3" />{event.target_department_name}</span>
                   }
                   <span className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />{fmtDate(event.created_at)} · {event.created_by_name}
+                    <Clock className="w-3 h-3" />{fmtShortDate(event.created_at)} · {event.created_by_name}
                   </span>
                 </div>
               </div>
