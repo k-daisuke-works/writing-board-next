@@ -22,6 +22,12 @@ function isAppleMobile() {
     || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
 }
 
+// PC ではモーダルで勧誘しない（ブラウザのメニューからインストール可能なまま）。
+// 本アプリはスマホ主体で、PC ではログインのたびに出て煩わしいため
+function isMobileDevice() {
+  return /Android/i.test(navigator.userAgent) || isAppleMobile()
+}
+
 function wasRecentlyDismissed() {
   const dismissedAt = Number(localStorage.getItem(DISMISSED_AT_KEY))
   return dismissedAt > 0 && Date.now() - dismissedAt < DISMISS_FOR_MS
@@ -32,7 +38,7 @@ export default function InstallPrompt() {
   const [mode, setMode] = useState<'install' | 'ios' | null>(null)
 
   useEffect(() => {
-    if (isStandalone() || wasRecentlyDismissed()) return
+    if (isStandalone() || wasRecentlyDismissed() || !isMobileDevice()) return
 
     const handleInstallPrompt = (event: Event) => {
       event.preventDefault()
