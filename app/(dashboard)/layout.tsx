@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { getSession } from '@/lib/session'
 import { createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
@@ -38,11 +39,17 @@ async function getUnreadCounts(organizationKey: number, userKey: number, departm
   }
 }
 
+// 未読カウントは Suspense 内で非同期に取得し、ページ本体の描画をブロックしない
+async function NavWithUnread({ organizationKey, userKey, departmentId }: {
+  organizationKey: number; userKey: number; departmentId: number
+}) {
+  const unread = await getUnreadCounts(organizationKey, userKey, departmentId)
+  return <NavLinks unreadBoard={unread.board} unreadTeam={unread.team} />
+}
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
   if (!session) redirect('/login')
-
-  const unread = await getUnreadCounts(session.organizationKey, session.userKey, session.departmentId)
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[#faf7ee]">
@@ -55,7 +62,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
           <div className="w-px h-5 bg-gray-200 hidden sm:block" />
 
-          <NavLinks unreadBoard={unread.board} unreadTeam={unread.team} />
+          <Suspense fallback={<NavLinks unreadBoard={0} unreadTeam={0} />}>
+            <NavWithUnread
+              organizationKey={session.organizationKey}
+              userKey={session.userKey}
+              departmentId={session.departmentId}
+            />
+          </Suspense>
 
           <div className="flex shrink-0 items-center gap-3">
             <div className="hidden md:flex flex-col items-end">
