@@ -150,9 +150,12 @@ export default function LandingPage() {
               </span>
             </Reveal>
             <Reveal delay={80}>
-              <h1 className="font-maru font-extrabold text-[2.1rem] sm:text-5xl lg:text-[3.4rem] leading-[1.45] tracking-wide mb-5" style={{ color: NAVY }}>
-                チームの情報共有、<br />
-                <span className="inline-block bg-white rounded-full px-4" style={{ color: TEAL }}>まるっと</span>ひとつに。
+              <h1 className="font-maru font-extrabold text-[clamp(1.8rem,4.6vw,3.3rem)] leading-[1.45] mb-5" style={{ color: NAVY }}>
+                <span className="inline-block whitespace-nowrap">チームの情報共有、</span>
+                <br />
+                <span className="inline-block whitespace-nowrap">
+                  <span className="inline-block bg-white rounded-full px-3 sm:px-4" style={{ color: TEAL }}>まるっと</span>ひとつに。
+                </span>
               </h1>
             </Reveal>
             <Reveal delay={160}>
