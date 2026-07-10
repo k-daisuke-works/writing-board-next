@@ -15,7 +15,8 @@
 | 項目 | 値 |
 |---|---|
 | Vercel プロジェクト | `roscope`（リンク済み、CLI 認証済み。env・deploy・logs 操作可） |
-| Supabase プロジェクト | `Socialworks's Project` / ref: `ajyyoifxatincvflzcpb` |
+| Supabase プロジェクト | `Socialworks Tokyo` / ref: `qzehjiaxevghmvusdzrt`（東京 ap-northeast-1。2026-07-11 移行完了） |
+| 旧 Supabase プロジェクト | `Socialworks's Project` / ref: `ajyyoifxatincvflzcpb`（ソウル ap-northeast-2。ロールバック用に数日残置 → 問題なければ削除） |
 | Supabase 操作手段 | MCP サーバー（`~/.claude.json` にトークン設定済み）または Management API |
 | DBマイグレーション | `supabase/migrations/*.sql` に記録 → Management API `POST /v1/projects/{ref}/database/query` で適用 |
 
@@ -37,32 +38,23 @@
 - 東京リージョン移行時は他テーブル同様にデータ移行対象（access_token を含むので注意）
 - **運用メモ（2026-07-10 legal-check 指摘）**: ①Meta の Instagram Platform 利用規約（キャッシュ保持・帰属表示要件）への適合はトークン発行時に最新版を確認する、②IG 側で投稿を削除してもキャッシュ反映は次回 Cron（最大12時間後）— 緊急の削除要請時は SQL Editor で `DELETE FROM instagram_posts WHERE media_id = '...'` を直接実行、③access_token は平文保存（漏洩時は会の公式アカウント操作権限に影響。将来 Supabase Vault 化を検討）
 
-## 優先度1: Supabase 東京リージョン移行（個人情報の国内化）🔴最優先
+## ~~優先度1: Supabase 東京リージョン移行（個人情報の国内化）~~ → **完了（2026-07-11）**
 
-**背景**: 現DBはシンガポール（ap-southeast-1。db ホストの IPv6 プレフィックス 2406:da12 で確認済み）。会員情報・要配慮個人情報の取り扱いを見据え、国内（東京 ap-northeast-1）へ移す。**データ量が少ない今のうちに実施する**（2026-07-10 ユーザー決定。ローカル環境で実行予定）。Vercel 関数は現在 sin1 固定（DB隣接のため）— 移行完了時に hnd1 へ変更する。
+DB・Storage・Vercel 関数（hnd1）とも東京リージョンへ移行済み。旧DBの実リージョンはシンガポールではなく**ソウル（ap-northeast-2）**だった（Management API で確認。IPv6 プレフィックスからの推測が誤り）。
 
-**手順**（作業1〜2時間＋切替メンテ数分。夜間推奨）:
-
-1. **東京で新プロジェクト作成**: Supabase ダッシュボード → New Project → Region: Northeast Asia (Tokyo)。DBパスワードを控える。無料プランでも2プロジェクト並行可
-2. **スキーマ移行**: 旧DBから `pg_dump --schema-only`（または `supabase db dump`）→ 東京へ適用。**このダンプで旧優先度タスク「schema.sql の実DB同期」も同時に解消する**（ダンプ結果を `supabase/schema.sql` として再生成し、`.claude/skills/context/SKILL.md` のテーブル表と照合）
-3. **データ移行**: `pg_dump --data-only --disable-triggers` → 東京へ restore。`push_subscriptions`・`audit_logs`・`login_history` も忘れず対象に
-4. **Storage 移行**: バケット4つを再作成（`images`/`videos`/`avatars` = public、`pdfs` = 非公開）→ ファイルをコピー
-5. **保存済みURLの書き換え**: `writing_data.image_url/video_url/pdf_url`・`post_attachments.url`・`user_info.avatar_url` に旧プロジェクトドメインの完全URLが入っている場合、新ドメインへ一括置換:
-   `UPDATE ... SET url = replace(url, 'ajyyoifxatincvflzcpb.supabase.co', '<新ref>.supabase.co')`
-6. **Vercel 環境変数差し替え**（Production）: `NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` を新プロジェクトの値に
-7. **vercel.json の regions を `["sin1"]` → `["hnd1"]`** に変更してデプロイ（関数もDBも東京になり現状よりさらに速くなる）
-8. `next.config.ts` の remotePatterns は `*.supabase.co` ワイルドカードなので変更不要（念のため確認）
-9. **動作確認**: ログイン / 投稿＋画像添付 / アバター表示 / PDF署名URL / プッシュ通知 / 日程調整 / リアルタイム更新（broadcast はコード側チャンネルなので設定不要）/ 監査ログ記録
-10. 旧プロジェクトは数日残し、問題なければ削除（それまでは env を戻すだけでロールバック可能）
-
-**注意**: 切替の瞬間の書き込みは失われるため、事前に掲示板でメンテ告知を。移行後に更新するもの: ①HANDOFF 冒頭の環境情報表（ref: ajyyoifxatincvflzcpb）、②**`app/privacy/page.tsx` の「データの保管場所」記載**（シンガポール→日本国内。外的環境の公表事項のため必須）。
+- 移行方法: Management API＋pg_dump/psql（セッションプーラー経由・ポート5432）。スキーマ22テーブル・全データ・Storage 4バケット5ファイルを移行し、行数一致を確認済み
+- `supabase/schema.sql` は移行時の `pg_dump --schema-only` で実DB同期済み（旧課題解消）
+- 新 `videos` バケットの file_size_limit は 50MB（旧は100MB設定だったがプロジェクト全体上限50MBで頭打ちのため実効挙動は同じ）
+- `instagram_accounts` / `instagram_posts` は旧DB未適用のマイグレーションのため新DBにも未適用（IG連携有効化時に `20260710_instagram.sql` を適用する）
+- Vercel env は Production に加えて Preview の `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` も新プロジェクト値に更新済み
+- **ロールバック**: Vercel env と vercel.json を戻すだけ（旧プロジェクトは数日残置。問題なければダッシュボードから削除）
 
 ## 実利用開始前チェックリスト（現在はテスト運用・利用者ゼロ）
 
 提供形態は**無償・実験提供**（2026-07-10 ユーザー確認。契約締結の予定なし）。法的な芯はアプリ内の /terms・/privacy＋同意動線でカバー済み。実際に会のメンバーに使ってもらう前に:
 
-1. **東京リージョン移行**（上記優先度1）— 実の個人情報が入る前に済ませるのが最も低リスク
-2. 移行後、`app/privacy/page.tsx` の保管場所記載を更新
+1. ~~東京リージョン移行~~ → **完了（2026-07-11）**
+2. ~~移行後、`app/privacy/page.tsx` の保管場所記載を更新~~ → **完了（2026-07-11）**
 3. `docs/legal/RoScopeテスト利用のご案内.docx`（A4ビジネス文書・Word形式）を会に渡す — 契約書ではなく説明文書。日付・団体名・運営者名・連絡先の〔 〕を埋めて使う（本文の元データは trial-notice.md）
 4. 利用開始
 

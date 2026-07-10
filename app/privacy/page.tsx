@@ -30,7 +30,7 @@ export default function PrivacyPage() {
       <main className="max-w-3xl mx-auto px-5 py-10">
         <div className="bg-white rounded-[28px] px-6 py-8 sm:px-10 sm:py-10 shadow-sm">
           <h1 className="font-maru font-extrabold text-2xl mb-2" style={{ color: NAVY }}>プライバシーポリシー</h1>
-          <p className="text-xs text-gray-400 mb-8">制定日: 2026年7月10日</p>
+          <p className="text-xs text-gray-400 mb-8">制定日: 2026年7月10日（最終改定: 2026年7月11日）</p>
 
           <Section title="1. 本ポリシーについて">
             <p>
@@ -79,8 +79,7 @@ export default function PrivacyPage() {
               このとき、画像配信のために IP アドレス等の通信情報が Meta 社に送信されます。送信された情報は Meta 社のプライバシーポリシーに基づき取り扱われ、前段の「独自の目的で取り扱うことはありません」の対象には含まれません。
             </p>
             <p>
-              データベースは現在シンガポールのデータセンターに保管されており、日本国内（東京リージョン）への移転を予定しています。
-              移転完了後、本ポリシーを更新します。
+              データベースおよびアップロードされたファイルは、日本国内（東京リージョン）のデータセンターに保管されています。
             </p>
           </Section>
 
