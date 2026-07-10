@@ -2,9 +2,11 @@ import Link from 'next/link'
 import {
   MessageSquare, Calendar, Users, Newspaper,
   Receipt, ClipboardList, ArrowRight, CheckCircle2,
-  Megaphone, Sparkles, Rocket, Wrench,
+  Megaphone, Sparkles, Rocket, Wrench, MousePointerClick,
 } from 'lucide-react'
 import { RoScopeLogo } from '@/app/components/RoScopeLogo'
+import { Reveal } from '@/app/components/landing/Reveal'
+import { InteractiveDemo } from '@/app/components/landing/InteractiveDemo'
 
 // ── お知らせデータ ──────────────────────────────────────────
 type AnnouncementType = 'release' | 'feature' | 'improvement' | 'fix'
@@ -60,7 +62,7 @@ const ANNOUNCEMENT_STYLES: Record<AnnouncementType, { badge: string; dot: string
   fix: { badge: 'bg-gray-100 text-gray-600', dot: 'bg-gray-400', Icon: Wrench },
 }
 
-// ── ブラウザ風フレーム ──────────────────────────────────────
+// ── ブラウザ風フレーム（ヒーロー用の静的モック） ─────────────
 function BrowserFrame({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={`rounded-xl overflow-hidden shadow-2xl border border-gray-200 bg-white ${className}`}>
@@ -77,7 +79,6 @@ function BrowserFrame({ children, className = '' }: { children: React.ReactNode;
   )
 }
 
-// ── ホーム画面モックアップ ──────────────────────────────────
 function HomeMockup() {
   const notices = [
     { dept: '総務部', msg: '今月の会議資料をアップしました。ご確認ください。', time: '2時間前', isNew: true },
@@ -86,19 +87,17 @@ function HomeMockup() {
   ]
   return (
     <BrowserFrame>
-      {/* ナビバー */}
       <div className="flex items-center gap-3 px-3 py-2 bg-white border-b border-gray-100">
         <div className="w-5 h-5 bg-blue-600 rounded flex items-center justify-center shrink-0">
           <div className="w-2.5 h-2.5 border border-white rounded-sm" />
         </div>
         <span className="text-[10px] font-semibold text-gray-800">RoScope</span>
         <div className="flex gap-1 ml-1">
-          {['ホーム','全体掲示板','スケジュール'].map(t => (
-            <span key={t} className="text-[9px] text-gray-500 px-1.5 py-0.5 rounded hover:bg-gray-100">{t}</span>
+          {['ホーム', '全体掲示板', 'スケジュール'].map(t => (
+            <span key={t} className="text-[9px] text-gray-500 px-1.5 py-0.5 rounded">{t}</span>
           ))}
         </div>
       </div>
-      {/* コンテンツ */}
       <div className="p-3 bg-gray-50">
         <div className="text-[10px] font-semibold text-gray-600 mb-1.5">各部署からのお知らせ</div>
         <div className="grid grid-cols-3 gap-1.5 mb-3">
@@ -135,113 +134,6 @@ function HomeMockup() {
             </div>
           ))}
         </div>
-      </div>
-    </BrowserFrame>
-  )
-}
-
-// ── カレンダーモックアップ ──────────────────────────────────
-function CalendarMockup() {
-  const days = ['日','月','火','水','木','金','土']
-  const cells = [null,null,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,null,null]
-  const events: Record<number,string[]> = {
-    5: ['利用者A面談'],
-    12: ['全体会議'],
-    18: ['研修'],
-    25: ['月次報告'],
-  }
-  return (
-    <BrowserFrame>
-      <div className="p-3 bg-gray-50">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-1">
-            <div className="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-200 cursor-pointer text-gray-500 text-xs">‹</div>
-            <span className="text-[11px] font-semibold text-gray-800 w-20 text-center">2026年6月</span>
-            <div className="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-200 cursor-pointer text-gray-500 text-xs">›</div>
-          </div>
-          <div className="text-[9px] bg-blue-600 text-white px-2 py-0.5 rounded font-medium">+ 追加</div>
-        </div>
-        <div className="bg-white rounded-lg overflow-hidden border border-gray-200">
-          <div className="grid grid-cols-7 border-b border-gray-100">
-            {days.map((d, i) => (
-              <div key={d} className={`text-center text-[9px] font-medium py-1 ${i===0?'text-red-400':i===6?'text-blue-400':'text-gray-500'}`}>{d}</div>
-            ))}
-          </div>
-          <div className="grid grid-cols-7">
-            {cells.map((day, i) => (
-              <div key={i} className={`min-h-[28px] border-r border-b border-gray-100 p-0.5 ${i%7===6?'border-r-0':''} ${day?'':'bg-gray-50/40'}`}>
-                {day && (
-                  <>
-                    <span className={`text-[8px] font-medium inline-flex w-3.5 h-3.5 items-center justify-center rounded-full ${
-                      day===2?'bg-blue-600 text-white':i%7===0?'text-red-400':i%7===6?'text-blue-400':'text-gray-600'
-                    }`}>{day}</span>
-                    {events[day] && (
-                      <div className="text-[6px] px-0.5 py-0.5 mt-0.5 rounded bg-blue-100 text-blue-700 truncate leading-tight">
-                        {events[day][0]}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </BrowserFrame>
-  )
-}
-
-// ── 日程調整モックアップ ────────────────────────────────────
-function ScheduleMockup() {
-  const dates = ['6/10(水)', '6/11(木)', '6/12(金)']
-  const rows = [
-    { name: '田中 花子', answers: ['ok','ok','ng'], isMe: true },
-    { name: '山田 太郎', answers: ['ok','maybe','ok'], isMe: false },
-    { name: '相談支援部', answers: ['ng','ok','ok'], isMe: false },
-  ]
-  const DISP: Record<string,{label:string;cls:string}> = {
-    ok:    { label: '○', cls: 'bg-green-50 text-green-600 border-green-200' },
-    maybe: { label: '△', cls: 'bg-yellow-50 text-amber-500 border-yellow-200' },
-    ng:    { label: '×', cls: 'bg-red-50 text-red-500 border-red-200' },
-  }
-  return (
-    <BrowserFrame>
-      <div className="p-3 bg-gray-50">
-        <p className="text-[10px] font-semibold text-gray-700 mb-2">6月研修日程調整</p>
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <table className="w-full border-collapse text-[9px]">
-            <thead>
-              <tr>
-                <th className="bg-gray-50 border-b border-r border-gray-200 px-2 py-1.5 text-left text-gray-500 font-semibold">名前</th>
-                {dates.map(d => (
-                  <th key={d} className="border-b border-r last:border-r-0 border-gray-200 px-2 py-1.5 text-center text-gray-700 font-semibold whitespace-nowrap">{d}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, ri) => (
-                <tr key={row.name} className={ri%2===0?'bg-white':'bg-gray-50/50'}>
-                  <td className="border-b border-r border-gray-100 px-2 py-1.5">
-                    <div className="flex items-center gap-1">
-                      <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-bold shrink-0 ${row.isMe?'bg-blue-600 text-white':'bg-gray-100 text-gray-600'}`}>
-                        {row.name[0]}
-                      </div>
-                      <span className={`whitespace-nowrap ${row.isMe?'text-blue-700':'text-gray-700'}`}>{row.name}</span>
-                    </div>
-                  </td>
-                  {row.answers.map((a, ai) => (
-                    <td key={ai} className="border-b border-r last:border-r-0 border-gray-100 px-1 py-1 text-center">
-                      <span className={`inline-flex items-center justify-center w-6 h-5 rounded border text-[9px] font-bold ${DISP[a].cls}`}>
-                        {DISP[a].label}
-                      </span>
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p className="text-[8px] text-gray-400 mt-1.5 text-center">自分の行をクリックして回答 · ○→△→×の順で切り替わります</p>
       </div>
     </BrowserFrame>
   )
@@ -298,7 +190,7 @@ export default function LandingPage() {
           <RoScopeLogo size="sm" />
           <Link
             href="/login"
-            className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition-colors"
+            className="inline-flex items-center min-h-[44px] text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition-colors"
           >
             ログイン
           </Link>
@@ -306,46 +198,71 @@ export default function LandingPage() {
       </header>
 
       {/* ヒーロー */}
-      <section className="relative overflow-hidden" style={{ background: 'linear-gradient(160deg,#1e3a8a 0%,#1d4ed8 55%,#3b82f6 100%)' }}>
+      <section className="relative overflow-hidden" style={{ background: 'linear-gradient(160deg,#172554 0%,#1e3a8a 40%,#1d4ed8 75%,#3b82f6 100%)' }}>
+        {/* 動くブロブ + ドットパターン */}
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-500/30 rounded-full blur-3xl anim-blob pointer-events-none" aria-hidden />
+        <div className="absolute -bottom-32 right-0 w-[28rem] h-[28rem] bg-indigo-400/25 rounded-full blur-3xl anim-blob pointer-events-none" style={{ animationDelay: '-8s' }} aria-hidden />
         <div className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: 'radial-gradient(circle at 70% 50%, white 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+          style={{ backgroundImage: 'radial-gradient(circle at 70% 50%, white 1px, transparent 1px)', backgroundSize: '32px 32px' }} aria-hidden />
+
         <div className="relative max-w-6xl mx-auto px-5 py-16 lg:py-28 flex flex-col lg:flex-row items-center gap-12">
           {/* テキスト */}
-          <div className="flex-1 text-center lg:text-left anim-fade-in">
-            <span className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 text-blue-100 text-xs font-medium px-3 py-1 rounded-full mb-5 backdrop-blur">
-              <Sparkles className="w-3.5 h-3.5 text-blue-200" />
-              福祉施設チーム向け 業務連絡システム
-            </span>
-            <h1 className="text-3xl sm:text-4xl lg:text-[3.25rem] font-bold text-white leading-[1.15] tracking-tight mb-5">
-              チームの情報共有を<br />
-              <span className="bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">もっとスムーズに</span>
-            </h1>
-            <p className="text-blue-100/90 text-base sm:text-lg leading-relaxed mb-8 max-w-lg mx-auto lg:mx-0">
-              部署間の情報共有・スケジュール管理・日程調整・福祉最新情報の収集まで、日常業務に必要な機能をひとつにまとめました。
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
-              <Link
-                href="/login"
-                className="group inline-flex items-center justify-center gap-2 bg-white text-blue-700 font-semibold px-6 py-3 rounded-lg hover:bg-blue-50 transition-all shadow-lg shadow-blue-950/20 hover:shadow-xl hover:-translate-y-0.5"
-              >
-                ログインして始める
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
-            </div>
-            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 justify-center lg:justify-start">
-              {['リアルタイム更新', 'ファイル添付対応', 'マルチ部署対応', 'スマホ対応'].map(t => (
-                <span key={t} className="flex items-center gap-1.5 text-blue-200 text-sm">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-blue-300" />{t}
+          <div className="flex-1 text-center lg:text-left">
+            <Reveal>
+              <span className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 text-blue-100 text-xs font-medium px-3 py-1 rounded-full mb-5 backdrop-blur">
+                <Sparkles className="w-3.5 h-3.5 text-blue-200" />
+                福祉施設チーム向け 業務連絡システム
+              </span>
+            </Reveal>
+            <Reveal delay={100}>
+              <h1 className="text-3xl sm:text-4xl lg:text-[3.25rem] font-bold text-white leading-[1.15] tracking-tight mb-5">
+                チームの情報共有を<br />
+                <span className="text-shine bg-gradient-to-r from-white via-blue-200 to-white bg-clip-text text-transparent">
+                  もっとスムーズに
                 </span>
-              ))}
-            </div>
+              </h1>
+            </Reveal>
+            <Reveal delay={200}>
+              <p className="text-blue-100/90 text-base sm:text-lg leading-relaxed mb-8 max-w-lg mx-auto lg:mx-0">
+                部署間の情報共有・スケジュール管理・日程調整・福祉最新情報の収集まで、日常業務に必要な機能をひとつにまとめました。
+              </p>
+            </Reveal>
+            <Reveal delay={300}>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+                <Link
+                  href="/login"
+                  className="group inline-flex items-center justify-center gap-2 bg-white text-blue-700 font-semibold px-6 py-3 rounded-lg hover:bg-blue-50 transition-all shadow-lg shadow-blue-950/20 hover:shadow-xl hover:-translate-y-0.5"
+                >
+                  ログインして始める
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </Link>
+                <a
+                  href="#demo"
+                  className="inline-flex items-center justify-center gap-2 bg-white/10 border border-white/25 text-white font-semibold px-6 py-3 rounded-lg hover:bg-white/20 transition-colors backdrop-blur"
+                >
+                  <MousePointerClick className="w-4 h-4" />
+                  触って体験する
+                </a>
+              </div>
+            </Reveal>
+            <Reveal delay={400}>
+              <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 justify-center lg:justify-start">
+                {['リアルタイム更新', 'ファイル添付対応', 'マルチ部署対応', 'スマホ対応'].map(t => (
+                  <span key={t} className="flex items-center gap-1.5 text-blue-200 text-sm">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-blue-300" />{t}
+                  </span>
+                ))}
+              </div>
+            </Reveal>
           </div>
-          {/* モックアップ */}
+          {/* モックアップ（ふわふわ浮く） */}
           <div className="flex-1 w-full max-w-lg relative">
             <div className="absolute -inset-6 bg-blue-400/25 blur-3xl rounded-full pointer-events-none" aria-hidden />
-            <div className="relative">
-              <HomeMockup />
-            </div>
+            <Reveal delay={250}>
+              <div className="relative anim-float">
+                <HomeMockup />
+              </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -353,88 +270,58 @@ export default function LandingPage() {
       {/* 機能紹介 */}
       <section className="py-16 lg:py-24 bg-gray-50">
         <div className="max-w-6xl mx-auto px-5">
-          <div className="text-center mb-12">
-            <p className="text-blue-600 text-sm font-semibold mb-2">FEATURES</p>
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">すべての機能がひとつに</h2>
-          </div>
+          <Reveal>
+            <div className="text-center mb-12">
+              <p className="text-blue-600 text-sm font-semibold mb-2">FEATURES</p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">すべての機能がひとつに</h2>
+            </div>
+          </Reveal>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {FEATURES.map(({ Icon, color, title, desc }) => (
-              <div
-                key={title}
-                className="group bg-white rounded-2xl border border-gray-200 p-6 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-900/5 hover:-translate-y-1 transition-all duration-200"
-              >
-                <div className={`w-11 h-11 ${color} rounded-xl flex items-center justify-center mb-4 ring-1 ring-inset ring-black/5 group-hover:scale-110 transition-transform`}>
-                  <Icon className="w-5 h-5" strokeWidth={1.75} />
+            {FEATURES.map(({ Icon, color, title, desc }, i) => (
+              <Reveal key={title} delay={(i % 3) * 100}>
+                <div className="group h-full bg-white rounded-2xl border border-gray-200 p-6 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-900/5 hover:-translate-y-1 transition-all duration-200">
+                  <div className={`w-11 h-11 ${color} rounded-xl flex items-center justify-center mb-4 ring-1 ring-inset ring-black/5 group-hover:scale-110 transition-transform`}>
+                    <Icon className="w-5 h-5" strokeWidth={1.75} />
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1.5">{title}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-1.5">{title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
 
-      {/* スクリーンショット：カレンダー */}
-      <section className="py-16 lg:py-24 bg-white">
+      {/* インタラクティブデモ */}
+      <section id="demo" className="py-16 lg:py-24 bg-white scroll-mt-14 overflow-hidden">
         <div className="max-w-6xl mx-auto px-5">
-          <div className="flex flex-col lg:flex-row items-center gap-12">
-            <div className="flex-1 order-2 lg:order-1 w-full max-w-lg mx-auto">
-              <CalendarMockup />
-            </div>
-            <div className="flex-1 order-1 lg:order-2 text-center lg:text-left">
-              <p className="text-blue-600 text-sm font-semibold mb-2">SCHEDULE</p>
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-                スケジュールを<br />チームで共有
-              </h2>
-              <p className="text-gray-500 leading-relaxed mb-5">
-                月カレンダー形式で全体・部署ごとのイベントを管理できます。日付をクリックするだけでイベントを追加でき、チーム全員がリアルタイムで確認できます。
+          <Reveal>
+            <div className="text-center mb-12">
+              <p className="text-blue-600 text-sm font-semibold mb-2 flex items-center justify-center gap-1.5">
+                <MousePointerClick className="w-4 h-4" />
+                INTERACTIVE DEMO
               </p>
-              <ul className="space-y-2 text-sm text-gray-600 text-left inline-block">
-                {['全体・部署別の2種類のカレンダー', 'イベントの場所・メモを記録', 'ユニゾンプラザの空き状況も確認できる'].map(t => (
-                  <li key={t} className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0" />{t}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* スクリーンショット：日程調整 */}
-      <section className="py-16 lg:py-24 bg-gray-50">
-        <div className="max-w-6xl mx-auto px-5">
-          <div className="flex flex-col lg:flex-row items-center gap-12">
-            <div className="flex-1 text-center lg:text-left">
-              <p className="text-violet-600 text-sm font-semibold mb-2">SCHEDULE POLL</p>
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-                日程調整を<br />かんたんに
-              </h2>
-              <p className="text-gray-500 leading-relaxed mb-5">
-                候補日を複数出して、メンバー全員が○△×で回答。集計結果が一目でわかるので、会議や研修の日程決めがスムーズになります。
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">実際に触って体験できます</h2>
+              <p className="text-gray-500 max-w-xl mx-auto">
+                下の画面は本物そっくりに動くデモです。タップ・クリックして、RoScope の操作感をそのまま確かめてください。
               </p>
-              <ul className="space-y-2 text-sm text-gray-600 text-left inline-block">
-                {['候補日を期間で一括追加できる', 'クリックひとつで回答を切り替え', '回答確定後はカレンダーに自動登録'].map(t => (
-                  <li key={t} className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-violet-500 shrink-0" />{t}
-                  </li>
-                ))}
-              </ul>
             </div>
-            <div className="flex-1 w-full max-w-lg mx-auto">
-              <ScheduleMockup />
-            </div>
-          </div>
+          </Reveal>
+          <Reveal delay={150}>
+            <InteractiveDemo />
+          </Reveal>
         </div>
       </section>
 
       {/* こんな場面で活躍します */}
-      <section className="py-16 lg:py-24 bg-white">
+      <section className="py-16 lg:py-24 bg-gray-50">
         <div className="max-w-6xl mx-auto px-5">
-          <div className="text-center mb-12">
-            <p className="text-teal-600 text-sm font-semibold mb-2">USE CASES</p>
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">こんな場面で活躍します</h2>
-          </div>
+          <Reveal>
+            <div className="text-center mb-12">
+              <p className="text-teal-600 text-sm font-semibold mb-2">USE CASES</p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">こんな場面で活躍します</h2>
+            </div>
+          </Reveal>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
@@ -455,61 +342,63 @@ export default function LandingPage() {
                 label: '重要連絡の確実な周知',
                 desc: '重要マーク付きの投稿は未読バナーとプッシュ通知でお知らせ。見逃しを防いで連絡の抜け漏れをなくします。',
               },
-            ].map(({ img, alt, label, desc }) => (
-              <div key={label} className="rounded-2xl overflow-hidden border border-gray-200 bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-                <div className="relative overflow-hidden h-48">
-                  <img
-                    src={img}
-                    alt={alt}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" aria-hidden />
-                  <h3 className="absolute bottom-3 left-4 right-4 text-white font-semibold text-base drop-shadow-sm">{label}</h3>
+            ].map(({ img, alt, label, desc }, i) => (
+              <Reveal key={label} delay={i * 120}>
+                <div className="h-full rounded-2xl overflow-hidden border border-gray-200 bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                  <div className="relative overflow-hidden h-48">
+                    <img
+                      src={img}
+                      alt={alt}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" aria-hidden />
+                    <h3 className="absolute bottom-3 left-4 right-4 text-white font-semibold text-base drop-shadow-sm">{label}</h3>
+                  </div>
+                  <div className="p-5">
+                    <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
+                  </div>
                 </div>
-                <div className="p-5">
-                  <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
-                </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
 
       {/* お知らせ */}
-      <section className="py-16 lg:py-24 bg-gray-50">
+      <section className="py-16 lg:py-24 bg-white">
         <div className="max-w-3xl mx-auto px-5">
-          <div className="text-center mb-10">
-            <p className="text-blue-600 text-sm font-semibold mb-2">CHANGELOG</p>
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">お知らせ・更新履歴</h2>
-          </div>
+          <Reveal>
+            <div className="text-center mb-10">
+              <p className="text-blue-600 text-sm font-semibold mb-2">CHANGELOG</p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">お知らせ・更新履歴</h2>
+            </div>
+          </Reveal>
 
           <div className="relative">
-            {/* 縦ライン */}
             <div className="absolute left-5 top-3 bottom-3 w-px bg-gray-200 hidden sm:block" />
-
             <div className="space-y-6">
-              {ANNOUNCEMENTS.map((item) => {
+              {ANNOUNCEMENTS.map((item, i) => {
                 const { badge, dot, Icon } = ANNOUNCEMENT_STYLES[item.type]
                 return (
-                  <div key={`${item.date}-${item.version}`} className="flex gap-5 sm:gap-8 items-start group">
-                    {/* ドット */}
-                    <div className="relative z-10 hidden sm:flex shrink-0 items-center justify-center w-10 h-10 rounded-full bg-white border-2 border-gray-200 group-hover:border-gray-300 transition-colors shadow-sm">
-                      <div className={`w-3 h-3 rounded-full ${dot}`} />
-                    </div>
-                    {/* カード */}
-                    <div className="flex-1 bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
-                      <div className="flex items-center flex-wrap gap-2 mb-2">
-                        <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${badge}`}>
-                          <Icon className="w-3 h-3" />
-                          {item.version}
-                        </span>
-                        <span className="text-xs text-gray-400">{item.date}</span>
+                  <Reveal key={`${item.date}-${item.version}`} delay={Math.min(i * 80, 240)}>
+                    <div className="flex gap-5 sm:gap-8 items-start group">
+                      <div className="relative z-10 hidden sm:flex shrink-0 items-center justify-center w-10 h-10 rounded-full bg-white border-2 border-gray-200 group-hover:border-gray-300 transition-colors shadow-sm">
+                        <div className={`w-3 h-3 rounded-full ${dot}`} />
                       </div>
-                      <h3 className="font-semibold text-gray-900 mb-1">{item.title}</h3>
-                      <p className="text-sm text-gray-500 leading-relaxed">{item.desc}</p>
+                      <div className="flex-1 bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+                        <div className="flex items-center flex-wrap gap-2 mb-2">
+                          <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${badge}`}>
+                            <Icon className="w-3 h-3" />
+                            {item.version}
+                          </span>
+                          <span className="text-xs text-gray-400">{item.date}</span>
+                        </div>
+                        <h3 className="font-semibold text-gray-900 mb-1">{item.title}</h3>
+                        <p className="text-sm text-gray-500 leading-relaxed">{item.desc}</p>
+                      </div>
                     </div>
-                  </div>
+                  </Reveal>
                 )
               })}
             </div>
@@ -518,21 +407,24 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="relative overflow-hidden py-16 lg:py-24" style={{ background: 'linear-gradient(135deg,#1e3a8a,#2563eb)' }}>
+      <section className="relative overflow-hidden py-16 lg:py-24" style={{ background: 'linear-gradient(135deg,#172554,#1d4ed8)' }}>
+        <div className="absolute -top-20 left-1/4 w-80 h-80 bg-blue-500/25 rounded-full blur-3xl anim-blob pointer-events-none" aria-hidden />
         <div className="absolute inset-0 opacity-10" aria-hidden
           style={{ backgroundImage: 'radial-gradient(circle at 50% 40%, white 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
         <div className="relative max-w-2xl mx-auto px-5 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-            さっそく使ってみましょう
-          </h2>
-          <p className="text-blue-200 mb-8">団体ID・ユーザーID・パスワードを入力するだけですぐに始められます</p>
-          <Link
-            href="/login"
-            className="group inline-flex items-center gap-2 bg-white text-blue-700 font-semibold px-8 py-3.5 rounded-lg hover:bg-blue-50 transition-all shadow-xl shadow-blue-950/30 hover:-translate-y-0.5 text-base"
-          >
-            ログインページへ
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-          </Link>
+          <Reveal>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
+              さっそく使ってみましょう
+            </h2>
+            <p className="text-blue-200 mb-8">団体ID・ユーザーID・パスワードを入力するだけですぐに始められます</p>
+            <Link
+              href="/login"
+              className="group inline-flex items-center gap-2 bg-white text-blue-700 font-semibold px-8 py-3.5 rounded-lg hover:bg-blue-50 transition-all shadow-xl shadow-blue-950/30 hover:-translate-y-0.5 text-base"
+            >
+              ログインページへ
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+          </Reveal>
         </div>
       </section>
 
