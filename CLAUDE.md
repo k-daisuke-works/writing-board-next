@@ -19,11 +19,11 @@
 
 メイン会話は設計・実装に専念し、ノイズの多い検証はサブエージェントに委譲する:
 
-| エージェント | モデル | 使うタイミング |
+| エージェント | モデル / effort | 使うタイミング |
 |---|---|---|
-| `build-check` | haiku | 複数ファイル変更後の型チェック・ビルド検証（ログをメイン会話に持ち込まない） |
-| `tenant-audit` | sonnet | Server Action・DBクエリ・API を追加/変更したらコミット前に（organization_key 漏れ監査） |
-| `mobile-review` | haiku | TSX を追加/変更したらコミット前に |
+| `build-check` | haiku / low | 複数ファイル変更後の型チェック・ビルド検証（ログをメイン会話に持ち込まない） |
+| `tenant-audit` | sonnet / xhigh | Server Action・DBクエリ・API を追加/変更したらコミット前に（organization_key 漏れ監査） |
+| `mobile-review` | haiku / low | TSX を追加/変更したらコミット前に（チェックリストは `/mobile` スキルをプリロード＝単一ソース） |
 
 - 1〜2ファイルの小変更は委譲せず `npx tsc --noEmit` を直接実行する（エージェント起動自体にもコストがある）
 - 独立した監査は並列に起動してよい。🔴指摘は修正してからコミット

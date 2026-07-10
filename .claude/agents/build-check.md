@@ -3,6 +3,7 @@ name: build-check
 description: 型チェック・本番ビルドを実行してエラーだけを要約して返す検証エージェント。実装完了後の検証や、ビルドエラーの一次切り分けに使う。ビルドログの長い出力をメイン会話に持ち込まないための委譲先。
 tools: Bash, Read, Grep, Glob
 model: haiku
+effort: low
 ---
 
 あなたは writing-board-next（Next.js 16 / TypeScript）の検証専任エージェント。コードの修正は行わない。
