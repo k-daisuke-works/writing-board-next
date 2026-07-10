@@ -66,17 +66,17 @@ type DemoPost = {
 function BoardDemo() {
   const [posts, setPosts] = useState<DemoPost[]>([
     {
-      id: 1, name: '山田 太郎', dept: '総務部',
-      msg: '今月の全体会議は6/12(金) 14:00からです。資料は事前に目を通しておいてください。',
+      id: 1, name: '田中 花子', dept: '研修班',
+      msg: '6月の定例研修、会場はユニゾンプラザ大会議室に決定しました！',
       time: '2時間前',
       reactions: [
         { emoji: '👍', count: 4, mine: false },
-        { emoji: '✅', count: 2, mine: false },
+        { emoji: '🎉', count: 2, mine: false },
       ],
     },
     {
-      id: 2, name: '佐藤 美咲', dept: '福祉支援部',
-      msg: '新しい送迎ルートの表を掲示板に貼りました。来週から適用です！',
+      id: 2, name: '佐藤 美咲', dept: '広報班',
+      msg: '会報の原稿締切は 6/30 です。テンプレートを添付します📎',
       time: '5時間前',
       reactions: [
         { emoji: '👍', count: 3, mine: false },
@@ -107,7 +107,7 @@ function BoardDemo() {
     if (!text) return
     setPosts(prev => [
       {
-        id: Date.now(), name: 'あなた', dept: '相談支援部', msg: text,
+        id: Date.now(), name: 'あなた', dept: '研修班', msg: text,
         time: 'たった今', mine: true, isNew: true,
         reactions: [{ emoji: '👍', count: 0, mine: false }],
       },
@@ -213,7 +213,7 @@ function PollDemo() {
 
   return (
     <div className="flex-1 overflow-y-auto p-3">
-      <p className="text-[12px] font-semibold text-gray-800 mb-0.5">6月研修 日程調整</p>
+      <p className="text-[12px] font-semibold text-gray-800 mb-0.5">6月定例研修 日程調整</p>
       <p className="text-[10px] text-gray-400 mb-2.5">自分の行をタップして回答してください</p>
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
         <table className="w-full border-collapse text-[10px]">
@@ -304,7 +304,7 @@ function CalendarDemo() {
     28, 29, 30, null, null, null, null,
   ]
   const [events, setEvents] = useState<Record<number, string[]>>({
-    5: ['利用者A面談'], 12: ['全体会議'], 25: ['月次報告'],
+    5: ['理事会'], 12: ['定例研修'], 25: ['会報締切'],
   })
   const [selected, setSelected] = useState<number | null>(null)
   const [draft, setDraft] = useState('')
@@ -380,7 +380,7 @@ function CalendarDemo() {
               <button
                 onClick={() => removeEvent(selected, i)}
                 aria-label={`${ev} を削除`}
-                className="w-7 h-7 -mr-1 flex items-center justify-center text-blue-400 active:text-blue-700 shrink-0"
+                className="w-10 h-10 -my-2 -mr-2 flex items-center justify-center text-blue-400 active:text-blue-700 shrink-0"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -398,7 +398,7 @@ function CalendarDemo() {
               onClick={addEvent}
               disabled={!draft.trim()}
               aria-label="予定を追加"
-              className="h-9 px-3 rounded-lg bg-blue-600 text-white flex items-center gap-1 text-[10px] font-semibold shrink-0 disabled:opacity-40 active:scale-95 transition-transform"
+              className="h-11 px-3.5 rounded-lg bg-blue-600 text-white flex items-center gap-1 text-[10px] font-semibold shrink-0 disabled:opacity-40 active:scale-95 transition-transform"
             >
               <Plus className="w-3.5 h-3.5" />追加
             </button>
@@ -432,7 +432,7 @@ const TABS = [
     label: 'カレンダー',
     Icon: CalendarIcon,
     hint: '日付をタップして、実際に予定を追加してみてください。',
-    points: ['全体・部署別の2種類のカレンダー', '場所やメモも記録できる', 'チーム全員がリアルタイムで確認'],
+    points: ['会全体・班ごとの2種類のカレンダー', '場所やメモも記録できる', '会員全員がリアルタイムで確認'],
   },
 ] as const
 
@@ -451,10 +451,10 @@ export function InteractiveDemo() {
             <button
               key={id}
               onClick={() => setTab(id)}
-              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap shrink-0 min-h-[44px] transition-all ${
+              className={`font-maru flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-bold whitespace-nowrap shrink-0 min-h-[44px] transition-all active:scale-95 ${
                 tab === id
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25'
-                  : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300 hover:text-blue-600'
+                  ? 'bg-[#ffc300] text-[#001e5a] shadow-[0_4px_0_#d9a600]'
+                  : 'bg-white text-gray-500 border-2 border-gray-200 hover:border-[#ffc300] hover:text-[#8a6d00]'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -463,13 +463,13 @@ export function InteractiveDemo() {
           ))}
         </div>
         <div key={tab} className="anim-slide-down text-center lg:text-left">
-          <p className="text-gray-600 text-sm sm:text-base leading-relaxed mb-4 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 inline-block">
+          <p className="text-sm sm:text-base leading-relaxed mb-4 rounded-2xl px-5 py-3 inline-block bg-[#fff4d1] border border-[#f3d9ad] text-[#6b5410] font-medium">
             👆 {active.hint}
           </p>
           <ul className="space-y-2.5 text-sm text-gray-600 text-left inline-block">
             {active.points.map(p => (
               <li key={p} className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0" />{p}
+                <CheckCircle2 className="w-4 h-4 text-[#23aabe] shrink-0" />{p}
               </li>
             ))}
           </ul>

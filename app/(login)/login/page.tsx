@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { login } from '@/actions/auth'
 import Link from 'next/link'
+import { ANNOUNCEMENTS } from '@/lib/announcements'
 
 const inputCls = "w-full border border-gray-300 rounded-md px-3 py-2.5 min-h-[44px] text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
 const labelCls = "block text-sm font-medium text-gray-700 mb-1.5"
@@ -50,7 +51,7 @@ export default function LoginPage() {
 
         <button
           type="submit" disabled={loading}
-          className="pressable w-full bg-blue-600 hover:bg-blue-700 hover:shadow-md hover:shadow-blue-200 disabled:opacity-60 text-white font-medium py-2.5 rounded-md text-sm transition-colors flex items-center justify-center gap-2"
+          className="pressable w-full min-h-[44px] bg-blue-600 hover:bg-blue-700 hover:shadow-md hover:shadow-blue-200 disabled:opacity-60 text-white font-medium py-2.5 rounded-md text-sm transition-colors flex items-center justify-center gap-2"
         >
           {loading
             ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />ログイン中…</>
@@ -62,7 +63,7 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={() => setShowForgot(v => !v)}
-          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+          className="inline-flex items-center justify-center min-h-[44px] px-3 text-sm text-blue-600 hover:text-blue-800 font-medium"
         >
           パスワードをお忘れですか？
         </button>
@@ -87,6 +88,20 @@ export default function LoginPage() {
         団体アカウントをお持ちでない方は{' '}
         <Link href="/register" className="text-blue-600 hover:text-blue-800 font-medium">新規登録</Link>
       </p>
+
+      {/* 最近のアップデート */}
+      <div className="mt-10 pt-6 border-t border-gray-200">
+        <p className="text-xs font-semibold text-gray-400 tracking-wide mb-3">最近のアップデート</p>
+        <ul className="space-y-2.5">
+          {ANNOUNCEMENTS.slice(0, 3).map(a => (
+            <li key={a.version} className="flex items-baseline gap-2.5 text-sm">
+              <span className="text-xs text-gray-400 tabular-nums shrink-0">{a.date}</span>
+              <span className="text-[10px] font-bold text-blue-600 bg-blue-50 rounded-full px-2 py-0.5 shrink-0">{a.version}</span>
+              <span className="text-gray-600 min-w-0">{a.title}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   )
 }

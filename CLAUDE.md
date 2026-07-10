@@ -2,7 +2,7 @@
 
 # writing-board-next 開発ルール
 
-福祉事業所向け業務連絡ボード。マルチテナント（複数団体が1システム共有）。
+福祉系団体向けチーム情報共有ボード。マルチテナント（複数団体が1システム共有）。主利用者は社会福祉士会（department＝班。訴求・例文は「チームの情報共有」主体で書く）。
 **スタック:** Next.js App Router / Supabase（service role key・RLSなし）/ Vercel / TypeScript / Tailwind CSS
 
 このファイルは要点のみ。詳細は以下のスキルを**該当作業の前に**読むこと:

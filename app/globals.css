@@ -57,6 +57,25 @@ html { scroll-behavior: smooth; }
 .anim-blob  { animation: blob-drift 16s ease-in-out infinite; }
 .anim-pop   { animation: pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
 
+/* ── ポップLP用（ぷかぷか・ゆらゆら・波） ── */
+@keyframes puka {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+@keyframes yura {
+  0%, 100% { transform: rotate(-4deg); }
+  50%      { transform: rotate(4deg); }
+}
+@keyframes nami-flow {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.anim-puka { animation: puka 4s ease-in-out infinite; }
+.anim-yura { animation: yura 5s ease-in-out infinite; transform-origin: center; }
+.wave-clip { height: 60px; overflow: hidden; line-height: 0; }
+.wave-clip svg { display: block; width: 200%; height: 100%; animation: nami-flow 14s linear infinite; }
+.font-maru { font-family: 'Hiragino Maru Gothic ProN', 'HG Maru Gothic M-PRO', 'Yu Gothic', 'Noto Sans JP', sans-serif; }
+
 /* ── 操作フィードバックの土台 ── */
 /* モバイルのタップ時グレー点滅を除去し、ダブルタップズーム遅延も殺す */
 * { -webkit-tap-highlight-color: transparent; }
@@ -103,7 +122,8 @@ button, [role='button'], a, label, select, summary { touch-action: manipulation;
 
 @media (prefers-reduced-motion: reduce) {
   .anim-float, .anim-blob, .anim-pop, .text-shine,
-  .anim-scale-in, .anim-sheet-up, .anim-page-in { animation: none; }
+  .anim-scale-in, .anim-sheet-up, .anim-page-in,
+  .anim-puka, .anim-yura, .wave-clip svg { animation: none; }
   .reveal { opacity: 1; }
   .reveal.is-visible { animation: none; }
   .pressable { transition: none; }
