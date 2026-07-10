@@ -219,3 +219,16 @@ export type WritingData = {
   is_important: boolean
   display_until: string | null
 }
+
+export type InstagramPost = {
+  id: number
+  organization_key: number
+  media_id: string
+  caption: string | null
+  media_type: 'IMAGE' | 'VIDEO' | 'CAROUSEL_ALBUM'
+  media_url: string | null
+  thumbnail_url: string | null
+  permalink: string
+  posted_at: string | null
+  fetched_at: string
+}

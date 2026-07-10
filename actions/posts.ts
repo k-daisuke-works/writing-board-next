@@ -102,13 +102,13 @@ export async function createPost(formData: FormData) {
     revalidatePath('/posts')
   }
 
-  // 新着投稿を通知（team投稿は部署メンバーのみ、board/noticeは組織全体。送信者は除外）
+  // 新着投稿を通知（boardは組織全体、team / noticeは投稿部署のみ＝閲覧範囲と一致。送信者は除外）
   const pushTarget =
-    postType === 'team'
-      ? session.departmentId
+    postType === 'board'
+      ? { organizationKey: session.organizationKey, excludeUserKey: session.userKey }
+      : session.departmentId
         ? { organizationKey: session.organizationKey, departmentId: session.departmentId, excludeUserKey: session.userKey }
         : null
-      : { organizationKey: session.organizationKey, excludeUserKey: session.userKey }
 
   if (pushTarget) {
     const title =

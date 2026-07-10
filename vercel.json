@@ -8,6 +8,14 @@
     {
       "path": "/api/cron/welfare",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/instagram",
+      "schedule": "30 21 * * *"
+    },
+    {
+      "path": "/api/cron/instagram",
+      "schedule": "30 9 * * *"
     }
   ]
 }

@@ -26,7 +26,7 @@ export default async function SearchPage({
 
   let results: Awaited<ReturnType<typeof fetchResults>> = []
   if (query.length >= 1) {
-    results = await fetchResults(session.organizationKey, query)
+    results = await fetchResults(session.organizationKey, session.departmentId, query)
   }
 
   return (
@@ -102,12 +102,14 @@ export default async function SearchPage({
   )
 }
 
-async function fetchResults(organizationKey: number, query: string) {
+async function fetchResults(organizationKey: number, departmentId: number, query: string) {
   const supabase = createServiceClient()
   const { data } = await supabase
     .from('writing_data')
     .select('writing_id, user_key, user_name_stamp, job_name_stamp, department_id, department_name_stamp, post_type, message, writing_time')
     .eq('organization_key', organizationKey)
+    // 閲覧範囲は各ページと同じ: board は組織全体、team / notice は自部署のみ
+    .or(`post_type.eq.board,department_id.eq.${departmentId}`)
     .ilike('message', `%${query}%`)
     .order('writing_time', { ascending: false })
     .limit(50)

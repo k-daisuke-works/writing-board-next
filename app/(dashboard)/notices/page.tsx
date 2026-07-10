@@ -105,7 +105,8 @@ export default async function NoticesPage() {
               </div>
               <div className="px-4 sm:px-5 py-3 border-t border-gray-100 space-y-2">
                 <PostReactions postId={post.writing_id} reactions={reactionsMap[post.writing_id] ?? []} myUserKey={session.userKey} />
-                <PostReads reads={readsMap[post.writing_id] ?? []} myUserKey={session.userKey} />
+                <PostReads reads={readsMap[post.writing_id] ?? []} myUserKey={session.userKey}
+                  postId={post.writing_id} canRemind={session.role !== 'member'} />
                 <PostReplies
                   postId={post.writing_id}
                   replies={repliesMap[post.writing_id] ?? []}

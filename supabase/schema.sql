@@ -231,3 +231,34 @@ ALTER TABLE schedule_responses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE calendar_events    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE welfare_news       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_logs         ENABLE ROW LEVEL SECURITY;
+
+-- ================================================
+-- Instagram 連携（2026-07-10 追加。詳細は migrations/20260710_instagram.sql）
+-- ================================================
+CREATE TABLE IF NOT EXISTS instagram_accounts (
+  organization_key integer PRIMARY KEY REFERENCES organization_data(organization_key) ON DELETE CASCADE,
+  ig_user_id       text NOT NULL,
+  account_name     text,
+  access_token     text NOT NULL,
+  token_expires_at timestamptz,
+  updated_at       timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS instagram_posts (
+  id               bigserial PRIMARY KEY,
+  organization_key integer NOT NULL REFERENCES organization_data(organization_key) ON DELETE CASCADE,
+  media_id         text NOT NULL,
+  caption          text,
+  media_type       text NOT NULL,
+  media_url        text,
+  thumbnail_url    text,
+  permalink        text NOT NULL,
+  posted_at        timestamptz,
+  fetched_at       timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (organization_key, media_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_instagram_posts_org ON instagram_posts (organization_key, posted_at DESC);
+
+ALTER TABLE instagram_accounts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE instagram_posts    ENABLE ROW LEVEL SECURITY;

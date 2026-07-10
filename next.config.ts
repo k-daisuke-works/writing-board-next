@@ -10,7 +10,8 @@ const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://*.supabase.co https://images.pexels.com",
+  // cdninstagram / fbcdn は /sns の Instagram 投稿画像（サーバー側キャッシュの表示のみ・スクリプトは読み込まない）
+  "img-src 'self' data: blob: https://*.supabase.co https://images.pexels.com https://*.cdninstagram.com https://*.fbcdn.net",
   "media-src 'self' blob: https://*.supabase.co",
   "font-src 'self' data:",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co",

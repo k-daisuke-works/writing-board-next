@@ -1,5 +1,5 @@
 import {
-  MessageSquare, Users, Settings, Receipt, UserCircle, BookOpen, KeyRound,
+  MessageSquare, Users, Settings, Receipt, UserCircle, BookOpen, KeyRound, FolderOpen, Camera,
 } from 'lucide-react'
 
 export const STATIC_CARDS = [
@@ -22,12 +22,30 @@ export const STATIC_CARDS = [
     adminOnly: false,
   },
   {
+    href: '/documents',
+    Icon: FolderOpen,
+    title: '資料庫',
+    desc: '投稿に添付された資料・写真を横断で見る',
+    iconBg: 'bg-amber-50',
+    iconColor: 'text-amber-600',
+    adminOnly: false,
+  },
+  {
     href: '/expenses',
     Icon: Receipt,
     title: '活動費請求',
     desc: '活動費の請求フォームを開く',
     iconBg: 'bg-orange-50',
     iconColor: 'text-orange-600',
+    adminOnly: false,
+  },
+  {
+    href: '/sns',
+    Icon: Camera,
+    title: '会のInstagram',
+    desc: '会の公式Instagramの投稿を見る',
+    iconBg: 'bg-pink-50',
+    iconColor: 'text-pink-600',
     adminOnly: false,
   },
   {

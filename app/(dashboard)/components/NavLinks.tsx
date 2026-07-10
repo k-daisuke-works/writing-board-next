@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutGrid, MessageSquare, Calendar, Newspaper, Search } from 'lucide-react'
+import { LayoutGrid, MessageSquare, Calendar, Newspaper, Search, FolderOpen } from 'lucide-react'
 
 type Props = { unreadBoard: number; unreadTeam: number }
 
@@ -10,6 +10,7 @@ const LINKS = [
   { href: '/home', match: '/home', Icon: LayoutGrid, label: 'ホーム', mobile: true, badge: 'team' as const },
   { href: '/posts', match: '/posts', Icon: MessageSquare, label: '全体掲示板', mobile: true, badge: 'board' as const },
   { href: '/schedule/calendar', match: '/schedule', Icon: Calendar, label: 'スケジュール', mobile: true, badge: null },
+  { href: '/documents', match: '/documents', Icon: FolderOpen, label: '資料庫', mobile: false, badge: null },
   { href: '/welfare', match: '/welfare', Icon: Newspaper, label: '福祉情報', mobile: false, badge: null },
   { href: '/search', match: '/search', Icon: Search, label: '検索', mobile: false, badge: null },
 ]

@@ -125,6 +125,8 @@ export default async function DepartmentHistoryPage({
                   <PostReads
                     reads={readsMap[post.writing_id] ?? []}
                     myUserKey={session.userKey}
+                    postId={post.writing_id}
+                    canRemind={session.role !== 'member'}
                   />
                 </div>
                 <PostReplies

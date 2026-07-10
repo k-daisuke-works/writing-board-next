@@ -116,7 +116,8 @@ export default function RealtimePosts({
                           myUserKey={session.userKey}
                         />
                         <div className="flex items-center gap-3">
-                          <PostReads reads={initialReadsMap[post.writing_id] ?? []} myUserKey={session.userKey} />
+                          <PostReads reads={initialReadsMap[post.writing_id] ?? []} myUserKey={session.userKey}
+                            postId={post.writing_id} canRemind={session.role !== 'member'} />
                         </div>
                         <PostReplies
                           postId={post.writing_id}
