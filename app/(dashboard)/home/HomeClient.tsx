@@ -4,7 +4,7 @@ import useSWR from 'swr'
 import type { UserSession } from '@/types/database'
 import HomeView from './HomeView'
 
-export default function HomeClient({ session }: { session: UserSession }) {
+export default function HomeClient({ session, hasInstagram = false }: { session: UserSession; hasInstagram?: boolean }) {
   const { data, isLoading } = useSWR('/api/data/home')
 
   if (!data && isLoading) return null
@@ -12,6 +12,7 @@ export default function HomeClient({ session }: { session: UserSession }) {
   return (
     <HomeView
       session={session}
+      hasInstagram={hasInstagram}
       noticePosts={data?.noticePosts ?? []}
       teamMembers={data?.teamMembers ?? []}
       memberLatest={data?.memberLatest ?? {}}

@@ -40,15 +40,6 @@ export const STATIC_CARDS = [
     adminOnly: false,
   },
   {
-    href: '/sns',
-    Icon: Camera,
-    title: '会のInstagram',
-    desc: '会の公式Instagramの投稿を見る',
-    iconBg: 'bg-pink-50',
-    iconColor: 'text-pink-600',
-    adminOnly: false,
-  },
-  {
     href: '/manual',
     Icon: BookOpen,
     title: '使い方マニュアル',
@@ -68,9 +59,20 @@ export const STATIC_CARDS = [
   },
 ] as const
 
-export function buildCards(role: string, userKey: number) {
+// Instagram カードは組織が連携済み（instagram_accounts に行がある）のときだけ表示する
+const SNS_CARD = {
+  href: '/sns',
+  Icon: Camera,
+  title: '会のInstagram',
+  desc: '会の公式Instagramの投稿を見る',
+  iconBg: 'bg-pink-50',
+  iconColor: 'text-pink-600',
+} as const
+
+export function buildCards(role: string, userKey: number, hasInstagram = false) {
   return [
     ...STATIC_CARDS.filter(c => !c.adminOnly || role !== 'member'),
+    ...(hasInstagram ? [SNS_CARD] : []),
     {
       href: `/member/${userKey}`,
       Icon: UserCircle,

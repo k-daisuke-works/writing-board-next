@@ -29,6 +29,7 @@ type SocialMaps = {
 
 type Props = {
   session: UserSession
+  hasInstagram?: boolean
   noticePosts: WritingData[]
   teamMembers: { user_key: number; user_name: string; avatar_url?: string | null }[]
   memberLatest: Record<number, WritingData | null>
@@ -121,7 +122,7 @@ function TeamCard({ member, post, isMe, social }: {
 }
 
 export default function HomeView({
-  session, noticePosts, teamMembers, memberLatest,
+  session, hasInstagram, noticePosts, teamMembers, memberLatest,
   readsMap, reactionsMap, repliesMap, allPostIds, importantPosts, avatarMap, attachmentsMap,
 }: Props) {
   const [modal, setModal] = useState<{ postType: 'team' | 'notice'; defaultImportant?: boolean } | null>(null)
@@ -156,7 +157,7 @@ export default function HomeView({
         </div>
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <PushNotificationButton />
-          <HomeMenuDropdown role={session.role} userKey={session.userKey} />
+          <HomeMenuDropdown role={session.role} userKey={session.userKey} hasInstagram={hasInstagram} />
         </div>
       </div>
 
