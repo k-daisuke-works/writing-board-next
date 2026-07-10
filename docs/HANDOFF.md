@@ -62,7 +62,7 @@ DB・Storage・Vercel 関数（hnd1）とも東京リージョンへ移行済み
 
 ## 優先度2: ISO27001 残課題（docs/SECURITY.md §7 と同期）
 
-1. ~~RLS ポリシーの本格導入~~ → **導入済み（2026-07-11）・実効化は `SUPABASE_JWT_SECRET` 設定待ち**: 組織スコープポリシー（`20260711_rls_org_policies.sql`、東京DBに適用・psqlロール切替で越境遮断を実証済み）＋ `createOrgClient`（role=authenticated の自己署名JWT。Supabase Auth 移行は不要だった）。認証済みコンテキストは org クライアント・セッション確立前/Cron/内部API/Storage は service role＋`// tenant-ok`。**環境変数 `SUPABASE_JWT_SECRET`（ダッシュボード→JWT Keys のレガシーシークレット）を Vercel と `.env.local` に設定するまでは service role フォールバックで動作＝RLS層は無効**（フォールバックは一度だけ console.error を出す。設定後は本番でクロステナント遮断を再確認すること）
+1. ~~RLS ポリシーの本格導入~~ → **完了（2026-07-11・実効化済み）**: 組織スコープポリシー（`20260711_rls_org_policies.sql`、東京DBに適用）＋ `createOrgClient`（role=authenticated の自己署名JWT。Supabase Auth 移行は不要だった）。認証済みコンテキストは org クライアント・セッション確立前/Cron/内部API/Storage は service role＋`// tenant-ok`。`SUPABASE_JWT_SECRET`（レガシーJWTシークレット）は Vercel Production/Preview と `.env.local` に設定済み。自己署名トークンで PostgREST を直接叩き、越境の読取（空）・更新（0件）・自組織の正常動作を実証済み。**未設定環境では service role フォールバックで動作しRLS層だけが無効になる**（起動時に console.error 1回。新環境構築時は設定を忘れないこと）
 2. **レート制限の永続化**: `actions/auth.ts` のログインレート制限はプロセス内 Map。Vercel でインスタンスが分かれると効果が薄れる。Upstash Redis（Vercel Marketplace で導入可）+ `@upstash/ratelimit` へ移行
 3. **パスワード履歴**: 過去N世代の再利用禁止（`password_history` テーブル追加）
 4. ~~依存脆弱性の自動監視~~ → **解消済み（2026-07-10）**: `.github/dependabot.yml` 追加（npm / github-actions 週次）
