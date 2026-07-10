@@ -2,8 +2,8 @@ import { getSession } from '@/lib/session'
 import { createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { LayoutGrid, MessageSquare, Calendar, Newspaper, Search } from 'lucide-react'
 import UserMenu from '@/app/(dashboard)/components/UserMenu'
+import NavLinks from '@/app/(dashboard)/components/NavLinks'
 import { RoScopeLogo } from '@/app/components/RoScopeLogo'
 
 async function getUnreadCounts(organizationKey: number, userKey: number, departmentId: number) {
@@ -45,7 +45,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const unread = await getUnreadCounts(session.organizationKey, session.userKey, session.departmentId)
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-gray-100">
+    <div className="flex min-h-[100dvh] flex-col bg-[#faf7ee]">
       <header className="sticky top-0 z-40 overflow-x-clip border-b border-gray-200 bg-white">
         <div className="mx-auto flex h-14 w-full max-w-screen-xl items-center gap-2 px-3 sm:gap-6 sm:px-6">
 
@@ -55,39 +55,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
           <div className="w-px h-5 bg-gray-200 hidden sm:block" />
 
-          <nav className="flex min-w-0 flex-1 items-center justify-center gap-0 sm:justify-start sm:gap-1" aria-label="メインナビゲーション">
-            <Link href="/home"
-              className="relative flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded text-sm text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 sm:min-h-0 sm:min-w-0 sm:px-3 sm:py-1.5">
-              <LayoutGrid className="w-4 h-4" />
-              <span className="hidden sm:inline">ホーム</span>
-              {unread.team > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-              )}
-            </Link>
-            <Link href="/posts"
-              className="relative flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded text-sm text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 sm:min-h-0 sm:min-w-0 sm:px-3 sm:py-1.5">
-              <MessageSquare className="w-4 h-4" />
-              <span className="hidden sm:inline">全体掲示板</span>
-              {unread.board > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-              )}
-            </Link>
-            <Link href="/schedule/calendar"
-              className="flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded text-sm text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 sm:min-h-0 sm:min-w-0 sm:px-3 sm:py-1.5">
-              <Calendar className="w-4 h-4" />
-              <span className="hidden sm:inline">スケジュール</span>
-            </Link>
-            <Link href="/welfare"
-              className="hidden items-center gap-1.5 rounded px-3 py-1.5 text-sm text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 sm:flex">
-              <Newspaper className="w-4 h-4" />
-              <span className="hidden sm:inline">福祉情報</span>
-            </Link>
-            <Link href="/search"
-              className="hidden items-center gap-1.5 rounded px-3 py-1.5 text-sm text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 sm:flex">
-              <Search className="w-4 h-4" />
-              <span className="hidden sm:inline">検索</span>
-            </Link>
-          </nav>
+          <NavLinks unreadBoard={unread.board} unreadTeam={unread.team} />
 
           <div className="flex shrink-0 items-center gap-3">
             <div className="hidden md:flex flex-col items-end">
@@ -99,7 +67,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
       </header>
 
-      <main className="safe-pb mx-auto w-full max-w-screen-xl flex-1 px-3 py-4 sm:px-6 sm:py-7">
+      <main className="pop-headings safe-pb mx-auto w-full max-w-screen-xl flex-1 px-3 py-4 sm:px-6 sm:py-7">
         {children}
       </main>
     </div>

@@ -108,7 +108,7 @@ export default function CalendarView({ events, session, mode }: Props) {
         {canEdit && (
           <button
             onClick={() => openAdd(now.getDate())}
-            className="flex items-center gap-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded transition-colors"
+            className="flex items-center gap-1.5 text-sm btn-pop text-white px-3 py-1.5 rounded transition-colors"
           >
             <Plus className="w-4 h-4" />
             追加
@@ -228,7 +228,7 @@ export default function CalendarView({ events, session, mode }: Props) {
                 <button
                   type="submit"
                   disabled={!title.trim()}
-                  className="flex-1 text-sm bg-blue-600 hover:bg-blue-700 text-white py-2 rounded disabled:opacity-40 transition-colors"
+                  className="flex-1 text-sm btn-pop text-white py-2 rounded disabled:opacity-40 transition-colors"
                 >
                   追加
                 </button>

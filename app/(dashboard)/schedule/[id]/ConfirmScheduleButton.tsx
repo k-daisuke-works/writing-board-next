@@ -100,7 +100,7 @@ export default function ConfirmScheduleButton({ eventId, dates }: Props) {
             <button
               type="submit"
               disabled={!dateId || isPending}
-              className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded disabled:opacity-40 transition-colors"
+              className="text-sm btn-pop text-white px-4 py-1.5 rounded disabled:opacity-40 transition-colors"
             >
               {isPending ? '追加中...' : '追加'}
             </button>

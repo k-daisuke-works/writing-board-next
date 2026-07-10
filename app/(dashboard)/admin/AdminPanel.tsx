@@ -140,7 +140,7 @@ function MasterSection<T extends { id: number; name: string }>({
       <form onSubmit={onAdd} className="flex gap-2 px-4 py-3 border-t border-gray-100 shrink-0">
         <input type="text" value={newName} onChange={e => setNewName(e.target.value)} placeholder={placeholder} className={addInp} />
         <button type="submit" disabled={isPending || !newName.trim()}
-          className="shrink-0 flex items-center gap-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
+          className="shrink-0 flex items-center gap-1 btn-pop disabled:opacity-50 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
           {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}追加
         </button>
       </form>
@@ -615,7 +615,7 @@ export default function AdminPanel({
             <form onSubmit={handleAddGrp} className="flex gap-2 px-4 py-3 border-t border-gray-100">
               <input type="text" value={newGrp} onChange={e => setNewGrp(e.target.value)} placeholder="グループ名を入力…" className={addInp} />
               <button type="submit" disabled={isPending || !newGrp.trim()}
-                className="shrink-0 flex items-center gap-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
+                className="shrink-0 flex items-center gap-1 btn-pop disabled:opacity-50 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
                 {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}追加
               </button>
             </form>
@@ -637,7 +637,7 @@ export default function AdminPanel({
                   <input type="text" value={orgNameInput} onChange={e => setOrgNameInput(e.target.value)}
                     maxLength={100} className={`${formInp} flex-1`} />
                   <button type="submit" disabled={isPending || orgNameInput.trim() === orgName}
-                    className="shrink-0 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                    className="shrink-0 btn-pop disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
                     更新
                   </button>
                 </div>
@@ -653,7 +653,7 @@ export default function AdminPanel({
                 <input type="password" value={confirmOrgPw} onChange={e => setConfirmOrgPw(e.target.value)}
                   placeholder="新しい団体パス（確認）" autoComplete="new-password" className={formInp} />
                 <button type="submit" disabled={isPending || !currentOrgPw || !newOrgPw || !confirmOrgPw}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                  className="btn-pop disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
                   団体パスを変更
                 </button>
               </form>
@@ -669,7 +669,7 @@ export default function AdminPanel({
                     placeholder="admin@example.com" maxLength={254} autoComplete="email" lang="en"
                     className={`${formInp} flex-1`} />
                   <button type="submit" disabled={isPending || myEmailInput.trim() === (myEmail ?? '')}
-                    className="shrink-0 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                    className="shrink-0 btn-pop disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
                     保存
                   </button>
                 </div>
@@ -719,7 +719,7 @@ export default function AdminPanel({
                 </select>
               </div>
               <button type="submit" disabled={isPending}
-                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                className="btn-pop disabled:opacity-50 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
                 保存
               </button>
             </form>

@@ -29,7 +29,7 @@ export default function SearchForm({ defaultValue }: { defaultValue: string }) {
       </div>
       <button
         type="submit"
-        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors shrink-0"
+        className="btn-pop text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors shrink-0"
       >
         検索
       </button>

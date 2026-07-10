@@ -203,7 +203,7 @@ export default function CreateEventModal({ departments, onClose }: Props) {
                   </button>
                   <button type="button" onClick={addRange}
                     disabled={!rangeStart || !rangeEnd}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-xs font-medium py-1.5 rounded-md transition-colors">
+                    className="flex-1 btn-pop disabled:opacity-40 text-white text-xs font-medium py-1.5 rounded-md transition-colors">
                     一括追加
                   </button>
                 </div>
@@ -237,7 +237,7 @@ export default function CreateEventModal({ departments, onClose }: Props) {
               キャンセル
             </button>
             <button type="submit" disabled={isPending}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium py-2.5 rounded-md transition-colors flex items-center justify-center gap-2">
+              className="flex-1 btn-pop disabled:opacity-50 text-white text-sm font-medium py-2.5 rounded-md transition-colors flex items-center justify-center gap-2">
               {isPending
                 ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />作成中…</>
                 : '作成する'}

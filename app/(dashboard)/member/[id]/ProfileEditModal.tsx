@@ -153,7 +153,7 @@ export default function ProfileEditModal({
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="flex-1 text-sm bg-blue-600 hover:bg-blue-700 text-white py-2 rounded disabled:opacity-40 transition-colors"
+                  className="flex-1 text-sm btn-pop text-white py-2 rounded disabled:opacity-40 transition-colors"
                 >
                   {isPending ? '保存中...' : '保存'}
                 </button>

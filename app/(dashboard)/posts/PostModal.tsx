@@ -333,7 +333,7 @@ export default function PostModal({ session, postType = 'board', defaultImportan
             </button>
             <button type="submit" disabled={loading || submitted || !message.trim()}
               className={`pressable flex min-h-11 flex-1 items-center justify-center gap-2 rounded-md text-sm font-medium text-white transition-colors disabled:opacity-50 ${
-                submitted ? 'bg-green-500' : 'bg-blue-600 hover:bg-blue-700 hover:shadow-md hover:shadow-blue-200'
+                submitted ? 'bg-green-500' : 'btn-pop'
               }`}>
               {submitted
                 ? '投稿しました ✓'

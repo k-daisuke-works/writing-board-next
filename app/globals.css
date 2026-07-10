@@ -76,6 +76,27 @@ html { scroll-behavior: smooth; }
 .wave-clip svg { display: block; width: 200%; height: 100%; animation: nami-flow 14s linear infinite; }
 .font-maru { font-family: 'Hiragino Maru Gothic ProN', 'HG Maru Gothic M-PRO', 'Yu Gothic', 'Noto Sans JP', sans-serif; }
 
+/* ── アプリ内ポップ統一 ── */
+/* 見出しを丸ゴシックに（main に .pop-headings を付与して一括適用） */
+.pop-headings h1, .pop-headings h2, .pop-headings h3 {
+  font-family: 'Hiragino Maru Gothic ProN', 'HG Maru Gothic M-PRO', 'Yu Gothic', 'Noto Sans JP', sans-serif;
+}
+
+/* 主ボタン: 紺ピル＋3D影（LP・ログインと同じ世界観） */
+.btn-pop {
+  font-family: 'Hiragino Maru Gothic ProN', 'HG Maru Gothic M-PRO', 'Yu Gothic', 'Noto Sans JP', sans-serif;
+  font-weight: 700;
+  color: #fff;
+  background: #001e5a;
+  border-radius: 9999px;
+  min-height: 44px; /* モバイルのタップターゲット規約を全ボタンで保証 */
+  box-shadow: 0 4px 0 #001240;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease, opacity 0.2s ease;
+}
+.btn-pop:hover:not(:disabled) { transform: translateY(-1px); }
+.btn-pop:active:not(:disabled) { transform: scale(0.96); box-shadow: 0 2px 0 #001240; }
+.btn-pop:disabled { opacity: 0.55; }
+
 /* ── 操作フィードバックの土台 ── */
 /* モバイルのタップ時グレー点滅を除去し、ダブルタップズーム遅延も殺す */
 * { -webkit-tap-highlight-color: transparent; }
@@ -132,7 +153,7 @@ button, [role='button'], a, label, select, summary { touch-action: manipulation;
 
 body {
   min-height: 100dvh;
-  background-color: #f5f5f5;
+  background-color: #faf7ee;
   color: #1f2937;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont,
     'Hiragino Kaku Gothic ProN', 'Noto Sans JP',

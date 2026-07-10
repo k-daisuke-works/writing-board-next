@@ -195,7 +195,7 @@ export default function UserFormModal({ mode, user, departments, jobs, positions
             </button>
             <button
               type="submit" disabled={isPending}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-medium py-2.5 rounded-md transition-colors flex items-center justify-center gap-2"
+              className="flex-1 btn-pop disabled:opacity-60 text-white text-sm font-medium py-2.5 rounded-md transition-colors flex items-center justify-center gap-2"
             >
               {isPending
                 ? <><Loader2 className="w-4 h-4 animate-spin" />保存中…</>
