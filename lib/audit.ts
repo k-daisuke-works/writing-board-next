@@ -1,4 +1,4 @@
-import { createServiceClient } from '@/lib/supabase/server'
+import { createOrgClient } from '@/lib/supabase/server'
 
 /**
  * 監査ログのアクション種別。
@@ -38,7 +38,7 @@ export type AuditEntry = {
  */
 export async function logAudit(entry: AuditEntry): Promise<void> {
   try {
-    const supabase = createServiceClient()
+    const supabase = await createOrgClient(entry.organizationKey)
     await supabase.from('audit_logs').insert({
       organization_key: entry.organizationKey,
       actor_user_key:   entry.actorUserKey ?? null,

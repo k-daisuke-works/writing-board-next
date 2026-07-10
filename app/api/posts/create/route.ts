@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { after } from 'next/server'
 import bcrypt from 'bcryptjs'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createOrgClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/session'
 import { sendPush } from '@/lib/push'
 import { broadcastRefresh } from '@/lib/realtime'
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
   if (allPaths.some(p => !p.startsWith(orgPrefix)))
     return err('不正なファイルパスです。')
 
-  const supabase   = createServiceClient()
+  const supabase   = await createOrgClient(session.organizationKey)
   const hashedPin  = pin?.trim() ? await bcrypt.hash(pin.trim(), 10) : null
 
   const { data: insertedPost, error } = await supabase.from('writing_data').insert({

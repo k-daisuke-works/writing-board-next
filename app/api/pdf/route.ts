@@ -14,6 +14,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
+  // tenant-ok: Storage（pdfs バケット）の署名URL発行のみ。storage スキーマにRLS未設定のため service role
   const supabase = createServiceClient()
   const { data } = await supabase.storage.from('pdfs').createSignedUrl(path, 300)
   if (!data?.signedUrl) return NextResponse.json({ error: 'Not found' }, { status: 404 })

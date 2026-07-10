@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { getSession } from '@/lib/session'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createOrgClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import UserMenu from '@/app/(dashboard)/components/UserMenu'
@@ -8,7 +8,7 @@ import NavLinks from '@/app/(dashboard)/components/NavLinks'
 import { RoScopeLogo } from '@/app/components/RoScopeLogo'
 
 async function getUnreadCounts(organizationKey: number, userKey: number, departmentId: number) {
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(organizationKey)
   const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString()
 
   const [boardResult, teamResult] = await Promise.all([

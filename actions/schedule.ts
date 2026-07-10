@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createOrgClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/session'
 
 export async function createScheduleEvent(formData: FormData) {
@@ -21,7 +21,7 @@ export async function createScheduleEvent(formData: FormData) {
   const validDates = dates.filter(d => d.trim() && !Number.isNaN(Date.parse(d)))
   if (!validDates.length) return { error: '候補日時を1つ以上入力してください。' }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
 
   const { data: event, error: eventError } = await supabase
     .from('schedule_events')
@@ -77,7 +77,7 @@ export async function upsertScheduleResponse(formData: FormData) {
   if (respondentType === 'user'       && respondentId !== session.userKey)     return { error: '他のユーザーの回答は変更できません。' }
   if (respondentType === 'department' && respondentId !== session.departmentId) return { error: '他の部署の回答は変更できません。' }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
 
   const { data: event } = await supabase
     .from('schedule_events')
@@ -112,7 +112,7 @@ export async function closeScheduleEvent(eventId: number) {
   const session = await getSession()
   if (!session) return { error: '認証が必要です。' }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
 
   const { data: event } = await supabase
     .from('schedule_events')

@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
   const bucket = BUCKETS[fileType as keyof typeof BUCKETS]
   const path   = `${session.organizationKey}/${Date.now()}_${safeName(filename)}`
 
+  // tenant-ok: Storage の署名アップロードURL発行のみ。storage スキーマにRLS未設定のため service role
   const supabase = createServiceClient()
   const { data, error } = await supabase.storage.from(bucket).createSignedUploadUrl(path)
   if (error || !data) return NextResponse.json({ error: 'URLの生成に失敗しました。' }, { status: 500 })

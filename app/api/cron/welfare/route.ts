@@ -11,6 +11,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  // tenant-ok: Cron（CRON_SECRET 認証・セッション文脈なし）。welfare_news は全団体共通キャッシュ
   const supabase = createServiceClient()
   let total = 0
   const errors: string[] = []

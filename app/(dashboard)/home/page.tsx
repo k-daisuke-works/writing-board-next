@@ -8,6 +8,7 @@ export default async function HomePage() {
   if (!session) redirect('/login')
 
   // Instagram カードは組織が連携済みのときだけメニューに出す
+  // tenant-ok: instagram_accounts は access_token を含むため authenticated には非公開（service role 限定・organization_key で絞り込み済み）
   const supabase = createServiceClient()
   const { count } = await supabase
     .from('instagram_accounts')

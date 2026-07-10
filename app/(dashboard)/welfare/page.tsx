@@ -1,5 +1,5 @@
 import { getSession } from '@/lib/session'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createOrgClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { ExternalLink, RefreshCw, Newspaper } from 'lucide-react'
 import { WELFARE_SOURCES } from '@/lib/welfare-rss'
@@ -22,7 +22,7 @@ export default async function WelfarePage({
   if (!session) redirect('/login')
 
   const { source } = await searchParams
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
 
   // 60日以内の記事を最大200件
   const since = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString()

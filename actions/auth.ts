@@ -5,7 +5,7 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { after } from 'next/server'
 import bcrypt from 'bcryptjs'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createServiceClient, createOrgClient } from '@/lib/supabase/server'
 import {
   createSession, deleteSession, createSetupToken, getSession,
   createPasswordResetToken, verifyPasswordResetToken,
@@ -63,6 +63,7 @@ export async function login(formData: FormData) {
     return { error: 'ログイン試行が多すぎます。15分後に再度お試しください。' }
   }
 
+  // tenant-ok: ログイン（セッション確立前）。organization_id から組織を解決するため service role
   const supabase = createServiceClient()
 
   const { data: org } = await supabase
@@ -172,7 +173,7 @@ export async function changePassword(formData: FormData) {
     return { error: '全ての項目を入力してください。' }
   if (newPassword !== confirmPassword)
     return { error: '新しいパスワードが一致しません。' }
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
 
   const [{ data: user }, { data: policy }] = await Promise.all([
     supabase
@@ -264,6 +265,7 @@ export async function requestPasswordReset(formData: FormData) {
 
   const genericSuccess = { success: true }
 
+  // tenant-ok: パスワード再設定リクエスト（セッション確立前）。organization_id から組織解決
   const supabase = createServiceClient()
   const { data: org } = await supabase
     .from('organization_data')
@@ -323,6 +325,7 @@ export async function resetPasswordWithToken(formData: FormData) {
   const claims = await verifyPasswordResetToken(token)
   if (!claims) return { error: 'リンクが無効か期限切れです。再度お手続きください。' }
 
+  // tenant-ok: トークンによるパスワード再設定（セッション確立前）
   const supabase = createServiceClient()
   const [{ data: user }, { data: policy }] = await Promise.all([
     supabase
@@ -414,6 +417,7 @@ export async function registerOrganization(formData: FormData) {
     return { error: 'サーバー設定エラーが発生しました。' }
   }
 
+  // tenant-ok: 団体新規登録（セッション確立前・組織作成そのもの）
   const supabase = createServiceClient()
 
   const { data: existing } = await supabase

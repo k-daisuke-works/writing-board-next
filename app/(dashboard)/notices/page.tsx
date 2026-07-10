@@ -1,5 +1,5 @@
 import { getSession } from '@/lib/session'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createOrgClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
 import PostAttachments from '@/app/(dashboard)/components/PostAttachments'
@@ -18,7 +18,7 @@ export default async function NoticesPage() {
   if (!session) redirect('/login')
   if (session.departmentId <= 0) redirect('/home')
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
 
   const { data: notices } = await supabase.from('writing_data').select('*')
     .eq('organization_key', session.organizationKey)

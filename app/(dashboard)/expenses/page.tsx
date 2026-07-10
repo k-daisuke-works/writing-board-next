@@ -1,12 +1,12 @@
 import { getSession } from '@/lib/session'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createOrgClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
 export default async function ExpensesPage() {
   const session = await getSession()
   if (!session) redirect('/login')
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
   const { data: user } = await supabase
     .from('user_info')
     .select('social_worker_member_id')

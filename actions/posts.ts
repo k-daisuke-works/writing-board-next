@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { after } from 'next/server'
 import bcrypt from 'bcryptjs'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createOrgClient, createServiceClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/session'
 import { logAudit } from '@/lib/audit'
 import { sendPush } from '@/lib/push'
@@ -63,7 +63,7 @@ export async function createPost(formData: FormData) {
   if ([...imageUrls, ...videoUrls, ...pdfUrls].some(p => !p.startsWith(orgPrefix)))
     return { error: '不正なファイルパスです。' }
 
-  const supabase  = createServiceClient()
+  const supabase  = await createOrgClient(session.organizationKey)
   const hashedPin = pin?.trim() ? await bcrypt.hash(pin.trim(), 10) : null
 
   const { data: insertedPost, error } = await supabase.from('writing_data').insert({
@@ -144,7 +144,9 @@ export async function updatePost(formData: FormData) {
   if (!message) return { error: '内容を入力してください。' }
   if (message.length > MAX_MESSAGE_LENGTH) return { error: `本文は${MAX_MESSAGE_LENGTH}文字以内で入力してください。` }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
+  // tenant-ok: Storage（pdfs バケット）へのアップロード用。storage スキーマにRLS未設定のため service role
+  const storage = createServiceClient()
 
   const { data: post } = await supabase
     .from('writing_data')
@@ -177,7 +179,7 @@ export async function updatePost(formData: FormData) {
     const buf = await pdfFile.arrayBuffer()
     if (!isPdfMagicBytes(buf)) return { error: 'PDFファイルの形式が正しくありません。' }
     const path = `${session.organizationKey}/${Date.now()}_${safeName(pdfFile.name)}`
-    const { data, error } = await supabase.storage.from('pdfs').upload(path, buf, { contentType: 'application/pdf' })
+    const { data, error } = await storage.storage.from('pdfs').upload(path, buf, { contentType: 'application/pdf' })
     if (error) return { error: 'PDFのアップロードに失敗しました。' }
     pdfUrl = data.path
   }
@@ -210,7 +212,7 @@ export async function deletePost(formData: FormData) {
 
   if (!Number.isInteger(writingId) || writingId <= 0) return { error: '不正なリクエストです。' }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
 
   const { data: post } = await supabase
     .from('writing_data')
@@ -273,6 +275,7 @@ export async function getPdfSignedUrl(pdfPath: string) {
   const session = await getSession()
   if (!session) return null
   if (!pdfPath.startsWith(`${session.organizationKey}/`) || pdfPath.includes('..')) return null
+  // tenant-ok: Storage（pdfs バケット）の署名URL発行のみ。storage スキーマにRLS未設定のため service role
   const supabase = createServiceClient()
   const { data } = await supabase.storage.from('pdfs').createSignedUrl(pdfPath, 60)
   return data?.signedUrl ?? null

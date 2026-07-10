@@ -1,5 +1,5 @@
 import { getSession } from '@/lib/session'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createOrgClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { FolderOpen, Image as ImageIcon, Film, FileText, LayoutGrid } from 'lucide-react'
@@ -52,7 +52,7 @@ export default async function DocumentsPage({
   const { type } = await searchParams
   const activeTab = TABS.some(t => t.key === type) ? (type as FileType | 'all') : 'all'
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
 
   // 複数添付テーブルと旧形式（writing_data の単一添付カラム）の両方から資料つき投稿を集める
   const [{ data: attachmentsRaw }, { data: legacyPostsRaw }] = await Promise.all([

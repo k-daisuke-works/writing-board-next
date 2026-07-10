@@ -1,5 +1,5 @@
 import { getSession } from '@/lib/session'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createOrgClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import AdminPanel from './AdminPanel'
 import type { UserInfo, Department, Job, Position, EmploymentType, Group, LoginHistoryEntry, PasswordPolicy, AuditLogEntry } from '@/types/database'
@@ -8,7 +8,7 @@ export default async function AdminPage() {
   const session = await getSession()
   if (!session || session.role === 'member') redirect('/home')
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
   const orgKey   = session.organizationKey
 
   // password（ハッシュ）・email はクライアントに渡さないためカラムを明示列挙する

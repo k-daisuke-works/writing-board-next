@@ -2,7 +2,7 @@
 
 import { after } from 'next/server'
 import { getSession } from '@/lib/session'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createOrgClient } from '@/lib/supabase/server'
 import { sendPush } from '@/lib/push'
 import { broadcastRefresh } from '@/lib/realtime'
 import { logAudit } from '@/lib/audit'
@@ -21,7 +21,7 @@ export async function remindUnread(
   const postId = Number(formData.get('postId'))
   if (!Number.isInteger(postId) || postId <= 0) return { error: '不正なリクエストです。' }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
 
   const { data: post } = await supabase
     .from('writing_data')
@@ -88,7 +88,7 @@ export async function markPostsRead(postIds: number[]) {
   const session = await getSession()
   if (!session || postIds.length === 0) return
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
 
   const { data: valid } = await supabase
     .from('writing_data')
@@ -114,7 +114,7 @@ export async function toggleReaction(postId: number, emoji: string) {
   const session = await getSession()
   if (!session) return
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
 
   const { data: post } = await supabase
     .from('writing_data')
@@ -157,7 +157,7 @@ export async function addReply(formData: FormData) {
   const message = String(formData.get('message') ?? '').trim()
   if (!postId || !message) return
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
 
   const { data: post } = await supabase
     .from('writing_data')

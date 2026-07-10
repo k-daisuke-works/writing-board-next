@@ -1,5 +1,5 @@
 import { getSession } from '@/lib/session'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createOrgClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Building2, Users } from 'lucide-react'
@@ -18,7 +18,7 @@ export default async function ScheduleEventPage({
 
   const { id } = await params
   const eventId = Number(id)
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
 
   const { data: event } = await supabase
     .from('schedule_events')

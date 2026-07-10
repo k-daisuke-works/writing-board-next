@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/session'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createOrgClient } from '@/lib/supabase/server'
 import type { WritingData, PostRead, PostReaction, PostReply, PostAttachment } from '@/types/database'
 import { groupByPostId } from '@/lib/utils'
 
@@ -8,7 +8,7 @@ export async function GET() {
   const session = await getSession()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
 
   const [{ data: departments }, { data: boardPosts }] = await Promise.all([
     supabase.from('department_data').select('*').eq('organization_key', session.organizationKey).order('department_id'),

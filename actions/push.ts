@@ -1,7 +1,7 @@
 'use server'
 
 import { getSession } from '@/lib/session'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createOrgClient } from '@/lib/supabase/server'
 
 export async function subscribePush(sub: {
   endpoint: string
@@ -11,7 +11,7 @@ export async function subscribePush(sub: {
   const session = await getSession()
   if (!session) return
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
   await supabase.from('push_subscriptions').upsert(
     {
       user_key: session.userKey,
@@ -28,7 +28,7 @@ export async function unsubscribePush(endpoint: string) {
   const session = await getSession()
   if (!session) return
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
   await supabase.from('push_subscriptions')
     .delete()
     .eq('endpoint', endpoint)

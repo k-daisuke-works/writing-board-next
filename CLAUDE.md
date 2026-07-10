@@ -3,7 +3,7 @@
 # writing-board-next 開発ルール
 
 福祉系団体向けチーム情報共有ボード。マルチテナント（複数団体が1システム共有）。主利用者は社会福祉士会（department＝班。訴求・例文は「チームの情報共有」主体で書く）。
-**スタック:** Next.js App Router / Supabase（service role key・RLSなし）/ Vercel / TypeScript / Tailwind CSS
+**スタック:** Next.js App Router / Supabase（RLS多層防御: アプリ層フィルタ＋組織スコープポリシー）/ Vercel / TypeScript / Tailwind CSS
 
 このファイルは要点のみ。詳細は以下のスキルを**該当作業の前に**読むこと:
 
@@ -32,7 +32,7 @@
 
 ## 🔴 絶対ルール（違反すると本番事故）
 
-1. **全DBクエリに `.eq('organization_key', session.organizationKey)`** — RLSなしのためアプリ側フィルタが唯一の防衛線。特に UPDATE / DELETE で漏れやすい。書いたら `npm run check:tenant`（機械検査。CIでも必ず実行される）。organization_key カラムがないテーブル等の正当な例外は `// tenant-ok: 理由` を同じ行か直前行に付ける。
+1. **全DBクエリに `.eq('organization_key', session.organizationKey)`** — アプリ側フィルタが第一防衛線（DB側の組織スコープRLSと二重化。RLSがあってもこのルールは緩めない）。特に UPDATE / DELETE で漏れやすい。書いたら `npm run check:tenant`（機械検査。CIでも必ず実行される）。organization_key カラムがないテーブル等の正当な例外は `// tenant-ok: 理由` を同じ行か直前行に付ける。認証済みコンテキストのDBアクセスは `createServiceClient()` ではなく `await createOrgClient(session.organizationKey)` を使う（service role 可: セッション確立前・Cron・内部API・Storage操作のみ）。
 2. **未認証セットアップ系アクションは組織の既存ユーザー数を確認**してから実行（organizationKey 推測による不正登録防止）。
 3. **`middleware.ts` の名前・配置を変えない**（変えると認証ガードが無音で無効化）。matcher から `manifest.webmanifest` を除外。PUBLIC_PATHS の `'/'` は `===` 完全一致。
 4. **ID系入力は Server Action 冒頭で `.normalize('NFKC').trim()`**（IME全角入力対策）。

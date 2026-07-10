@@ -1,7 +1,7 @@
 'use server'
 
 import { getSession } from '@/lib/session'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createOrgClient, createServiceClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024
@@ -19,7 +19,9 @@ export async function updateProfile(formData: FormData) {
     return { error: '権限がありません。' }
   }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
+  // tenant-ok: Storage（avatars バケット）操作用。storage スキーマにRLS未設定のため service role
+  const storage = createServiceClient()
 
   // 対象ユーザーが自組織に所属していることを確認（user_key は組織横断のグローバル連番のため必須）
   const { data: targetUser } = await supabase
@@ -50,12 +52,12 @@ export async function updateProfile(formData: FormData) {
     const path = `${session.organizationKey}/${targetUserKey}.${ext}`
     const bytes = await avatarFile.arrayBuffer()
 
-    const { error } = await supabase.storage
+    const { error } = await storage.storage
       .from('avatars')
       .upload(path, bytes, { contentType: avatarFile.type, upsert: true })
 
     if (!error) {
-      const { data } = supabase.storage.from('avatars').getPublicUrl(path)
+      const { data } = storage.storage.from('avatars').getPublicUrl(path)
       avatarUrl = data.publicUrl
     }
   }

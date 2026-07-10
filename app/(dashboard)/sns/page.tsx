@@ -9,6 +9,7 @@ export default async function SnsPage() {
   const session = await getSession()
   if (!session) redirect('/login')
 
+  // tenant-ok: instagram_accounts は access_token を含むため authenticated には非公開。posts も未連携判定と同一クライアントで読む（各クエリは organization_key で絞り込み済み）
   const supabase = createServiceClient()
 
   const [{ data: account }, { data: postsRaw }] = await Promise.all([

@@ -1,7 +1,7 @@
 'use server'
 
 import { getSession } from '@/lib/session'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createOrgClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import type { UserRole } from '@/types/database'
 
@@ -30,7 +30,7 @@ export async function createCalendarEvent(formData: FormData) {
     departmentId = session.departmentId
   }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
 
   const { error } = await supabase.from('calendar_events').insert({
     organization_key: session.organizationKey,
@@ -55,7 +55,7 @@ export async function deleteCalendarEvent(id: number) {
   if (!session) return { error: '認証が必要です。' }
   if (!Number.isInteger(id) || id <= 0) return { error: '不正なリクエストです。' }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
 
   const { data: event } = await supabase.from('calendar_events')
     .select('created_by, department_id')
@@ -92,7 +92,7 @@ export async function confirmScheduleEvent(formData: FormData) {
   const location = (formData.get('location') as string) || null
   const note     = (formData.get('note') as string) || null
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
 
   const [{ data: event }, { data: date }] = await Promise.all([
     supabase.from('schedule_events').select('*')

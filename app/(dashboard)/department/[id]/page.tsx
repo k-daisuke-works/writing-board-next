@@ -1,5 +1,5 @@
 import { getSession } from '@/lib/session'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createOrgClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { deletePost, updatePost, getPdfSignedUrl } from '@/actions/posts'
 import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
@@ -28,7 +28,7 @@ export default async function DepartmentHistoryPage({
 
   const { id } = await params
   const deptId   = Number(id)
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
 
   const { data: department } = await supabase.from('department_data').select('*')
     .eq('department_id', deptId)

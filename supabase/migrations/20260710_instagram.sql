@@ -37,3 +37,10 @@ CREATE INDEX IF NOT EXISTS idx_instagram_posts_org ON instagram_posts (organizat
 
 ALTER TABLE instagram_accounts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE instagram_posts    ENABLE ROW LEVEL SECURITY;
+
+-- 組織スコープRLS（20260711_rls_org_policies.sql と同型）。
+-- access_token を含む instagram_accounts は読み取りも投稿キャッシュ表示に不要なため
+-- authenticated には instagram_posts の SELECT のみ許可（書き込みは Cron の service role）。
+DROP POLICY IF EXISTS org_read ON instagram_posts;
+CREATE POLICY org_read ON instagram_posts FOR SELECT TO authenticated
+  USING (organization_key = (SELECT public.jwt_org_key()));

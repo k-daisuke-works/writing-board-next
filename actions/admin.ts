@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { after } from 'next/server'
 import bcrypt from 'bcryptjs'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createOrgClient } from '@/lib/supabase/server'
 import { getSession, verifySetupToken } from '@/lib/session'
 import { logAudit } from '@/lib/audit'
 import type { UserRole } from '@/types/database'
@@ -24,7 +24,7 @@ export async function deleteUser(formData: FormData) {
   const userKey = Number(formData.get('userKey'))
   if (userKey === session.userKey) return { error: '自分自身は削除できません。' }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
 
   if (session.role === 'leader') {
     const { data: target } = await supabase
@@ -64,7 +64,7 @@ export async function deleteDepartment(formData: FormData) {
   if (session?.role !== 'admin') return { error: '管理者権限が必要です。' }
 
   const departmentId = Number(formData.get('departmentId'))
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
 
   const { count } = await supabase
     .from('user_info')
@@ -91,7 +91,7 @@ export async function deleteJob(formData: FormData) {
   if (session?.role !== 'admin') return { error: '管理者権限が必要です。' }
 
   const jobId = Number(formData.get('jobId'))
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
 
   const { count } = await supabase
     .from('user_info')
@@ -127,7 +127,8 @@ export async function createDepartment(formData: FormData) {
   if (!departmentName?.trim()) return { error: '部署名を入力してください。' }
   if (departmentName.trim().length > 100) return { error: '部署名は100文字以内で入力してください。' }
 
-  const supabase = createServiceClient()
+  // tenant-ok: 初回セットアップ時は session=null。organizationKey は検証済みトークン由来
+  const supabase = await createOrgClient(organizationKey)
 
   if (!session) {
     const { count } = await supabase
@@ -166,7 +167,8 @@ export async function createJob(formData: FormData) {
   if (!jobName?.trim()) return { error: '職種名を入力してください。' }
   if (jobName.trim().length > 100) return { error: '職種名は100文字以内で入力してください。' }
 
-  const supabase = createServiceClient()
+  // tenant-ok: 初回セットアップ時は session=null。organizationKey は検証済みトークン由来
+  const supabase = await createOrgClient(organizationKey)
 
   if (!session) {
     const { count } = await supabase
@@ -199,7 +201,7 @@ export async function updateDepartment(formData: FormData) {
   const departmentName = (formData.get('departmentName') as string)?.trim()
   if (!departmentName) return { error: '部署名を入力してください。' }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
   const { error } = await supabase
     .from('department_data')
     .update({ department_name: departmentName })
@@ -220,7 +222,7 @@ export async function updateJob(formData: FormData) {
   const jobName = (formData.get('jobName') as string)?.trim()
   if (!jobName) return { error: '職種名を入力してください。' }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
   const { error } = await supabase
     .from('job_data')
     .update({ job_name: jobName })
@@ -254,7 +256,7 @@ export async function updateUser(formData: FormData) {
 
   if (!userName) return { error: 'ユーザー名を入力してください。' }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
 
   if (session.role === 'leader') {
     const { data: target } = await supabase
@@ -352,7 +354,8 @@ export async function registerUser(formData: FormData) {
     }
   }
 
-  const supabase = createServiceClient()
+  // tenant-ok: 初回セットアップ時は session=null。organizationKey はフォーム値だが既存ユーザー数チェックで防御
+  const supabase = await createOrgClient(organizationKey)
 
   if (!session && isInitialSetup) {
     const { count } = await supabase
@@ -418,7 +421,7 @@ export async function resetUserPassword(formData: FormData) {
   if (!userKey || !newPassword) return { error: '必須項目を入力してください。' }
   if (newPassword.length < 8) return { error: 'パスワードは8文字以上で入力してください。' }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
   const hashed   = await bcrypt.hash(newPassword, 10)
 
   const { error } = await supabase
@@ -450,7 +453,7 @@ export async function toggleUserActive(formData: FormData) {
   const isActive  = formData.get('isActive') === 'true'
   if (userKey === session.userKey) return { error: '自分自身は変更できません。' }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
   const { error } = await supabase
     .from('user_info')
     .update({ is_active: isActive })
@@ -479,7 +482,7 @@ export async function createPosition(formData: FormData) {
   const name = (formData.get('positionName') as string)?.trim()
   if (!name) return { error: '役職名を入力してください。' }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
   const { error } = await supabase.from('position_data').insert({
     position_name:    name,
     organization_key: session.organizationKey,
@@ -497,7 +500,7 @@ export async function updatePosition(formData: FormData) {
   const name       = (formData.get('positionName') as string)?.trim()
   if (!name) return { error: '役職名を入力してください。' }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
   const { error } = await supabase
     .from('position_data')
     .update({ position_name: name })
@@ -513,7 +516,7 @@ export async function deletePosition(formData: FormData) {
   if (session?.role !== 'admin') return { error: '管理者権限が必要です。' }
   const positionId = Number(formData.get('positionId'))
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
   const { error } = await supabase
     .from('position_data')
     .delete()
@@ -532,7 +535,7 @@ export async function createEmploymentType(formData: FormData) {
   const name = (formData.get('employmentTypeName') as string)?.trim()
   if (!name) return { error: '雇用形態名を入力してください。' }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
   const { error } = await supabase.from('employment_type_data').insert({
     employment_type_name: name,
     organization_key:     session.organizationKey,
@@ -550,7 +553,7 @@ export async function updateEmploymentType(formData: FormData) {
   const name = (formData.get('employmentTypeName') as string)?.trim()
   if (!name) return { error: '雇用形態名を入力してください。' }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
   const { error } = await supabase
     .from('employment_type_data')
     .update({ employment_type_name: name })
@@ -566,7 +569,7 @@ export async function deleteEmploymentType(formData: FormData) {
   if (session?.role !== 'admin') return { error: '管理者権限が必要です。' }
   const id = Number(formData.get('employmentTypeId'))
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
   const { error } = await supabase
     .from('employment_type_data')
     .delete()
@@ -585,7 +588,7 @@ export async function createGroup(formData: FormData) {
   const name = (formData.get('groupName') as string)?.trim()
   if (!name) return { error: 'グループ名を入力してください。' }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
   const { error } = await supabase.from('group_data').insert({
     group_name:       name,
     organization_key: session.organizationKey,
@@ -603,7 +606,7 @@ export async function updateGroup(formData: FormData) {
   const name    = (formData.get('groupName') as string)?.trim()
   if (!name) return { error: 'グループ名を入力してください。' }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
   const { error } = await supabase
     .from('group_data')
     .update({ group_name: name })
@@ -619,7 +622,7 @@ export async function deleteGroup(formData: FormData) {
   if (session?.role !== 'admin') return { error: '管理者権限が必要です。' }
   const groupId = Number(formData.get('groupId'))
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
   const { error } = await supabase
     .from('group_data')
     .delete()
@@ -641,7 +644,7 @@ export async function setGroupMembers(formData: FormData) {
     ? JSON.parse(userKeysRaw).map(Number).filter(Boolean)
     : []
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
 
   const { data: group } = await supabase
     .from('group_data')
@@ -683,7 +686,7 @@ export async function updateOrgName(formData: FormData) {
   const name = (formData.get('orgName') as string)?.trim()
   if (!name || name.length > 100) return { error: '団体名を100文字以内で入力してください。' }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
   const { error } = await supabase
     .from('organization_data')
     .update({ organization_name: name })
@@ -708,7 +711,7 @@ export async function updateOrgPassword(formData: FormData) {
   if (newPassword !== confirmPassword)
     return { error: '新しい団体パスが一致しません。' }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
   const { data: org } = await supabase
     .from('organization_data')
     .select('organization_password')
@@ -747,7 +750,7 @@ export async function upsertPasswordPolicy(formData: FormData) {
   const expiryRaw  = formData.get('expiryDays') as string
   const expiryDays = expiryRaw && expiryRaw !== '0' ? Number(expiryRaw) : null
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
   const { error } = await supabase.from('password_policy').upsert({
     organization_key: session.organizationKey,
     min_length:       minLength,
@@ -784,7 +787,7 @@ export async function updateMyEmail(formData: FormData) {
     }
   }
 
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(session.organizationKey)
   const { error } = await supabase
     .from('user_info')
     .update({ email })

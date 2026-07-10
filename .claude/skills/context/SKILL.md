@@ -9,7 +9,9 @@ description: writing-board-next のプロジェクト構成リファレンス（
 
 福祉事業所向け業務連絡ボード「RoScope」。複数の団体（organization）が1システムを共有するマルチテナント構成。PWA対応（プッシュ通知・オフラインフォールバック）。
 
-**スタック:** Next.js 16 App Router / Supabase（service role key、RLS未使用）/ Vercel / TypeScript / Tailwind CSS
+**スタック:** Next.js 16 App Router / Supabase（RLS多層防御）/ Vercel / TypeScript / Tailwind CSS
+
+**DBアクセス（2026-07-11〜）:** 認証済みコンテキストは `await createOrgClient(session.organizationKey)`（role=authenticated の自己署名JWT。DB側 org_isolation ポリシーで組織スコープを強制）。`createServiceClient()`（RLSバイパス）はセッション確立前・Cron・内部API・Storage操作のみ＋`// tenant-ok: 理由`。どちらの場合もアプリ層の `.eq('organization_key', ...)` は必須（二重防御）。`SUPABASE_JWT_SECRET` 未設定時は service role にフォールバック（RLS層のみ無効）。
 
 **認証:** Supabase Auth は使っていない — 独自JWT（`lib/session.ts`、8時間有効・httpOnly Cookie）。全ページ冒頭で:
 

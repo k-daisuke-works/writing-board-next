@@ -1,5 +1,5 @@
 import { getSession } from '@/lib/session'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createOrgClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
 import Link from 'next/link'
@@ -103,7 +103,7 @@ export default async function SearchPage({
 }
 
 async function fetchResults(organizationKey: number, departmentId: number, query: string) {
-  const supabase = createServiceClient()
+  const supabase = await createOrgClient(organizationKey)
   const { data } = await supabase
     .from('writing_data')
     .select('writing_id, user_key, user_name_stamp, job_name_stamp, department_id, department_name_stamp, post_type, message, writing_time')

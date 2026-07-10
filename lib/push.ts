@@ -1,5 +1,5 @@
 import webpush from 'web-push'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createOrgClient } from '@/lib/supabase/server'
 
 // VAPID は遅延初期化（モジュールレベル初期化は env 未設定時にデプロイ全体を壊す）
 let vapidReady: boolean | null = null
@@ -39,7 +39,7 @@ export type PushPayload = {
 export async function sendPush(target: PushTarget, payload: PushPayload): Promise<number> {
   try {
     if (!initVapid()) return 0
-    const supabase = createServiceClient()
+    const supabase = await createOrgClient(target.organizationKey)
 
     let userKeys = target.userKeys ?? null
     if (!userKeys && target.departmentId) {

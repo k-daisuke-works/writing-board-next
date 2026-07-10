@@ -14,7 +14,7 @@ RoScope（writing-board-next）の技術的・運用的セキュリティ管理�
 | 認証必須化 | 全ページを `middleware.ts` で JWT 検証。未認証は `/login` へ | `middleware.ts` |
 | ロールベースアクセス制御 | `admin` / `leader` / `member` の3ロール。管理操作は Server Action 冒頭でロール検証 | `actions/admin.ts` |
 | 特権の制限（A.8.2） | リーダーは自部署のみ操作可・admin昇格不可。管理者も自分自身の削除・凍結は不可 | `actions/admin.ts` |
-| テナント分離 | 全DBクエリに `organization_key` フィルタ（RLS未使用のためアプリ層が防衛線） | 全 actions / pages |
+| テナント分離（多層防御） | ①全DBクエリに `organization_key` フィルタ（アプリ層）＋②組織スコープRLSポリシー（DB層）。認証済みコンテキストは `createOrgClient`（role=authenticated の自己署名JWT）で接続し、アプリ層のフィルタが漏れてもDBが他団体の行を返さない | 全 actions / pages・`lib/supabase/server.ts`・`supabase/migrations/20260711_rls_org_policies.sql` |
 | セッション管理 | JWT 8時間有効・httpOnly・secure・sameSite=lax。ユーザー削除で即時無効化（毎リクエストDB照合） | `lib/session.ts` |
 | アカウント凍結 | `is_active=false` でログイン拒否。管理画面から凍結/解除 | `actions/auth.ts` / `actions/admin.ts` |
 
@@ -98,9 +98,9 @@ RoScope（writing-board-next）の技術的・運用的セキュリティ管理�
 
 ## 7. 残課題サマリー（優先度順）
 
-1. **RLS（Row Level Security）ポリシーの有効化** — 現状 service role でバイパスされており、アプリ層のフィルタ漏れが即データ漏洩につながる。機械検査（§5）で漏れ検出は自動化済みだが、多層防御として RLS ポリシー定義を推奨
-2. **レート制限の永続化** — Upstash Redis 等への移行（スケールアウト時必須）
-3. **パスワード履歴** — 過去パスワードの再利用禁止
-4. **バックアップ・リストア演習** — 年1回の復旧テスト
+1. **レート制限の永続化** — Upstash Redis 等への移行（スケールアウト時必須）
+2. **パスワード履歴** — 過去パスワードの再利用禁止
+3. **バックアップ・リストア演習** — 年1回の復旧テスト
 
 ※「依存関係の脆弱性スキャン自動化」は 2026-07-10 に Dependabot 導入で解消（§5）。
+※「RLSポリシーの有効化」は 2026-07-11 に組織スコープポリシー導入で解消（§2 テナント分離）。Supabase Auth へは移行せず、独自JWT認証を維持したまま自己署名トークンで実現。
