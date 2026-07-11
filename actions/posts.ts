@@ -10,6 +10,7 @@ import { sendPush } from '@/lib/push'
 import { broadcastRefresh } from '@/lib/realtime'
 
 const MAX_MESSAGE_LENGTH = 5000
+const MAX_TITLE_LENGTH   = 100
 const MAX_PDF_SIZE_BYTES = 10 * 1024 * 1024
 
 function stripHtml(text: string): string {
@@ -58,6 +59,9 @@ export async function createPost(formData: FormData) {
   if (!message) return { error: '内容を入力してください。' }
   if (message.length > MAX_MESSAGE_LENGTH) return { error: `本文は${MAX_MESSAGE_LENGTH}文字以内で入力してください。` }
 
+  const postTitle = stripHtml((formData.get('title') as string | null) ?? '')
+  if (postTitle.length > MAX_TITLE_LENGTH) return { error: `タイトルは${MAX_TITLE_LENGTH}文字以内で入力してください。` }
+
   // パスが自組織のディレクトリ配下であることを確認
   const orgPrefix = `${session.organizationKey}/`
   if ([...imageUrls, ...videoUrls, ...pdfUrls].some(p => !p.startsWith(orgPrefix)))
@@ -75,6 +79,7 @@ export async function createPost(formData: FormData) {
     job_name_stamp:        session.jobName,
     department_name_stamp: session.departmentName,
     pin:           hashedPin,
+    title:         postTitle || null,
     message,
     image_url:     imageUrls[0] ?? null,
     video_url:     videoUrls[0] ?? null,
@@ -119,7 +124,7 @@ export async function createPost(formData: FormData) {
     const url = postType === 'board' ? '/posts' : postType === 'notice' ? '/notices' : '/home'
     after(() => sendPush(pushTarget, {
       title,
-      body: `${session.userName}: ${message.slice(0, 80)}`,
+      body: `${session.userName}: ${(postTitle || message).slice(0, 80)}`,
       url,
       tag: `post-${insertedPost.writing_id}`,
     }))
@@ -143,6 +148,12 @@ export async function updatePost(formData: FormData) {
   const message = stripHtml(rawMessage ?? '')
   if (!message) return { error: '内容を入力してください。' }
   if (message.length > MAX_MESSAGE_LENGTH) return { error: `本文は${MAX_MESSAGE_LENGTH}文字以内で入力してください。` }
+
+  // title フィールドを持たないフォームからの更新では既存タイトルを維持する
+  const rawTitle = formData.get('title') as string | null
+  const postTitle = rawTitle !== null ? stripHtml(rawTitle) : null
+  if (postTitle !== null && postTitle.length > MAX_TITLE_LENGTH)
+    return { error: `タイトルは${MAX_TITLE_LENGTH}文字以内で入力してください。` }
 
   const supabase = await createOrgClient(session.organizationKey)
   // tenant-ok: Storage（pdfs バケット）へのアップロード用。storage スキーマにRLS未設定のため service role
@@ -186,7 +197,11 @@ export async function updatePost(formData: FormData) {
 
   const { error } = await supabase
     .from('writing_data')
-    .update({ message, pdf_url: pdfUrl })
+    .update({
+      message,
+      pdf_url: pdfUrl,
+      ...(rawTitle !== null ? { title: postTitle || null } : {}),
+    })
     .eq('writing_id', writingId)
     .eq('organization_key', session.organizationKey)
 

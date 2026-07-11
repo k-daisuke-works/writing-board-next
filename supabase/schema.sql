@@ -820,7 +820,8 @@ CREATE TABLE public.writing_data (
     image_url text,
     video_url text,
     is_important boolean DEFAULT false NOT NULL,
-    display_until timestamp with time zone
+    display_until timestamp with time zone,
+    title text
 );
 
 ALTER TABLE ONLY public.writing_data REPLICA IDENTITY FULL;

@@ -9,9 +9,9 @@ import PostReplies from '@/app/(dashboard)/components/PostReplies'
 import RealtimeSocial from '@/app/(dashboard)/components/RealtimeSocial'
 import MarkReadOnMount from '@/app/(dashboard)/components/MarkReadOnMount'
 import Link from 'next/link'
-import { ArrowLeft, Clock, AlertCircle, Megaphone } from 'lucide-react'
+import { ArrowLeft, Clock, AlertCircle, ChevronDown, Megaphone } from 'lucide-react'
 import type { PostRead, PostReaction, PostReply, PostAttachment } from '@/types/database'
-import { groupByPostId, fmtDatetime, fmtShortDate } from '@/lib/utils'
+import { groupByPostId, fmtDatetime, fmtShortDate, postHeading } from '@/lib/utils'
 
 export default async function NoticesPage() {
   const session = await getSession()
@@ -79,20 +79,27 @@ export default async function NoticesPage() {
       {notices && notices.length > 0 ? (
         <div className="space-y-2.5">
           {notices.map((post) => (
-            <div key={post.writing_id} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-              <div className="px-4 sm:px-5 pt-3.5 pb-1">
-                <div className="flex items-center gap-1.5 mb-2 flex-wrap">
-                  {post.is_important && (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-50 px-1.5 py-0.5 rounded">
-                      <AlertCircle className="w-3 h-3" />重要
-                    </span>
-                  )}
-                  {post.display_until && (
-                    <span className="text-xs text-blue-500 font-medium">
-                      {fmtShortDate(post.display_until)}まで固定表示
-                    </span>
-                  )}
-                </div>
+            <details key={post.writing_id} className="group bg-white border border-gray-200 rounded-lg overflow-hidden">
+              {/* タイトル行（クリックで展開） */}
+              <summary className="flex min-h-[44px] cursor-pointer select-none list-none items-center gap-2 px-4 py-3 sm:px-5 hover:bg-gray-50 transition-colors">
+                {post.is_important && (
+                  <span className="flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-50 px-1.5 py-0.5 rounded shrink-0">
+                    <AlertCircle className="w-3 h-3" />重要
+                  </span>
+                )}
+                <span className="flex-1 min-w-0 truncate text-sm font-medium text-gray-900">
+                  {postHeading(post.title, post.message)}
+                </span>
+                <span className="text-xs text-gray-400 shrink-0">{fmtShortDate(post.writing_time)}</span>
+                <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 transition-transform group-open:rotate-180" />
+              </summary>
+
+              <div className="px-4 sm:px-5 pt-3.5 pb-1 border-t border-gray-100">
+                {post.display_until && (
+                  <p className="text-xs text-blue-500 font-medium mb-2">
+                    {fmtShortDate(post.display_until)}まで固定表示
+                  </p>
+                )}
                 <ExpandableText text={post.message} className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap" />
                 <PostAttachments post={post} attachments={attachmentsMap[post.writing_id] ?? []} />
                 <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-50">
@@ -116,7 +123,7 @@ export default async function NoticesPage() {
                   avatarMap={avatarMap}
                 />
               </div>
-            </div>
+            </details>
           ))}
         </div>
       ) : (

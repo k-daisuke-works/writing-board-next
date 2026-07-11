@@ -41,9 +41,10 @@ type Props = {
   onClose: () => void
 }
 
-const inputCls = "w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+const inputCls = "w-full min-h-[44px] border border-gray-300 rounded-md px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
 
 export default function PostModal({ session, postType = 'board', defaultImportant = false, onClose }: Props) {
+  const [postTitle,     setPostTitle]     = useState('')
   const [message,       setMessage]       = useState('')
   const [pin,           setPin]           = useState('')
   const [loading,       setLoading]       = useState(false)
@@ -123,6 +124,7 @@ export default function PostModal({ session, postType = 'board', defaultImportan
       if (totalFiles > 0) setUploadProgress(100)
 
       const fd = new FormData()
+      fd.set('title', postTitle)
       fd.set('message', message)
       fd.set('pin', pin)
       fd.set('postType', postType)
@@ -178,6 +180,18 @@ export default function PostModal({ session, postType = 'board', defaultImportan
               {error}
             </div>
           )}
+
+          {/* タイトル */}
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1.5">
+              タイトル <span className="text-gray-400 font-normal">（任意・履歴一覧の見出しに使用）</span>
+            </label>
+            <input
+              type="text" value={postTitle} onChange={(e) => setPostTitle(e.target.value)}
+              maxLength={100} placeholder="例: 7月の定例会について"
+              className={inputCls}
+            />
+          </div>
 
           {/* 本文 */}
           <div>

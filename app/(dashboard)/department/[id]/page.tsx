@@ -148,6 +148,8 @@ export default async function DepartmentHistoryPage({
                 <div className="bg-gray-50 px-4 sm:px-5 py-4 space-y-3 border-t border-gray-100">
                   <form action={toAction(updatePost)} className="space-y-2.5">
                     <input type="hidden" name="writingId" value={post.writing_id} />
+                    <input type="text" name="title" defaultValue={post.title ?? ''} maxLength={100} placeholder="タイトル（任意）"
+                      className="w-full min-h-[44px] border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors bg-white" />
                     <textarea name="message" defaultValue={post.message}
                       rows={3}
                       className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 resize-none transition-colors bg-white" />

@@ -31,3 +31,10 @@ export function relativeTime(t: string): string {
 export function isRecent(t: string | null): boolean {
   return !!t && Date.now() - new Date(t).getTime() < 7 * 864e5
 }
+
+/** 履歴一覧の見出し。タイトル未設定の旧投稿は本文1行目で代替する */
+export function postHeading(title: string | null, message: string): string {
+  if (title?.trim()) return title.trim()
+  const firstLine = message.split('\n')[0]
+  return firstLine.length > 50 ? firstLine.slice(0, 50) + '…' : firstLine
+}

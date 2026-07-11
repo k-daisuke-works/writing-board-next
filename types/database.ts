@@ -210,6 +210,7 @@ export type WritingData = {
   job_name_stamp: string | null
   department_name_stamp: string | null
   pin: string | null
+  title: string | null
   message: string
   pdf_url: string | null
   image_url: string | null

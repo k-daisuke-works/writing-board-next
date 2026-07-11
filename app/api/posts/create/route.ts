@@ -43,6 +43,9 @@ export async function POST(req: NextRequest) {
   if (!message)                            return err('内容を入力してください。')
   if (message.length > MAX_MESSAGE_LENGTH) return err(`本文は${MAX_MESSAGE_LENGTH}文字以内で入力してください。`)
 
+  const postTitle = stripHtml((formData.get('title') as string | null) ?? '')
+  if (postTitle.length > 100) return err('タイトルは100文字以内で入力してください。')
+
   // パスが自組織のディレクトリ配下であることを確認
   const orgPrefix = `${session.organizationKey}/`
   const allPaths  = [...imageUrls, ...videoUrls, ...pdfUrls]
@@ -61,6 +64,7 @@ export async function POST(req: NextRequest) {
     job_name_stamp:        session.jobName,
     department_name_stamp: session.departmentName,
     pin:           hashedPin,
+    title:         postTitle || null,
     message,
     image_url:     imageUrls[0] ?? null,
     video_url:     videoUrls[0] ?? null,

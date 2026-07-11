@@ -14,7 +14,7 @@ import RealtimeSocial from '@/app/(dashboard)/components/RealtimeSocial'
 import Link from 'next/link'
 import { ArrowLeft, Clock, Paperclip, User, ChevronDown, Building2 } from 'lucide-react'
 import type { PostRead, PostReaction, PostReply, PostAttachment } from '@/types/database'
-import { groupByPostId, fmtDatetime } from '@/lib/utils'
+import { groupByPostId, fmtDatetime, fmtShortDate, postHeading } from '@/lib/utils'
 
 type SA = (fd: FormData) => Promise<void>
 const toAction = (fn: (fd: FormData) => unknown) => fn as unknown as SA
@@ -147,8 +147,17 @@ export default async function MemberHistoryPage({
       {posts && posts.length > 0 ? (
         <div className="space-y-2.5">
           {posts.map((post) => (
-            <div key={post.writing_id} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-              <div className="flex items-center gap-3 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-gray-100">
+            <details key={post.writing_id} className="group/card bg-white border border-gray-200 rounded-lg overflow-hidden">
+              {/* タイトル行（クリックで展開） */}
+              <summary className="flex min-h-[44px] cursor-pointer select-none list-none items-center gap-2 px-4 py-3 sm:px-5 hover:bg-gray-50 transition-colors">
+                <span className="flex-1 min-w-0 truncate text-sm font-medium text-gray-900">
+                  {postHeading(post.title, post.message)}
+                </span>
+                <span className="text-xs text-gray-400 shrink-0">{fmtShortDate(post.writing_time)}</span>
+                <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 transition-transform group-open/card:rotate-180" />
+              </summary>
+
+              <div className="flex items-center gap-3 px-4 sm:px-5 py-3 sm:py-3.5 border-y border-gray-100">
                 <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
                   {post.user_name_stamp.slice(0, 1)}
                 </div>
@@ -198,6 +207,8 @@ export default async function MemberHistoryPage({
                   <div className="bg-gray-50 px-4 sm:px-5 py-4 space-y-3 border-t border-gray-100">
                     <form action={toAction(updatePost)} className="space-y-2.5">
                       <input type="hidden" name="writingId" value={post.writing_id} />
+                      <input type="text" name="title" defaultValue={post.title ?? ''} maxLength={100} placeholder="タイトル（任意）"
+                        className="w-full min-h-[44px] border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors bg-white" />
                       <textarea name="message" defaultValue={post.message} rows={3}
                         className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 resize-none transition-colors bg-white" />
                       <div className="flex gap-2 flex-wrap">
@@ -216,7 +227,7 @@ export default async function MemberHistoryPage({
                   </div>
                 </details>
               )}
-            </div>
+            </details>
           ))}
         </div>
       ) : (
