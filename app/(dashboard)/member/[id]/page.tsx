@@ -145,12 +145,13 @@ export default async function MemberHistoryPage({
                   currentProfile={member.profile}
                   currentAvatarUrl={member.avatar_url}
                   currentSocialWorkerMemberId={privateProfile?.social_worker_member_id ?? null}
+                  isSelf={session.userKey === userId}
                 />
               )}
             </div>
             {member.profile ? (
               <p className="text-sm text-gray-600 mt-2 whitespace-pre-wrap leading-relaxed">{member.profile}</p>
-            ) : canEdit ? (
+            ) : session.userKey === userId ? (
               <p className="text-sm text-gray-400 mt-2">プロフィールを編集して自己紹介を追加しましょう</p>
             ) : null}
           </div>

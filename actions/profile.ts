@@ -15,7 +15,10 @@ export async function updateProfile(formData: FormData) {
 
   const targetUserKey = Number(formData.get('user_key'))
   if (!Number.isInteger(targetUserKey) || targetUserKey <= 0) return { error: '不正なリクエストです。' }
-  if (targetUserKey !== session.userKey && !session.adminFlag) {
+  const isSelf = targetUserKey === session.userKey
+  // 本人＝全項目編集可。管理者が他人を編集する場合は事務項目（会員番号）のみ許可し、
+  // 自己表現（アイコン・所属・自己紹介）は本人だけが変えられる。
+  if (!isSelf && !session.adminFlag) {
     return { error: '権限がありません。' }
   }
 
@@ -39,6 +42,18 @@ export async function updateProfile(formData: FormData) {
   if (socialWorkerMemberId.length > 50) return { error: '社会福祉士会IDは50文字以内で入力してください。' }
   if (socialWorkerMemberId && !/^[a-zA-Z0-9_-]+$/.test(socialWorkerMemberId)) {
     return { error: '社会福祉士会IDは英数字・ハイフン・アンダースコアで入力してください。' }
+  }
+
+  // 管理者が他人を編集するとき: 会員番号だけ更新して即返す（自己表現項目は触らない）
+  if (!isSelf) {
+    const { error: idError } = await supabase.from('user_info')
+      .update({ social_worker_member_id: socialWorkerMemberId || null })
+      .eq('user_key', targetUserKey)
+      .eq('organization_key', session.organizationKey)
+    if (idError) return { error: '会員番号の保存に失敗しました。' }
+    revalidatePath(`/member/${targetUserKey}`)
+    revalidatePath('/expenses')
+    return { success: true }
   }
 
   const avatarFile = formData.get('avatar') as File | null
