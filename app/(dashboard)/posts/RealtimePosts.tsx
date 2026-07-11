@@ -6,7 +6,7 @@ import { relativeTime, isRecent } from '@/lib/utils'
 import type { Department, WritingData, UserSession, PostRead, PostReaction, PostReply, PostAttachment } from '@/types/database'
 import PostModal from './PostModal'
 import Link from 'next/link'
-import { Plus, Clock, Building2, ChevronRight, Wifi } from 'lucide-react'
+import { Plus, Clock, Building2, ChevronRight } from 'lucide-react'
 import PostReads from '@/app/(dashboard)/components/PostReads'
 import PostReactions from '@/app/(dashboard)/components/PostReactions'
 import PostReplies from '@/app/(dashboard)/components/PostReplies'
@@ -46,13 +46,9 @@ export default function RealtimePosts({
       <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">全体掲示板</h1>
-          <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-2">
+          <p className="text-sm text-gray-500 mt-0.5">
             {departments.length}部署
-            {newCount > 0 && <span className="text-blue-600 font-medium">· {newCount}件の新着</span>}
-            <span className="flex items-center gap-1 text-green-600">
-              <Wifi className="w-3 h-3" />
-              <span className="text-xs">リアルタイム</span>
-            </span>
+            {newCount > 0 && <span className="text-blue-600 font-medium"> · {newCount}件の新着</span>}
           </p>
         </div>
         <button
