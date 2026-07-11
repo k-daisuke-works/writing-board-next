@@ -1,11 +1,11 @@
 import {
-  MessageSquare, Users, Settings, Receipt, UserCircle, BookOpen, KeyRound, FolderOpen, Camera, MessagesSquare,
+  Megaphone, Users, Settings, Receipt, UserCircle, BookOpen, KeyRound, FolderOpen, Camera, MessagesSquare,
 } from 'lucide-react'
 
 export const STATIC_CARDS = [
   {
     href: '/posts',
-    Icon: MessageSquare,
+    Icon: Megaphone,
     title: '全体掲示板',
     desc: '全部署から組織全体へのお知らせを確認する',
     iconBg: 'bg-blue-50',

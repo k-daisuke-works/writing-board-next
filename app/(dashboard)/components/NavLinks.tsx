@@ -2,15 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutGrid, MessageSquare, MessagesSquare, Calendar, Newspaper, Search, FolderOpen } from 'lucide-react'
+import { Home, Megaphone, MessagesSquare, CalendarDays, Newspaper, Search, FolderOpen } from 'lucide-react'
 
 type Props = { unreadBoard: number; unreadTeam: number; unreadDm: number }
 
 const LINKS = [
-  { href: '/home', match: '/home', Icon: LayoutGrid, label: 'ホーム', mobile: true, badge: 'team' as const },
-  { href: '/posts', match: '/posts', Icon: MessageSquare, label: '全体掲示板', mobile: true, badge: 'board' as const },
+  { href: '/home', match: '/home', Icon: Home, label: 'ホーム', mobile: true, badge: 'team' as const },
+  { href: '/posts', match: '/posts', Icon: Megaphone, label: '全体掲示板', mobile: true, badge: 'board' as const },
   { href: '/messages', match: '/messages', Icon: MessagesSquare, label: 'メッセージ', mobile: true, badge: 'dm' as const },
-  { href: '/schedule/calendar', match: '/schedule', Icon: Calendar, label: 'スケジュール', mobile: true, badge: null },
+  { href: '/schedule/calendar', match: '/schedule', Icon: CalendarDays, label: 'スケジュール', mobile: true, badge: null },
   { href: '/documents', match: '/documents', Icon: FolderOpen, label: '資料庫', mobile: false, badge: null },
   { href: '/welfare', match: '/welfare', Icon: Newspaper, label: '福祉情報', mobile: false, badge: null },
   { href: '/search', match: '/search', Icon: Search, label: '検索', mobile: false, badge: null },
