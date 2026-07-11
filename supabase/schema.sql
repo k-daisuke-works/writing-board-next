@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict GI0wlK3D98vXfqIr76ogWzFBdLHLLABwOEXY9jiDfGEjcOplXuZIfgeS6jx62Ha
+\restrict DIDkczPudpg9LLsJkbRPGLjIgAl1GqMXeBIO7tQmvKpm3hVyUIhSU4pfk2gA5jf
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 18.1
@@ -34,6 +34,55 @@ ALTER SCHEMA public OWNER TO pg_database_owner;
 
 COMMENT ON SCHEMA public IS 'standard public schema';
 
+
+--
+-- Name: export_all_data(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.export_all_data() RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare
+  r record;
+  t jsonb;
+  result jsonb := '{}'::jsonb;
+begin
+  for r in
+    select table_name from information_schema.tables
+    where table_schema = 'public' and table_type = 'BASE TABLE'
+    order by table_name
+  loop
+    execute format('select coalesce(jsonb_agg(to_jsonb(x)), ''[]''::jsonb) from %I x', r.table_name) into t;
+    result := result || jsonb_build_object(r.table_name, t);
+  end loop;
+  return result;
+end $$;
+
+
+ALTER FUNCTION public.export_all_data() OWNER TO postgres;
+
+--
+-- Name: jwt_org_key(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.jwt_org_key() RETURNS integer
+    LANGUAGE sql STABLE
+    AS $$ select nullif(auth.jwt()->>'organization_key','')::integer $$;
+
+
+ALTER FUNCTION public.jwt_org_key() OWNER TO postgres;
+
+--
+-- Name: jwt_user_key(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.jwt_user_key() RETURNS integer
+    LANGUAGE sql STABLE
+    AS $$ SELECT nullif(auth.jwt()->>'user_key','')::integer $$;
+
+
+ALTER FUNCTION public.jwt_user_key() OWNER TO postgres;
 
 SET default_tablespace = '';
 
@@ -147,6 +196,87 @@ ALTER SEQUENCE public.department_data_department_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE public.department_data_department_id_seq OWNED BY public.department_data.department_id;
+
+
+--
+-- Name: dm_messages; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.dm_messages (
+    message_id bigint NOT NULL,
+    organization_key integer NOT NULL,
+    pair_id bigint NOT NULL,
+    sender_key integer NOT NULL,
+    message text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    read_at timestamp with time zone
+);
+
+
+ALTER TABLE public.dm_messages OWNER TO postgres;
+
+--
+-- Name: dm_messages_message_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.dm_messages_message_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.dm_messages_message_id_seq OWNER TO postgres;
+
+--
+-- Name: dm_messages_message_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.dm_messages_message_id_seq OWNED BY public.dm_messages.message_id;
+
+
+--
+-- Name: dm_pairs; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.dm_pairs (
+    pair_id bigint NOT NULL,
+    organization_key integer NOT NULL,
+    user_a integer NOT NULL,
+    user_b integer NOT NULL,
+    requested_by integer NOT NULL,
+    status text DEFAULT 'pending'::text NOT NULL,
+    disclosed_at timestamp with time zone,
+    disclosed_by integer,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    responded_at timestamp with time zone,
+    CONSTRAINT dm_pairs_check CHECK ((user_a < user_b)),
+    CONSTRAINT dm_pairs_status_check CHECK ((status = ANY (ARRAY['pending'::text, 'accepted'::text, 'declined'::text, 'blocked'::text])))
+);
+
+
+ALTER TABLE public.dm_pairs OWNER TO postgres;
+
+--
+-- Name: dm_pairs_pair_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.dm_pairs_pair_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.dm_pairs_pair_id_seq OWNER TO postgres;
+
+--
+-- Name: dm_pairs_pair_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.dm_pairs_pair_id_seq OWNED BY public.dm_pairs.pair_id;
 
 
 --
@@ -866,6 +996,20 @@ ALTER TABLE ONLY public.department_data ALTER COLUMN department_id SET DEFAULT n
 
 
 --
+-- Name: dm_messages message_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.dm_messages ALTER COLUMN message_id SET DEFAULT nextval('public.dm_messages_message_id_seq'::regclass);
+
+
+--
+-- Name: dm_pairs pair_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.dm_pairs ALTER COLUMN pair_id SET DEFAULT nextval('public.dm_pairs_pair_id_seq'::regclass);
+
+
+--
 -- Name: employment_type_data employment_type_id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -999,6 +1143,30 @@ ALTER TABLE ONLY public.calendar_events
 
 ALTER TABLE ONLY public.department_data
     ADD CONSTRAINT department_data_pkey PRIMARY KEY (department_id);
+
+
+--
+-- Name: dm_messages dm_messages_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.dm_messages
+    ADD CONSTRAINT dm_messages_pkey PRIMARY KEY (message_id);
+
+
+--
+-- Name: dm_pairs dm_pairs_organization_key_user_a_user_b_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.dm_pairs
+    ADD CONSTRAINT dm_pairs_organization_key_user_a_user_b_key UNIQUE (organization_key, user_a, user_b);
+
+
+--
+-- Name: dm_pairs dm_pairs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.dm_pairs
+    ADD CONSTRAINT dm_pairs_pkey PRIMARY KEY (pair_id);
 
 
 --
@@ -1217,6 +1385,20 @@ CREATE INDEX idx_audit_logs_org_time ON public.audit_logs USING btree (organizat
 
 
 --
+-- Name: idx_dm_messages_pair; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_dm_messages_pair ON public.dm_messages USING btree (pair_id, created_at DESC);
+
+
+--
+-- Name: idx_dm_pairs_org_users; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_dm_pairs_org_users ON public.dm_pairs USING btree (organization_key, user_a, user_b);
+
+
+--
 -- Name: post_attachments_organization_key_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -1244,6 +1426,46 @@ ALTER TABLE ONLY public.audit_logs
 
 ALTER TABLE ONLY public.department_data
     ADD CONSTRAINT department_data_organization_key_fkey FOREIGN KEY (organization_key) REFERENCES public.organization_data(organization_key) ON DELETE CASCADE;
+
+
+--
+-- Name: dm_messages dm_messages_organization_key_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.dm_messages
+    ADD CONSTRAINT dm_messages_organization_key_fkey FOREIGN KEY (organization_key) REFERENCES public.organization_data(organization_key) ON DELETE CASCADE;
+
+
+--
+-- Name: dm_messages dm_messages_pair_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.dm_messages
+    ADD CONSTRAINT dm_messages_pair_id_fkey FOREIGN KEY (pair_id) REFERENCES public.dm_pairs(pair_id) ON DELETE CASCADE;
+
+
+--
+-- Name: dm_pairs dm_pairs_organization_key_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.dm_pairs
+    ADD CONSTRAINT dm_pairs_organization_key_fkey FOREIGN KEY (organization_key) REFERENCES public.organization_data(organization_key) ON DELETE CASCADE;
+
+
+--
+-- Name: dm_pairs dm_pairs_user_a_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.dm_pairs
+    ADD CONSTRAINT dm_pairs_user_a_fkey FOREIGN KEY (user_a) REFERENCES public.user_info(user_key) ON DELETE CASCADE;
+
+
+--
+-- Name: dm_pairs dm_pairs_user_b_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.dm_pairs
+    ADD CONSTRAINT dm_pairs_user_b_fkey FOREIGN KEY (user_b) REFERENCES public.user_info(user_key) ON DELETE CASCADE;
 
 
 --
@@ -1397,6 +1619,13 @@ ALTER TABLE ONLY public.writing_data
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: welfare_news authenticated_read; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY authenticated_read ON public.welfare_news FOR SELECT TO authenticated USING (true);
+
+
+--
 -- Name: calendar_events; Type: ROW SECURITY; Schema: public; Owner: postgres
 --
 
@@ -1407,6 +1636,18 @@ ALTER TABLE public.calendar_events ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.department_data ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: dm_messages; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.dm_messages ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: dm_pairs; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.dm_pairs ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: employment_type_data; Type: ROW SECURITY; Schema: public; Owner: postgres
@@ -1433,10 +1674,221 @@ ALTER TABLE public.job_data ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.login_history ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: audit_logs org_isolation; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY org_isolation ON public.audit_logs TO authenticated USING ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key))) WITH CHECK ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)));
+
+
+--
+-- Name: calendar_events org_isolation; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY org_isolation ON public.calendar_events TO authenticated USING ((organization_key = ( SELECT (auth.jwt() ->> 'organization_key'::text)))) WITH CHECK ((organization_key = ( SELECT (auth.jwt() ->> 'organization_key'::text))));
+
+
+--
+-- Name: department_data org_isolation; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY org_isolation ON public.department_data TO authenticated USING ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key))) WITH CHECK ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)));
+
+
+--
+-- Name: employment_type_data org_isolation; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY org_isolation ON public.employment_type_data TO authenticated USING ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key))) WITH CHECK ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)));
+
+
+--
+-- Name: group_data org_isolation; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY org_isolation ON public.group_data TO authenticated USING ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key))) WITH CHECK ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)));
+
+
+--
+-- Name: job_data org_isolation; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY org_isolation ON public.job_data TO authenticated USING ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key))) WITH CHECK ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)));
+
+
+--
+-- Name: login_history org_isolation; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY org_isolation ON public.login_history TO authenticated USING ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key))) WITH CHECK ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)));
+
+
+--
+-- Name: organization_data org_isolation; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY org_isolation ON public.organization_data TO authenticated USING ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key))) WITH CHECK ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)));
+
+
+--
+-- Name: password_policy org_isolation; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY org_isolation ON public.password_policy TO authenticated USING ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key))) WITH CHECK ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)));
+
+
+--
+-- Name: position_data org_isolation; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY org_isolation ON public.position_data TO authenticated USING ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key))) WITH CHECK ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)));
+
+
+--
+-- Name: post_attachments org_isolation; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY org_isolation ON public.post_attachments TO authenticated USING ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key))) WITH CHECK ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)));
+
+
+--
+-- Name: post_reactions org_isolation; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY org_isolation ON public.post_reactions TO authenticated USING ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key))) WITH CHECK ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)));
+
+
+--
+-- Name: post_reads org_isolation; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY org_isolation ON public.post_reads TO authenticated USING ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key))) WITH CHECK ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)));
+
+
+--
+-- Name: post_replies org_isolation; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY org_isolation ON public.post_replies TO authenticated USING ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key))) WITH CHECK ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)));
+
+
+--
+-- Name: push_subscriptions org_isolation; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY org_isolation ON public.push_subscriptions TO authenticated USING ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key))) WITH CHECK ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)));
+
+
+--
+-- Name: schedule_dates org_isolation; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY org_isolation ON public.schedule_dates TO authenticated USING ((EXISTS ( SELECT 1
+   FROM public.schedule_events e
+  WHERE ((e.event_id = schedule_dates.event_id) AND (e.organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)))))) WITH CHECK ((EXISTS ( SELECT 1
+   FROM public.schedule_events e
+  WHERE ((e.event_id = schedule_dates.event_id) AND (e.organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key))))));
+
+
+--
+-- Name: schedule_events org_isolation; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY org_isolation ON public.schedule_events TO authenticated USING ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key))) WITH CHECK ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)));
+
+
+--
+-- Name: schedule_responses org_isolation; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY org_isolation ON public.schedule_responses TO authenticated USING ((EXISTS ( SELECT 1
+   FROM (public.schedule_dates d
+     JOIN public.schedule_events e ON ((e.event_id = d.event_id)))
+  WHERE ((d.date_id = schedule_responses.date_id) AND (e.organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)))))) WITH CHECK ((EXISTS ( SELECT 1
+   FROM (public.schedule_dates d
+     JOIN public.schedule_events e ON ((e.event_id = d.event_id)))
+  WHERE ((d.date_id = schedule_responses.date_id) AND (e.organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key))))));
+
+
+--
+-- Name: user_group_members org_isolation; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY org_isolation ON public.user_group_members TO authenticated USING ((EXISTS ( SELECT 1
+   FROM public.group_data g
+  WHERE ((g.group_id = user_group_members.group_id) AND (g.organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)))))) WITH CHECK ((EXISTS ( SELECT 1
+   FROM public.group_data g
+  WHERE ((g.group_id = user_group_members.group_id) AND (g.organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key))))));
+
+
+--
+-- Name: user_info org_isolation; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY org_isolation ON public.user_info TO authenticated USING ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key))) WITH CHECK ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)));
+
+
+--
+-- Name: writing_data org_isolation; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY org_isolation ON public.writing_data TO authenticated USING ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key))) WITH CHECK ((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)));
+
+
+--
 -- Name: organization_data; Type: ROW SECURITY; Schema: public; Owner: postgres
 --
 
 ALTER TABLE public.organization_data ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: dm_messages participant_insert; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY participant_insert ON public.dm_messages FOR INSERT TO authenticated WITH CHECK (((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)) AND (sender_key = ( SELECT public.jwt_user_key() AS jwt_user_key)) AND (EXISTS ( SELECT 1
+   FROM public.dm_pairs p
+  WHERE ((p.pair_id = dm_messages.pair_id) AND (p.organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)) AND (p.status = 'accepted'::text) AND ((( SELECT public.jwt_user_key() AS jwt_user_key) = p.user_a) OR (( SELECT public.jwt_user_key() AS jwt_user_key) = p.user_b)))))));
+
+
+--
+-- Name: dm_pairs participant_insert; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY participant_insert ON public.dm_pairs FOR INSERT TO authenticated WITH CHECK (((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)) AND ((( SELECT public.jwt_user_key() AS jwt_user_key) = user_a) OR (( SELECT public.jwt_user_key() AS jwt_user_key) = user_b)) AND (requested_by = ( SELECT public.jwt_user_key() AS jwt_user_key))));
+
+
+--
+-- Name: dm_messages participant_select; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY participant_select ON public.dm_messages FOR SELECT TO authenticated USING (((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)) AND (EXISTS ( SELECT 1
+   FROM public.dm_pairs p
+  WHERE ((p.pair_id = dm_messages.pair_id) AND (p.organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)) AND ((( SELECT public.jwt_user_key() AS jwt_user_key) = p.user_a) OR (( SELECT public.jwt_user_key() AS jwt_user_key) = p.user_b)))))));
+
+
+--
+-- Name: dm_pairs participant_select; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY participant_select ON public.dm_pairs FOR SELECT TO authenticated USING (((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)) AND ((( SELECT public.jwt_user_key() AS jwt_user_key) = user_a) OR (( SELECT public.jwt_user_key() AS jwt_user_key) = user_b))));
+
+
+--
+-- Name: dm_messages participant_update; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY participant_update ON public.dm_messages FOR UPDATE TO authenticated USING (((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)) AND (EXISTS ( SELECT 1
+   FROM public.dm_pairs p
+  WHERE ((p.pair_id = dm_messages.pair_id) AND (p.organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)) AND ((( SELECT public.jwt_user_key() AS jwt_user_key) = p.user_a) OR (( SELECT public.jwt_user_key() AS jwt_user_key) = p.user_b))))))) WITH CHECK (((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)) AND (EXISTS ( SELECT 1
+   FROM public.dm_pairs p
+  WHERE ((p.pair_id = dm_messages.pair_id) AND (p.organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)) AND ((( SELECT public.jwt_user_key() AS jwt_user_key) = p.user_a) OR (( SELECT public.jwt_user_key() AS jwt_user_key) = p.user_b)))))));
+
+
+--
+-- Name: dm_pairs participant_update; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY participant_update ON public.dm_pairs FOR UPDATE TO authenticated USING (((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)) AND ((( SELECT public.jwt_user_key() AS jwt_user_key) = user_a) OR (( SELECT public.jwt_user_key() AS jwt_user_key) = user_b)))) WITH CHECK (((organization_key = ( SELECT public.jwt_org_key() AS jwt_org_key)) AND ((( SELECT public.jwt_user_key() AS jwt_user_key) = user_a) OR (( SELECT public.jwt_user_key() AS jwt_user_key) = user_b))));
+
 
 --
 -- Name: password_policy; Type: ROW SECURITY; Schema: public; Owner: postgres
@@ -1533,6 +1985,32 @@ GRANT USAGE ON SCHEMA public TO service_role;
 
 
 --
+-- Name: FUNCTION export_all_data(); Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON FUNCTION public.export_all_data() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.export_all_data() TO service_role;
+
+
+--
+-- Name: FUNCTION jwt_org_key(); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.jwt_org_key() TO anon;
+GRANT ALL ON FUNCTION public.jwt_org_key() TO authenticated;
+GRANT ALL ON FUNCTION public.jwt_org_key() TO service_role;
+
+
+--
+-- Name: FUNCTION jwt_user_key(); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.jwt_user_key() TO anon;
+GRANT ALL ON FUNCTION public.jwt_user_key() TO authenticated;
+GRANT ALL ON FUNCTION public.jwt_user_key() TO service_role;
+
+
+--
 -- Name: TABLE audit_logs; Type: ACL; Schema: public; Owner: postgres
 --
 
@@ -1584,6 +2062,84 @@ GRANT ALL ON TABLE public.department_data TO service_role;
 GRANT ALL ON SEQUENCE public.department_data_department_id_seq TO anon;
 GRANT ALL ON SEQUENCE public.department_data_department_id_seq TO authenticated;
 GRANT ALL ON SEQUENCE public.department_data_department_id_seq TO service_role;
+
+
+--
+-- Name: TABLE dm_messages; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.dm_messages TO anon;
+GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.dm_messages TO authenticated;
+GRANT ALL ON TABLE public.dm_messages TO service_role;
+
+
+--
+-- Name: COLUMN dm_messages.read_at; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT UPDATE(read_at) ON TABLE public.dm_messages TO authenticated;
+
+
+--
+-- Name: SEQUENCE dm_messages_message_id_seq; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE public.dm_messages_message_id_seq TO anon;
+GRANT ALL ON SEQUENCE public.dm_messages_message_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE public.dm_messages_message_id_seq TO service_role;
+
+
+--
+-- Name: TABLE dm_pairs; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.dm_pairs TO anon;
+GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.dm_pairs TO authenticated;
+GRANT ALL ON TABLE public.dm_pairs TO service_role;
+
+
+--
+-- Name: COLUMN dm_pairs.requested_by; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT UPDATE(requested_by) ON TABLE public.dm_pairs TO authenticated;
+
+
+--
+-- Name: COLUMN dm_pairs.status; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT UPDATE(status) ON TABLE public.dm_pairs TO authenticated;
+
+
+--
+-- Name: COLUMN dm_pairs.disclosed_at; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT UPDATE(disclosed_at) ON TABLE public.dm_pairs TO authenticated;
+
+
+--
+-- Name: COLUMN dm_pairs.disclosed_by; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT UPDATE(disclosed_by) ON TABLE public.dm_pairs TO authenticated;
+
+
+--
+-- Name: COLUMN dm_pairs.responded_at; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT UPDATE(responded_at) ON TABLE public.dm_pairs TO authenticated;
+
+
+--
+-- Name: SEQUENCE dm_pairs_pair_id_seq; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE public.dm_pairs_pair_id_seq TO anon;
+GRANT ALL ON SEQUENCE public.dm_pairs_pair_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE public.dm_pairs_pair_id_seq TO service_role;
 
 
 --
@@ -1974,5 +2530,5 @@ ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON T
 -- PostgreSQL database dump complete
 --
 
-\unrestrict GI0wlK3D98vXfqIr76ogWzFBdLHLLABwOEXY9jiDfGEjcOplXuZIfgeS6jx62Ha
+\unrestrict DIDkczPudpg9LLsJkbRPGLjIgAl1GqMXeBIO7tQmvKpm3hVyUIhSU4pfk2gA5jf
 

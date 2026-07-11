@@ -6,13 +6,14 @@ import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
 import PostAttachments from '@/app/(dashboard)/components/PostAttachments'
 import { DeletePostButton } from '@/app/(dashboard)/department/[id]/DeletePostButton'
 import ProfileEditModal from './ProfileEditModal'
+import MessageButton from './MessageButton'
 import MarkReadOnMount from '@/app/(dashboard)/components/MarkReadOnMount'
 import PostReads from '@/app/(dashboard)/components/PostReads'
 import PostReactions from '@/app/(dashboard)/components/PostReactions'
 import PostReplies from '@/app/(dashboard)/components/PostReplies'
 import RealtimeSocial from '@/app/(dashboard)/components/RealtimeSocial'
 import Link from 'next/link'
-import { ArrowLeft, Clock, Paperclip, User, ChevronDown, Building2 } from 'lucide-react'
+import { ArrowLeft, Clock, Paperclip, User, ChevronDown, Building2, MessageSquare } from 'lucide-react'
 import type { PostRead, PostReaction, PostReply, PostAttachment } from '@/types/database'
 import { groupByPostId, fmtDatetime, fmtShortDate, postHeading } from '@/lib/utils'
 
@@ -76,6 +77,24 @@ export default async function MemberHistoryPage({
     for (const u of avatarData ?? []) avatarMap[u.user_key] = u.avatar_url ?? null
   }
 
+  // DM導線: 自分以外のメンバーには、ペアの状態に応じたボタンを出し分ける。
+  // blocked は declined/未作成と同じ「リクエスト」表示にしてブロックを悟らせない。
+  const isSelf = session.userKey === userId
+  let dmState: { kind: 'request' | 'pending' | 'accepted'; pairId?: number } = { kind: 'request' }
+  if (!isSelf) {
+    const [ua, ub] = session.userKey < userId ? [session.userKey, userId] : [userId, session.userKey]
+    const dmClient = await createOrgClient(session.organizationKey, { userKey: session.userKey })
+    const { data: pair } = await dmClient
+      .from('dm_pairs')
+      .select('pair_id, status')
+      .eq('organization_key', session.organizationKey)
+      .eq('user_a', ua)
+      .eq('user_b', ub)
+      .maybeSingle()
+    if (pair?.status === 'accepted') dmState = { kind: 'accepted', pairId: pair.pair_id }
+    else if (pair?.status === 'pending') dmState = { kind: 'pending' }
+  }
+
   const canEdit = session.userKey === userId || session.adminFlag
   const { data: privateProfile } = canEdit
     ? await supabase.from('user_info')
@@ -136,6 +155,31 @@ export default async function MemberHistoryPage({
             ) : null}
           </div>
         </div>
+
+        {!isSelf && (
+          <div className="mt-4 border-t border-gray-100 pt-4">
+            {dmState.kind === 'accepted' ? (
+              <Link
+                href={`/messages/${dmState.pairId}`}
+                className="flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-lg bg-blue-600 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+              >
+                <MessageSquare className="h-4 w-4" />
+                メッセージを開く
+              </Link>
+            ) : dmState.kind === 'pending' ? (
+              <button
+                type="button"
+                disabled
+                className="flex min-h-[44px] w-full cursor-not-allowed items-center justify-center gap-1.5 rounded-lg bg-gray-100 text-sm font-medium text-gray-400"
+              >
+                <Clock className="h-4 w-4" />
+                承認待ち
+              </button>
+            ) : (
+              <MessageButton targetUserKey={userId} />
+            )}
+          </div>
+        )}
       </div>
 
       {/* 投稿履歴 */}

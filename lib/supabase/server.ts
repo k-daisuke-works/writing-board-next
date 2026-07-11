@@ -48,10 +48,10 @@ export function createServiceClient() {
 // .eq('organization_key') が漏れても他団体のデータには到達できない。
 
 const ORG_TOKEN_TTL_SEC = 3600
-const orgTokenCache = new Map<number, { token: string; expiresAt: number }>()
+const orgTokenCache = new Map<string, { token: string; expiresAt: number }>()
 let warnedMissingSecret = false
 
-async function signOrgToken(organizationKey: number): Promise<string | null> {
+async function signOrgToken(organizationKey: number, userKey?: number): Promise<string | null> {
   const secret = process.env.SUPABASE_JWT_SECRET
   if (!secret) {
     if (!warnedMissingSecret) {
@@ -62,16 +62,22 @@ async function signOrgToken(organizationKey: number): Promise<string | null> {
   }
 
   const now = Math.floor(Date.now() / 1000)
-  const cached = orgTokenCache.get(organizationKey)
+  const cacheKey = `${organizationKey}:${userKey ?? ''}`
+  const cached = orgTokenCache.get(cacheKey)
   // 期限5分前を過ぎたら再署名（実行中のリクエストが期限を跨がないように）
   if (cached && cached.expiresAt - 300 > now) return cached.token
 
-  const token = await new SignJWT({ role: 'authenticated', organization_key: organizationKey })
+  const token = await new SignJWT({
+    role: 'authenticated',
+    organization_key: organizationKey,
+    // DM等の「本人限定」RLSポリシー用。付けない限り participant 系テーブルは全拒否
+    ...(userKey !== undefined ? { user_key: userKey } : {}),
+  })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(now + ORG_TOKEN_TTL_SEC)
     .sign(new TextEncoder().encode(secret))
-  orgTokenCache.set(organizationKey, { token, expiresAt: now + ORG_TOKEN_TTL_SEC })
+  orgTokenCache.set(cacheKey, { token, expiresAt: now + ORG_TOKEN_TTL_SEC })
   return token
 }
 
@@ -80,11 +86,14 @@ async function signOrgToken(organizationKey: number): Promise<string | null> {
  * 認証済みの Server Action / ページ / API では必ずこちらを使う:
  *   const supabase = await createOrgClient(session.organizationKey)
  *
+ * DM など「参加者本人限定」テーブルへのアクセスには userKey を渡す:
+ *   await createOrgClient(session.organizationKey, { userKey: session.userKey })
+ *
  * SUPABASE_JWT_SECRET 未設定時は service role にフォールバックする
  * （アプリは止めず、多層防御だけが無効になる）。
  */
-export async function createOrgClient(organizationKey: number) {
-  const token = await signOrgToken(organizationKey)
+export async function createOrgClient(organizationKey: number, opts?: { userKey?: number }) {
+  const token = await signOrgToken(organizationKey, opts?.userKey)
   if (!token) return createServiceClient()
 
   return createServerClient(

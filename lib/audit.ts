@@ -20,6 +20,8 @@ export type AuditAction =
   | 'policy.update'
   | 'post.force_delete'
   | 'post.remind_unread'
+  | 'dm.disclose'
+  | 'dm.disclosed_view'
 
 export type AuditEntry = {
   organizationKey: number

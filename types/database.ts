@@ -221,6 +221,29 @@ export type WritingData = {
   display_until: string | null
 }
 
+export type DmPair = {
+  pair_id: number
+  organization_key: number
+  user_a: number
+  user_b: number
+  requested_by: number
+  status: 'pending' | 'accepted' | 'declined' | 'blocked'
+  disclosed_at: string | null
+  disclosed_by: number | null
+  created_at: string
+  responded_at: string | null
+}
+
+export type DmMessage = {
+  message_id: number
+  organization_key: number
+  pair_id: number
+  sender_key: number
+  message: string
+  created_at: string
+  read_at: string | null
+}
+
 export type InstagramPost = {
   id: number
   organization_key: number

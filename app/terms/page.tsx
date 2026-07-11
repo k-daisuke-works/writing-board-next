@@ -30,7 +30,7 @@ export default function TermsPage() {
       <main className="max-w-3xl mx-auto px-5 py-10">
         <div className="bg-white rounded-[28px] px-6 py-8 sm:px-10 sm:py-10 shadow-sm">
           <h1 className="font-maru font-extrabold text-2xl mb-2" style={{ color: NAVY }}>利用規約</h1>
-          <p className="text-xs text-gray-400 mb-8">制定日: 2026年7月10日</p>
+          <p className="text-xs text-gray-400 mb-8">制定日: 2026年7月10日（最終改定: 2026年7月11日）</p>
 
           <Section title="1. 適用">
             <p>
@@ -66,6 +66,19 @@ export default function TermsPage() {
               投稿・添付ファイルの内容に関する責任は投稿者に帰属します。
               利用団体の管理者は、本規約に違反する投稿や運営上支障のある投稿を、投稿者への事前通知なく削除できます。
               権利侵害の申告があった場合、管理者は投稿の削除等の必要な対応を行います。
+            </p>
+          </Section>
+
+          <Section title="4の2. ダイレクトメッセージの取扱い">
+            <p>
+              メンバー間の1対1メッセージ（DM）は、双方が承諾した相手とのみやり取りできます。
+              DMの内容は当事者以外が閲覧できない仕組みとしており、運営者および利用団体の管理者もこれを閲覧しません。
+            </p>
+            <p>
+              ただし、当事者の一方が「管理者に報告」の操作を行った場合に限り、当該スレッドの内容が
+              利用団体の管理者に開示されます（開示の操作および管理者の閲覧はいずれも記録されます）。
+              ハラスメント等のトラブルの際はこの報告機能を利用してください。
+              DMにも第3条の禁止事項が適用されます。
             </p>
           </Section>
 

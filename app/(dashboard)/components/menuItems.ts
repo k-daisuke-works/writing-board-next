@@ -1,5 +1,5 @@
 import {
-  MessageSquare, Users, Settings, Receipt, UserCircle, BookOpen, KeyRound, FolderOpen, Camera,
+  MessageSquare, Users, Settings, Receipt, UserCircle, BookOpen, KeyRound, FolderOpen, Camera, MessagesSquare,
 } from 'lucide-react'
 
 export const STATIC_CARDS = [
@@ -19,6 +19,15 @@ export const STATIC_CARDS = [
     desc: 'メンバーのプロフィールを確認する',
     iconBg: 'bg-teal-50',
     iconColor: 'text-teal-600',
+    adminOnly: false,
+  },
+  {
+    href: '/messages',
+    Icon: MessagesSquare,
+    title: 'メッセージ',
+    desc: 'メンバーと1対1でメッセージをやり取りする',
+    iconBg: 'bg-violet-50',
+    iconColor: 'text-violet-600',
     adminOnly: false,
   },
   {

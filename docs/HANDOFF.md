@@ -68,6 +68,14 @@ DB・Storage・Vercel 関数（hnd1）とも東京リージョンへ移行済み
 4. ~~依存脆弱性の自動監視~~ → **解消済み（2026-07-10）**: `.github/dependabot.yml` 追加（npm / github-actions 週次）
 5. ~~バックアップ確認~~ → **確認・対策済み（2026-07-11）**: 無料プランは自動バックアップ対象外（`pitr_enabled: false`・復元ポイントゼロ）と確認。下記「バックアップと復元」の日次JSONバックアップを導入
 
+## ダイレクトメッセージ（2026-07-11 導入・変更しない設計判断）
+
+1対1DM。**相互承認制**（リクエスト→承認で開通。ブロックは相手に悟らせない汎用エラー）。
+
+- **通信の秘密への配慮（中核の設計判断）**: 運営・管理者は原則DM本文を閲覧できない。当事者の一方が「管理者に報告」操作をしたスレッドのみ、管理者が `/messages/reported` で閲覧できる（＝通信当事者の同意に基づく開示）。開示操作(`dm.disclose`)と管理者閲覧(`dm.disclosed_view`)は監査ログ必須。開示は取り消し不可・**相手方には通知もバナー表示もしない**（報復リスク回避）
+- **participant限定RLS**: `dm_pairs`/`dm_messages` は組織スコープに加え「参加者本人」限定。アクセスには `createOrgClient(orgKey, { userKey })` で **user_key クレーム付きトークン**が必要（通常の組織トークンでは全行不可視＝fail-closed）。なりすまし送信・承認前送信はDB層でも拒否される（psql検証済み）
+- 規約4の2・プライバシーポリシー2/4条にDMの取り扱いを明記済み
+
 ## バックアップと復元（2026-07-11 導入）
 
 - **日次 3:30 JST** に `/api/cron/backup` が DB関数 `export_all_data()`（service role 専用・migration `20260711_backup_export.sql`）で全テーブルをJSON化し、同プロジェクトの非公開バケット `backups` に `db/backup-YYYY-MM-DD.json` として保存（**14日分保持・国内保管を維持**）
@@ -85,7 +93,8 @@ DB・Storage・Vercel 関数（hnd1）とも東京リージョンへ移行済み
 
 - **既存 lint エラー6件の解消**（react-hooks v6 厳格ルール: `PostReactions.tsx`・`welfare/page.tsx`・`InteractiveDemo.tsx` の setState-in-effect / Date.now-in-render）。解消後、`.github/workflows/ci.yml` の Lint ステップから `continue-on-error: true` を外してブロッキング化する
 - `setGroupMembers`（グループメンバー変更＝実質的な権限操作）に `logAudit()` がない（既存ギャップ。2026-07-10 の tenant-audit で指摘）
-- プッシュ通知のユーザー別設定（通知種別のオン/オフ。現状は購読するか否かの二択）
+- プッシュ通知のユーザー別設定（通知種別のオン/オフ。現状は購読するか否かの二択）。**DM通知に本文先頭60字を含めているため「通知に本文を表示しない」設定も候補**（ロック画面露出への配慮）
+- **電気通信事業法の該当性再評価**: DM（他人の通信の媒介）追加により、有償化・正式提供へ切り替える際は電気通信事業の届出要否を弁護士に確認する（現在は無償・実験提供のため事業性なしと整理）
 - 監査ログの保持期間ポリシー（例: 1年経過分の自動削除 Cron）と CSV エクスポート
 - `vercel env ls` で Preview 環境に VAPID 系が未設定（Production のみ設定済み）。プレビューで通知テストが必要になったら追加
 
