@@ -20,6 +20,7 @@ export default function ConfirmScheduleButton({ eventId, dates }: Props) {
   const [note, setNote]               = useState('')
   const [isPending, startTransition]  = useTransition()
   const [done, setDone]               = useState(false)
+  const [error, setError]             = useState('')
 
   if (done) {
     return (
@@ -38,11 +39,17 @@ export default function ConfirmScheduleButton({ eventId, dates }: Props) {
     fd.set('date_id', String(dateId))
     fd.set('location', location)
     fd.set('note', note)
+    setError('')
     startTransition(async () => {
-      await confirmScheduleEvent(fd)
-      router.refresh()
-      setOpen(false)
-      setDone(true)
+      try {
+        const r = await confirmScheduleEvent(fd)
+        if (r?.error) { setError(r.error); return }
+        router.refresh()
+        setOpen(false)
+        setDone(true)
+      } catch {
+        setError('スケジュールへの追加に失敗しました。')
+      }
     })
   }
 
@@ -95,6 +102,8 @@ export default function ConfirmScheduleButton({ eventId, dates }: Props) {
             placeholder="メモ（任意）"
             className="w-full text-sm border border-gray-300 rounded px-3 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
+
+          {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
 
           <div className="flex gap-2">
             <button

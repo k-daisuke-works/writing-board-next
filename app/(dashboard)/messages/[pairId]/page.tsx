@@ -67,7 +67,7 @@ export default async function DmThreadPage({ params }: { params: Promise<{ pairI
 
       {/* ヘッダー */}
       <div className="mb-3 flex items-center gap-2">
-        <Link href="/messages" className="flex items-center gap-1.5 text-sm text-gray-500 transition-colors hover:text-blue-600">
+        <Link href="/messages" aria-label="メッセージ一覧に戻る" className="grid min-h-11 min-w-11 place-items-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-blue-600">
           <ArrowLeft className="h-4 w-4" />
         </Link>
         <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full border border-gray-200 bg-violet-100">

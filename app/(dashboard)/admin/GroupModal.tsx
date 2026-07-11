@@ -16,6 +16,7 @@ export default function GroupModal({ group, allUsers, onClose, onSuccess }: Prop
   const currentKeys = new Set((group.members ?? []).map(m => m.user_key))
   const [selected, setSelected] = useState<Set<number>>(new Set(currentKeys))
   const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState('')
 
   function toggle(userKey: number) {
     setSelected(prev => {
@@ -29,10 +30,15 @@ export default function GroupModal({ group, allUsers, onClose, onSuccess }: Prop
     const fd = new FormData()
     fd.set('groupId', String(group.group_id))
     fd.set('userKeys', JSON.stringify([...selected]))
+    setError('')
     startTransition(async () => {
-      const r = await setGroupMembers(fd)
-      if (r?.error) return
-      onSuccess()
+      try {
+        const r = await setGroupMembers(fd)
+        if (r?.error) { setError(r.error); return }
+        onSuccess()
+      } catch {
+        setError('保存に失敗しました。もう一度お試しください。')
+      }
     })
   }
 
@@ -82,6 +88,9 @@ export default function GroupModal({ group, allUsers, onClose, onSuccess }: Prop
           )}
         </div>
 
+        {error && (
+          <p className="px-5 pt-3 text-sm text-red-600 shrink-0" role="alert">{error}</p>
+        )}
         <div className="flex gap-2 px-5 py-4 border-t border-gray-100 shrink-0">
           <button
             type="button"

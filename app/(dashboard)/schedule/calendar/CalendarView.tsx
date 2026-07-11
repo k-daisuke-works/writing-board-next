@@ -26,6 +26,7 @@ export default function CalendarView({ events, session, mode }: Props) {
   const [title, setTitle]       = useState('')
   const [location, setLocation] = useState('')
   const [note, setNote]         = useState('')
+  const [error, setError]       = useState('')
   const [, startTransition] = useTransition()
 
   function prevMonth() {
@@ -75,18 +76,29 @@ export default function CalendarView({ events, session, mode }: Props) {
     fd.set('note', note)
     fd.set('scope', mode === 'department' ? 'department' : 'all')
     if (mode === 'department') fd.set('department_id', String(session.departmentId))
+    setError('')
     startTransition(async () => {
-      await createCalendarEvent(fd)
-      router.refresh()
-      setShowModal(false)
+      try {
+        const r = await createCalendarEvent(fd)
+        if (r?.error) { setError(r.error); return }
+        router.refresh()
+        setShowModal(false)
+      } catch {
+        setError('予定の追加に失敗しました。')
+      }
     })
   }
 
   function handleDelete(id: number) {
     if (!confirm('このイベントを削除しますか？')) return
     startTransition(async () => {
-      await deleteCalendarEvent(id)
-      router.refresh()
+      try {
+        const r = await deleteCalendarEvent(id)
+        if (r?.error) { alert(r.error); return }
+        router.refresh()
+      } catch {
+        alert('予定の削除に失敗しました。')
+      }
     })
   }
 
@@ -95,13 +107,13 @@ export default function CalendarView({ events, session, mode }: Props) {
       {/* ヘッダー */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <button onClick={prevMonth} className="p-1.5 rounded hover:bg-gray-100 transition-colors">
+          <button onClick={prevMonth} aria-label="前の月" className="grid place-items-center min-h-11 min-w-11 rounded hover:bg-gray-100 transition-colors">
             <ChevronLeft className="w-4 h-4 text-gray-600" />
           </button>
           <span className="text-base font-semibold text-gray-800 w-28 text-center">
             {year}年{month}月
           </span>
-          <button onClick={nextMonth} className="p-1.5 rounded hover:bg-gray-100 transition-colors">
+          <button onClick={nextMonth} aria-label="次の月" className="grid place-items-center min-h-11 min-w-11 rounded hover:bg-gray-100 transition-colors">
             <ChevronRight className="w-4 h-4 text-gray-600" />
           </button>
         </div>
@@ -224,6 +236,7 @@ export default function CalendarView({ events, session, mode }: Props) {
                 placeholder="メモ（任意）"
                 className="w-full text-sm border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
+              {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
               <div className="flex gap-2 pt-1">
                 <button
                   type="submit"

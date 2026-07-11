@@ -42,6 +42,7 @@ export default function ScheduleGrid({ event, dates, responses, rows, session }:
   })
   const [, startTransition] = useTransition()
   const [closing, setClosing] = useState(false)
+  const [error, setError] = useState('')
   // 直近で回答したセル（key を変えて anim-pop を再発火させる）
   const [popped, setPopped] = useState<string | null>(null)
 
@@ -58,6 +59,7 @@ export default function ScheduleGrid({ event, dates, responses, rows, session }:
     const next = current === null ? 'ok' : CYCLE[(CYCLE.indexOf(current) + 1) % CYCLE.length]
 
     setPopped(`${dateId}-${Date.now()}`)
+    setError('')
     setResMap(prev => ({
       ...prev,
       [dateId]: { ...prev[dateId], [row.id]: next },
@@ -71,14 +73,35 @@ export default function ScheduleGrid({ event, dates, responses, rows, session }:
     fd.set('respondentId',   String(row.id))
     fd.set('respondentName', row.name)
 
-    startTransition(async () => { await upsertScheduleResponse(fd) })
+    startTransition(async () => {
+      try {
+        const r = await upsertScheduleResponse(fd)
+        if (r?.error) throw new Error(r.error)
+      } catch (e) {
+        // 保存失敗: 楽観更新を元に戻してエラー表示
+        setError(e instanceof Error ? e.message : '回答の保存に失敗しました。')
+        setResMap(prev => {
+          const dateRow = { ...prev[dateId] }
+          if (current === null) delete dateRow[row.id]
+          else dateRow[row.id] = current
+          return { ...prev, [dateId]: dateRow }
+        })
+      }
+    })
   }
 
   async function handleClose() {
     if (!confirm('このイベントを終了しますか？')) return
     setClosing(true)
-    await closeScheduleEvent(event.event_id)
-    setClosing(false)
+    setError('')
+    try {
+      const r = await closeScheduleEvent(event.event_id)
+      if (r?.error) setError(r.error)
+    } catch {
+      setError('イベントの終了に失敗しました。')
+    } finally {
+      setClosing(false)
+    }
   }
 
   function summary(dateId: number) {
@@ -100,6 +123,11 @@ export default function ScheduleGrid({ event, dates, responses, rows, session }:
 
   return (
     <div className="space-y-4">
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600" role="alert">
+          {error}
+        </div>
+      )}
       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="border-collapse w-full">
