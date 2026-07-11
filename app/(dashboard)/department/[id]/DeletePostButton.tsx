@@ -1,6 +1,6 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 
 type Props = {
   action: (formData: FormData) => Promise<unknown>
@@ -9,32 +9,42 @@ type Props = {
 
 export function DeletePostButton({ action, writingId }: Props) {
   const [pending, startTransition] = useTransition()
+  const [error, setError] = useState('')
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!confirm('本当に削除しますか？')) return
+    setError('')
     const formData = new FormData(e.currentTarget)
     startTransition(async () => {
-      await action(formData)
+      try {
+        const r = await action(formData) as { error?: string } | undefined
+        if (r?.error) setError(r.error)
+      } catch {
+        setError('削除に失敗しました。もう一度お試しください。')
+      }
     })
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2 items-center">
-      <input type="hidden" name="writingId" value={writingId} />
-      <input
-        type="password"
-        name="pin"
-        placeholder="PIN（設定している場合）"
-        className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
-      />
-      <button
-        type="submit"
-        disabled={pending}
-        className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition disabled:opacity-60"
-      >
-        {pending ? '削除中…' : '削除'}
-      </button>
+    <form onSubmit={handleSubmit} className="space-y-2">
+      <div className="flex gap-2 items-center">
+        <input type="hidden" name="writingId" value={writingId} />
+        <input
+          type="password"
+          name="pin"
+          placeholder="PIN（設定している場合）"
+          className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+        />
+        <button
+          type="submit"
+          disabled={pending}
+          className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition disabled:opacity-60"
+        >
+          {pending ? '削除中…' : '削除'}
+        </button>
+      </div>
+      {error && <p className="text-xs text-red-600" role="alert">{error}</p>}
     </form>
   )
 }

@@ -1,22 +1,20 @@
 import { getSession } from '@/lib/session'
 import { createOrgClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { deletePost, updatePost, getPdfSignedUrl } from '@/actions/posts'
+import { deletePost } from '@/actions/posts'
 import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
 import PostAttachments from '@/app/(dashboard)/components/PostAttachments'
 import { DeletePostButton } from './DeletePostButton'
+import EditPostForm from '@/app/(dashboard)/components/EditPostForm'
 import MarkReadOnMount from '@/app/(dashboard)/components/MarkReadOnMount'
 import PostReads from '@/app/(dashboard)/components/PostReads'
 import PostReactions from '@/app/(dashboard)/components/PostReactions'
 import PostReplies from '@/app/(dashboard)/components/PostReplies'
 import RealtimeSocial from '@/app/(dashboard)/components/RealtimeSocial'
 import Link from 'next/link'
-import { ArrowLeft, Clock, Paperclip, User, ChevronDown } from 'lucide-react'
+import { ArrowLeft, Clock, User, ChevronDown } from 'lucide-react'
 import type { PostRead, PostReaction, PostReply, PostAttachment } from '@/types/database'
 import { groupByPostId, fmtDatetime } from '@/lib/utils'
-
-type SA = (fd: FormData) => Promise<void>
-const toAction = (fn: (fd: FormData) => unknown) => fn as unknown as SA
 
 export default async function DepartmentHistoryPage({
   params,
@@ -146,26 +144,7 @@ export default async function DepartmentHistoryPage({
                   編集 / 削除
                 </summary>
                 <div className="bg-gray-50 px-4 sm:px-5 py-4 space-y-3 border-t border-gray-100">
-                  <form action={toAction(updatePost)} className="space-y-2.5">
-                    <input type="hidden" name="writingId" value={post.writing_id} />
-                    <input type="text" name="title" defaultValue={post.title ?? ''} maxLength={100} placeholder="タイトル（任意）"
-                      className="w-full min-h-[44px] border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors bg-white" />
-                    <textarea name="message" defaultValue={post.message}
-                      rows={3}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 resize-none transition-colors bg-white" />
-                    <div className="flex gap-2 flex-wrap">
-                      <input type="text" name="pin" placeholder="PIN"
-                        className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-colors bg-white w-32" />
-                      <label className="flex items-center gap-1.5 border border-gray-300 rounded-md px-3 py-1.5 cursor-pointer hover:bg-white transition-colors text-sm text-gray-500">
-                        <Paperclip className="w-3.5 h-3.5" />PDF
-                        <input type="file" name="pdfFile" accept=".pdf" className="sr-only" />
-                      </label>
-                      <button type="submit"
-                        className="bg-yellow-400 hover:bg-yellow-500 text-yellow-900 px-4 py-1.5 rounded-md text-xs font-semibold transition-colors">
-                        更新
-                      </button>
-                    </div>
-                  </form>
+                  <EditPostForm writingId={post.writing_id} defaultTitle={post.title ?? ''} defaultMessage={post.message} />
                   <DeletePostButton action={deletePost} writingId={post.writing_id} />
                 </div>
               </details>
