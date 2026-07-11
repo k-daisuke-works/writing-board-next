@@ -3,6 +3,7 @@ import { createOrgClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { FolderOpen, Image as ImageIcon, Film, FileText, LayoutGrid } from 'lucide-react'
+import { PageHeading } from '@/app/(dashboard)/components/PageHeading'
 import PostAttachments from '@/app/(dashboard)/components/PostAttachments'
 import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
 import { fmtShortDate } from '@/lib/utils'
@@ -103,13 +104,11 @@ export default async function DocumentsPage({
 
   return (
     <div className="anim-fade-in max-w-3xl">
-      <div className="mb-5">
-        <h1 className="flex items-center gap-2 text-xl font-bold text-gray-900">
-          <FolderOpen className="w-5 h-5 text-amber-600" />
-          資料庫
-        </h1>
-        <p className="mt-1 text-sm text-gray-500">投稿に添付された資料・写真・動画を横断で確認できます</p>
-      </div>
+      <PageHeading
+        Icon={FolderOpen} iconBg="bg-amber-50" iconColor="text-amber-600"
+        title="資料庫"
+        subtitle="投稿に添付された資料・写真・動画を横断で確認できます"
+      />
 
       <div className="mb-4 flex gap-1.5 overflow-x-auto scrollbar-none">
         {TABS.map(({ key, label, Icon }) => (

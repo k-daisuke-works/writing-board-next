@@ -6,6 +6,7 @@ import { ArrowLeft, MessagesSquare, ChevronRight, Clock, ShieldAlert } from 'luc
 import { relativeTime } from '@/lib/utils'
 import RespondDmButtons from './RespondDmButtons'
 import DmRealtime from '@/app/(dashboard)/components/DmRealtime'
+import { PageHeading } from '@/app/(dashboard)/components/PageHeading'
 import type { DmPair, DmMessage } from '@/types/database'
 
 type OtherUser = { user_name: string; avatar_url: string | null }
@@ -94,15 +95,16 @@ export default async function MessagesPage() {
         ホームに戻る
       </Link>
 
-      <div className="mb-4 flex items-center justify-between gap-2">
-        <h1 className="text-lg font-semibold text-gray-900">メッセージ</h1>
-        {session.role === 'admin' && (
+      <PageHeading
+        Icon={MessagesSquare} iconBg="bg-blue-50" iconColor="text-blue-600"
+        title="メッセージ"
+        action={session.role === 'admin' ? (
           <Link href="/messages/reported" className="flex items-center gap-1 text-xs text-gray-400 transition-colors hover:text-gray-600">
             <ShieldAlert className="h-3.5 w-3.5" />
             報告一覧
           </Link>
-        )}
-      </div>
+        ) : undefined}
+      />
 
       {/* ① 自分宛のリクエスト */}
       {incoming.length > 0 && (

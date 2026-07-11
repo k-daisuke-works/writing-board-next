@@ -18,6 +18,7 @@ import type {
 } from '@/types/database'
 import UserFormModal from './UserFormModal'
 import GroupModal from './GroupModal'
+import { PageHeading } from '@/app/(dashboard)/components/PageHeading'
 import {
   ArrowLeft, Users, Building2, Briefcase, UserCog, Briefcase as BriefcaseIcon,
   Plus, Pencil, Trash2, Check, X, Loader2, KeyRound,
@@ -426,8 +427,11 @@ export default function AdminPanel({
         <Link href="/home" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition-colors mb-3 w-fit">
           <ArrowLeft className="w-4 h-4" />ホームに戻る
         </Link>
-        <h1 className="text-xl font-semibold text-gray-900">管理設定</h1>
-        <p className="text-sm text-gray-400 mt-0.5">{orgName}</p>
+        <PageHeading
+          Icon={Settings} iconBg="bg-gray-100" iconColor="text-gray-600"
+          title="管理設定"
+          subtitle={orgName}
+        />
       </div>
 
       <div className="space-y-5">

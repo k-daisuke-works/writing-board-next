@@ -1,6 +1,8 @@
 import { getSession } from '@/lib/session'
 import { createOrgClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { Receipt } from 'lucide-react'
+import { PageHeading } from '@/app/(dashboard)/components/PageHeading'
 
 export default async function ExpensesPage() {
   const session = await getSession()
@@ -22,13 +24,16 @@ export default async function ExpensesPage() {
 
   return (
     <div className="anim-fade-in max-w-3xl">
-      <div className="mb-5">
-        <h1 className="text-xl font-semibold text-gray-900">活動費請求</h1>
-        <p className="text-sm text-gray-500 mt-0.5">フォームに必要事項を入力して送信してください</p>
+      <PageHeading
+        Icon={Receipt} iconBg="bg-orange-50" iconColor="text-orange-600"
+        title="活動費請求"
+        subtitle="フォームに必要事項を入力して送信してください"
+      />
+      <div className="-mt-3 mb-5">
         {user?.social_worker_member_id ? (
-          <p className="mt-2 text-xs text-emerald-700">プロフィールの社会福祉士会IDを会員番号へ入力済みです</p>
+          <p className="text-xs text-emerald-700">プロフィールの社会福祉士会IDを会員番号へ入力済みです</p>
         ) : (
-          <p className="mt-2 text-xs text-amber-700">プロフィールに社会福祉士会IDを登録すると、会員番号が自動入力されます</p>
+          <p className="text-xs text-amber-700">プロフィールに社会福祉士会IDを登録すると、会員番号が自動入力されます</p>
         )}
       </div>
       <div className="bg-white border border-gray-200 rounded-lg overflow-x-auto">

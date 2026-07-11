@@ -2,6 +2,7 @@ import { getSession } from '@/lib/session'
 import { createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Camera, ExternalLink, Film, Images } from 'lucide-react'
+import { PageHeading } from '@/app/(dashboard)/components/PageHeading'
 import { fmtShortDate } from '@/lib/utils'
 import type { InstagramPost } from '@/types/database'
 
@@ -28,12 +29,10 @@ export default async function SnsPage() {
 
   return (
     <div className="anim-fade-in max-w-3xl">
-      <div className="mb-5">
-        <h1 className="flex items-center gap-2 text-xl font-bold text-gray-900">
-          <Camera className="w-5 h-5 text-pink-600" />
-          {account?.account_name ? `${account.account_name} の発信` : '会のInstagram'}
-        </h1>
-      </div>
+      <PageHeading
+        Icon={Camera} iconBg="bg-pink-50" iconColor="text-pink-600"
+        title={account?.account_name ? `${account.account_name} の発信` : '会のInstagram'}
+      />
 
       {!account ? (
         <div className="rounded-xl border border-gray-200 bg-white p-8 text-center">

@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Clock, ChevronRight, AlertCircle, Megaphone } from 'lucide-react'
+import { Plus, Clock, ChevronRight, AlertCircle, Megaphone, Bell, Users2 } from 'lucide-react'
 import Link from 'next/link'
 import { relativeTime, isRecent, fmtShortDate } from '@/lib/utils'
 import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
+import { SectionHeading } from '@/app/(dashboard)/components/PageHeading'
 import type { WritingData, UserSession, PostRead, PostReaction, PostReply, PostAttachment } from '@/types/database'
 import PostModal from '@/app/(dashboard)/posts/PostModal'
 import HomeMenuDropdown from './HomeMenuDropdown'
@@ -151,14 +152,14 @@ export default function HomeView({
 
       {importantPosts.length > 0 && (
         <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-gray-600 flex items-center gap-1.5">
-              <Megaphone className="w-3.5 h-3.5 text-red-500" />重要連絡
-            </h2>
-            <Link href="/posts" className="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors">
-              全体掲示板を見る
-            </Link>
-          </div>
+          <SectionHeading
+            Icon={Bell} title="重要連絡" iconBg="bg-red-50" iconColor="text-red-600"
+            action={
+              <Link href="/posts" className="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors">
+                全体掲示板を見る
+              </Link>
+            }
+          />
           <div className="space-y-2">
             {importantPosts.map((post) => (
               <div key={post.writing_id} className="bg-red-50 border border-red-200 rounded-lg px-4 py-3">
@@ -186,20 +187,22 @@ export default function HomeView({
 
       {session.departmentId > 0 && (
         <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-gray-600">部署からのお知らせ</h2>
-            <div className="flex items-center gap-3">
-              <Link href="/notices" className="text-xs font-medium text-gray-400 hover:text-blue-600 transition-colors">
-                過去のお知らせ
-              </Link>
-              <button
-                onClick={() => setModal({ postType: 'notice' })}
-                className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
-              >
-                <Plus className="w-3.5 h-3.5" />お知らせを投稿
-              </button>
-            </div>
-          </div>
+          <SectionHeading
+            Icon={Megaphone} title="部署からのお知らせ" iconBg="bg-blue-50" iconColor="text-blue-600"
+            action={
+              <div className="flex items-center gap-3">
+                <Link href="/notices" className="text-xs font-medium text-gray-400 hover:text-blue-600 transition-colors">
+                  過去のお知らせ
+                </Link>
+                <button
+                  onClick={() => setModal({ postType: 'notice' })}
+                  className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />お知らせを投稿
+                </button>
+              </div>
+            }
+          />
           <div className="space-y-2">
             {noticePosts.length === 0 ? (
               <div className="bg-white border border-gray-200 rounded-lg px-4 py-4 text-center">
@@ -240,22 +243,19 @@ export default function HomeView({
       )}
 
       <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-gray-600">
-            チームのメッセージ
-            {session.departmentName && (
-              <span className="font-normal text-gray-400 ml-1.5">· {session.departmentName}</span>
-            )}
-          </h2>
-          {session.departmentId > 0 && (
+        <SectionHeading
+          Icon={Users2}
+          title={session.departmentName ? `チームのメッセージ · ${session.departmentName}` : 'チームのメッセージ'}
+          iconBg="bg-teal-50" iconColor="text-teal-600"
+          action={session.departmentId > 0 ? (
             <button
               onClick={() => setModal({ postType: 'team' })}
               className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />投稿する
             </button>
-          )}
-        </div>
+          ) : null}
+        />
 
         {session.departmentId <= 0 ? (
           <div className="bg-white border border-gray-200 rounded-lg px-4 py-6 text-center">

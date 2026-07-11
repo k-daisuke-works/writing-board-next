@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { ExpandableText } from '@/app/(dashboard)/components/ExpandableText'
 import Link from 'next/link'
 import { Search, Clock, Building2 } from 'lucide-react'
+import { PageHeading } from '@/app/(dashboard)/components/PageHeading'
 import SearchForm from './SearchForm'
 import { fmtDatetime } from '@/lib/utils'
 
@@ -31,10 +32,11 @@ export default async function SearchPage({
 
   return (
     <div className="anim-fade-in max-w-3xl">
-      <div className="mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">投稿検索</h1>
-        <p className="text-sm text-gray-500 mt-0.5">全投稿からキーワードで検索します</p>
-      </div>
+      <PageHeading
+        Icon={Search} iconBg="bg-gray-100" iconColor="text-gray-600"
+        title="投稿検索"
+        subtitle="全投稿からキーワードで検索します"
+      />
 
       <SearchForm defaultValue={query} />
 

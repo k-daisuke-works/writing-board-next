@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
 import { Users, Building2, ChevronRight, Search, X } from 'lucide-react'
+import { PageHeading } from '@/app/(dashboard)/components/PageHeading'
 import type { UserSession } from '@/types/database'
 
 type Member = {
@@ -42,12 +43,11 @@ export default function MembersClient({ session }: { session: UserSession }) {
 
   return (
     <div className="anim-fade-in max-w-2xl">
-      <div className="mb-4">
-        <h1 className="text-xl font-semibold text-gray-900">メンバー一覧</h1>
-        <p className="text-sm text-gray-500 mt-0.5">
-          {filtered.length}名{filtered.length !== members.length && ` / 全${members.length}名`}
-        </p>
-      </div>
+      <PageHeading
+        Icon={Users} iconBg="bg-teal-50" iconColor="text-teal-600"
+        title="メンバー一覧"
+        subtitle={<>{filtered.length}名{filtered.length !== members.length && ` / 全${members.length}名`}</>}
+      />
 
       {/* 検索・絞り込み */}
       <div className="mb-4 flex flex-col gap-2 sm:flex-row">

@@ -10,6 +10,7 @@ import RealtimeSocial from '@/app/(dashboard)/components/RealtimeSocial'
 import MarkReadOnMount from '@/app/(dashboard)/components/MarkReadOnMount'
 import Link from 'next/link'
 import { ArrowLeft, Clock, AlertCircle, ChevronDown, Megaphone } from 'lucide-react'
+import { PageHeading } from '@/app/(dashboard)/components/PageHeading'
 import type { PostRead, PostReaction, PostReply, PostAttachment } from '@/types/database'
 import { groupByPostId, fmtDatetime, fmtShortDate, postHeading } from '@/lib/utils'
 
@@ -67,13 +68,11 @@ export default async function NoticesPage() {
           <ArrowLeft className="w-4 h-4" />
           ホームに戻る
         </Link>
-        <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-          <Megaphone className="w-5 h-5 text-blue-500" />
-          お知らせ履歴
-        </h1>
-        <p className="text-sm text-gray-400 mt-0.5">
-          {session.departmentName} · {notices?.length ?? 0}件
-        </p>
+        <PageHeading
+          Icon={Megaphone} iconBg="bg-blue-50" iconColor="text-blue-600"
+          title="お知らせ履歴"
+          subtitle={`${session.departmentName} · ${notices?.length ?? 0}件`}
+        />
       </div>
 
       {notices && notices.length > 0 ? (

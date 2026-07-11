@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Calendar, Plus, Building2, Users, ChevronRight, Clock } from 'lucide-react'
+import { ClipboardList, Calendar, Plus, Building2, Users, ChevronRight, Clock } from 'lucide-react'
+import { PageHeading } from '@/app/(dashboard)/components/PageHeading'
 import type { ScheduleEvent, Department } from '@/types/database'
 import CreateEventModal from './CreateEventModal'
 import { fmtShortDate } from '@/lib/utils'
@@ -17,18 +18,18 @@ export default function ScheduleList({ events, departments }: Props) {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">日程調整</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{events.length}件のイベント</p>
-        </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="pressable flex items-center gap-1.5 min-h-[44px] btn-pop text-white text-sm font-medium px-4 py-2 rounded-md transition-colors"
-        >
-          <Plus className="w-4 h-4" />新しいイベント
-        </button>
-      </div>
+      <PageHeading
+        Icon={ClipboardList} iconBg="bg-indigo-50" iconColor="text-indigo-600"
+        title="日程調整" subtitle={`${events.length}件のイベント`}
+        action={
+          <button
+            onClick={() => setShowModal(true)}
+            className="pressable flex items-center gap-1.5 min-h-[44px] btn-pop text-white text-sm font-medium px-4 py-2 rounded-md transition-colors"
+          >
+            <Plus className="w-4 h-4" />新しいイベント
+          </button>
+        }
+      />
 
       {events.length === 0 ? (
         <div className="text-center py-20 bg-white rounded-lg border border-gray-200">

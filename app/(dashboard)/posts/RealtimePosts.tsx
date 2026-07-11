@@ -6,7 +6,8 @@ import { relativeTime, isRecent } from '@/lib/utils'
 import type { Department, WritingData, UserSession, PostRead, PostReaction, PostReply, PostAttachment } from '@/types/database'
 import PostModal from './PostModal'
 import Link from 'next/link'
-import { Plus, Clock, Building2, ChevronRight } from 'lucide-react'
+import { Plus, Clock, Building2, ChevronRight, Megaphone } from 'lucide-react'
+import { PageHeading } from '@/app/(dashboard)/components/PageHeading'
 import PostReads from '@/app/(dashboard)/components/PostReads'
 import PostReactions from '@/app/(dashboard)/components/PostReactions'
 import PostReplies from '@/app/(dashboard)/components/PostReplies'
@@ -43,21 +44,19 @@ export default function RealtimePosts({
       <MarkReadOnMount postIds={postIds} />
       <RealtimeSocial channel={session.realtimeChannel} />
 
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">全体掲示板</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {departments.length}部署
-            {newCount > 0 && <span className="text-blue-600 font-medium"> · {newCount}件の新着</span>}
-          </p>
-        </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-1.5 btn-pop text-white text-sm font-medium px-4 py-2 rounded-md transition-colors"
-        >
-          <Plus className="w-4 h-4" /><span>投稿する</span>
-        </button>
-      </div>
+      <PageHeading
+        Icon={Megaphone} iconBg="bg-blue-50" iconColor="text-blue-600"
+        title="全体掲示板"
+        subtitle={<>{departments.length}部署{newCount > 0 && <span className="font-medium text-blue-600"> · {newCount}件の新着</span>}</>}
+        action={
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-1.5 btn-pop text-white text-sm font-medium px-4 py-2 rounded-md transition-colors"
+          >
+            <Plus className="w-4 h-4" /><span>投稿する</span>
+          </button>
+        }
+      />
 
       {departments.length === 0 ? (
         <div className="text-center py-20 bg-white rounded-lg border border-gray-200">

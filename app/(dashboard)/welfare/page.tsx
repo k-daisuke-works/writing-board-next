@@ -2,6 +2,7 @@ import { getSession } from '@/lib/session'
 import { createOrgClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { ExternalLink, RefreshCw, Newspaper } from 'lucide-react'
+import { PageHeading } from '@/app/(dashboard)/components/PageHeading'
 import { WELFARE_SOURCES } from '@/lib/welfare-rss'
 
 const SOURCE_NAMES = WELFARE_SOURCES.map(s => s.name)
@@ -53,20 +54,20 @@ export default async function WelfarePage({
 
   return (
     <div className="anim-fade-in max-w-4xl">
-      {/* ヘッダー */}
-      <div className="flex items-start justify-between mb-5 gap-4">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">福祉情報</h1>
-          <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-2">
+      <PageHeading
+        Icon={Newspaper} iconBg="bg-sky-50" iconColor="text-sky-600"
+        title="福祉情報"
+        subtitle={
+          <span className="flex items-center gap-2">
             {totalCount}件
             {lastFetched && (
               <span className="flex items-center gap-1 text-xs text-gray-400">
                 <RefreshCw className="w-3 h-3" />最終取得 {fmtDate(lastFetched)}
               </span>
             )}
-          </p>
-        </div>
-      </div>
+          </span>
+        }
+      />
 
       {/* ソースフィルター */}
       <div className="flex gap-2 flex-wrap mb-5">

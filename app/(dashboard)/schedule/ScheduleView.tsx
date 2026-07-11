@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { CalendarDays, Building2 } from 'lucide-react'
+import { PageHeading } from '@/app/(dashboard)/components/PageHeading'
 import type { CalendarEvent, ScheduleEvent, Department, UserSession } from '@/types/database'
 import CalendarView from './calendar/CalendarView'
 import ScheduleList from './ScheduleList'
@@ -46,20 +48,16 @@ export default function ScheduleView({ allEvents, deptEvents, scheduleEvents, de
 
       {tab === 'calendar' && (
         <div className="max-w-4xl">
-          <div className="mb-5">
-            <h1 className="text-xl font-semibold text-gray-900">全体スケジュール</h1>
-            <p className="text-sm text-gray-500 mt-0.5">全部署共通のイベント</p>
-          </div>
+          <PageHeading Icon={CalendarDays} iconBg="bg-indigo-50" iconColor="text-indigo-600"
+            title="全体スケジュール" subtitle="全部署共通のイベント" />
           <CalendarView events={allEvents} session={session} mode="all" />
         </div>
       )}
 
       {tab === 'department' && (
         <div className="max-w-4xl">
-          <div className="mb-5">
-            <h1 className="text-xl font-semibold text-gray-900">部署スケジュール</h1>
-            <p className="text-sm text-gray-500 mt-0.5">{session.departmentName} のイベント</p>
-          </div>
+          <PageHeading Icon={CalendarDays} iconBg="bg-indigo-50" iconColor="text-indigo-600"
+            title="部署スケジュール" subtitle={`${session.departmentName} のイベント`} />
           <CalendarView events={deptEvents} session={session} mode="department" />
         </div>
       )}
@@ -72,10 +70,8 @@ export default function ScheduleView({ allEvents, deptEvents, scheduleEvents, de
 
       {tab === 'unison' && (
         <div className="max-w-5xl">
-          <div className="mb-5">
-            <h1 className="text-xl font-semibold text-gray-900">ユニゾンプラザ 空き状況</h1>
-            <p className="text-sm text-gray-500 mt-0.5">研修室・会議室の予約状況</p>
-          </div>
+          <PageHeading Icon={Building2} iconBg="bg-green-50" iconColor="text-green-600"
+            title="ユニゾンプラザ 空き状況" subtitle="研修室・会議室の予約状況" />
           <UnisonPlazaAvailability />
         </div>
       )}
