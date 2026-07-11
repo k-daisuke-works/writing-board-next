@@ -175,7 +175,7 @@ export default function ScheduleGrid({ event, dates, responses, rows, session }:
                             onClick={() => handleCell(d.date_id, row)}
                             disabled={!editable}
                             title={editable ? 'クリックして変更' : undefined}
-                            className={`w-11 h-10 rounded border text-sm font-bold transition-all ${
+                            className={`w-11 h-11 rounded-md border text-sm font-bold transition-all ${
                               disp
                                 ? `${disp.cellCls} ${editable ? 'hover:opacity-70 cursor-pointer active:scale-90' : 'cursor-default'}`
                                 : editable

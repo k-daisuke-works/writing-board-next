@@ -47,7 +47,7 @@ export default function EditPostForm({
         className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-colors bg-white" />
       <div className="flex flex-wrap items-center gap-2">
         <input type="text" name="pin" placeholder="PIN"
-          className="w-32 border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white" />
+          className="w-32 min-h-[44px] border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white" />
         <label className="flex items-center gap-1.5 border border-gray-300 rounded-md px-3 py-1.5 cursor-pointer hover:bg-white transition-colors text-sm text-gray-500">
           <Paperclip className="w-3.5 h-3.5" />PDF
           <input type="file" name="pdfFile" accept=".pdf" className="sr-only" />

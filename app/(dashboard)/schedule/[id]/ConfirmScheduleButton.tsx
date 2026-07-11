@@ -79,7 +79,7 @@ export default function ConfirmScheduleButton({ eventId, dates }: Props) {
             value={dateId}
             onChange={e => setDateId(Number(e.target.value))}
             required
-            className="w-full text-sm border border-gray-300 rounded px-3 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full min-h-[44px] text-sm border border-gray-300 rounded-md px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">日程を選択...</option>
             {dates.map(d => (
@@ -93,14 +93,14 @@ export default function ConfirmScheduleButton({ eventId, dates }: Props) {
             value={location}
             onChange={e => setLocation(e.target.value)}
             placeholder="場所（例：ユニゾンプラザ 大研修室）"
-            className="w-full text-sm border border-gray-300 rounded px-3 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full min-h-[44px] text-sm border border-gray-300 rounded-md px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
 
           <input
             value={note}
             onChange={e => setNote(e.target.value)}
             placeholder="メモ（任意）"
-            className="w-full text-sm border border-gray-300 rounded px-3 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full min-h-[44px] text-sm border border-gray-300 rounded-md px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
 
           {error && <p className="text-sm text-red-600" role="alert">{error}</p>}

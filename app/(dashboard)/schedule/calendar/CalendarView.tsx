@@ -222,19 +222,19 @@ export default function CalendarView({ events, session, mode }: Props) {
                 placeholder="イベント名 *"
                 required
                 autoFocus
-                className="w-full text-sm border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full min-h-[44px] text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <input
                 value={location}
                 onChange={e => setLocation(e.target.value)}
                 placeholder="場所（例：ユニゾンプラザ 大研修室）"
-                className="w-full text-sm border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full min-h-[44px] text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <input
                 value={note}
                 onChange={e => setNote(e.target.value)}
                 placeholder="メモ（任意）"
-                className="w-full text-sm border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full min-h-[44px] text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
               <div className="flex gap-2 pt-1">

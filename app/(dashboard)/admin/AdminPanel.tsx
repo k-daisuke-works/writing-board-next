@@ -67,7 +67,7 @@ const AUDIT_ACTION_LABELS: Record<string, string> = {
 }
 
 const addInp = "flex-1 min-w-0 border border-gray-200 rounded-md px-3 py-1.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
-const formInp = "w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+const formInp = "w-full min-h-[44px] border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
 const sectionHdr = "flex items-center gap-2.5 px-5 py-3.5 border-b border-gray-100 shrink-0"
 
 // ─── インライン編集 ───────────────────────────────────────────
@@ -456,7 +456,7 @@ export default function AdminPanel({
                   value={userQuery}
                   onChange={e => setUserQuery(e.target.value)}
                   placeholder="名前・ID・部署で絞り込み"
-                  className="w-full min-h-[40px] rounded-md border border-gray-300 bg-white pl-9 pr-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full min-h-[44px] rounded-md border border-gray-300 bg-white pl-9 pr-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
             </div>
@@ -735,14 +735,14 @@ export default function AdminPanel({
                 <label className="block text-xs font-medium text-gray-700 mb-1.5">最低文字数</label>
                 <div className="flex items-center gap-2">
                   <input type="number" min={8} max={32} value={minLength} onChange={e => setMinLength(Number(e.target.value))}
-                    className="w-20 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" />
+                    className="w-20 min-h-[44px] border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" />
                   <span className="text-sm text-gray-500">文字（8〜32）</span>
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1.5">有効期限</label>
                 <select value={expiryDays} onChange={e => setExpiryDays(e.target.value)}
-                  className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                  className="min-h-[44px] border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
                   <option value="0">無期限</option>
                   <option value="90">90日（3ヶ月）</option>
                   <option value="180">180日（6ヶ月）</option>
