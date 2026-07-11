@@ -7,6 +7,7 @@ import { fmtDatetime, relativeTime } from '@/lib/utils'
 import DmSendForm from './DmSendForm'
 import MarkDmReadOnMount from './MarkDmReadOnMount'
 import ReportThreadButton from './ReportThreadButton'
+import ScrollToBottom from './ScrollToBottom'
 import DmRealtime from '@/app/(dashboard)/components/DmRealtime'
 import type { DmPair, DmMessage } from '@/types/database'
 
@@ -62,6 +63,7 @@ export default async function DmThreadPage({ params }: { params: Promise<{ pairI
     <div className="anim-fade-in mx-auto flex min-h-[calc(100dvh-8rem)] max-w-2xl flex-col">
       <MarkDmReadOnMount pairId={pairId} />
       <DmRealtime channel={session.realtimeChannel} />
+      <ScrollToBottom trigger={messages.length} />
 
       {/* ヘッダー */}
       <div className="mb-3 flex items-center gap-2">

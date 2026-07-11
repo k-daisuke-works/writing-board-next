@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { sendDm } from '@/actions/messages'
 import { Send } from 'lucide-react'
@@ -10,10 +10,10 @@ export default function DmSendForm({ pairId }: { pairId: number }) {
   const [text, setText] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const router = useRouter()
 
-  function submit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
+  function send() {
     const message = text.trim()
     if (!message || pending) return
     const fd = new FormData()
@@ -25,11 +25,34 @@ export default function DmSendForm({ pairId }: { pairId: number }) {
         if (res?.error) { setError(res.error); return }
         setText('')
         setError(null)
+        if (textareaRef.current) textareaRef.current.style.height = ''
         router.refresh()
       } catch {
         setError('送信に失敗しました。')
       }
     })
+  }
+
+  function submit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    send()
+  }
+
+  // PC（マウス等の fine pointer）では Enter で送信・Shift+Enter で改行。
+  // モバイル（coarse pointer）と IME 変換確定の Enter では送信しない
+  function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key !== 'Enter' || e.shiftKey) return
+    if (e.nativeEvent.isComposing) return
+    if (!window.matchMedia('(pointer: fine)').matches) return
+    e.preventDefault()
+    send()
+  }
+
+  // 入力に合わせて高さを自動調整（max-h-32 で頭打ち）
+  function onInput(e: React.FormEvent<HTMLTextAreaElement>) {
+    const el = e.currentTarget
+    el.style.height = ''
+    el.style.height = `${el.scrollHeight}px`
   }
 
   return (
@@ -38,8 +61,11 @@ export default function DmSendForm({ pairId }: { pairId: number }) {
       {error && <p className="mb-1.5 text-xs text-red-600">{error}</p>}
       <form onSubmit={submit} className="flex items-end gap-2">
         <textarea
+          ref={textareaRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
+          onKeyDown={onKeyDown}
+          onInput={onInput}
           rows={1}
           maxLength={2000}
           placeholder="メッセージを入力"
