@@ -3,15 +3,18 @@ import { RoScopeLogo } from '@/app/components/RoScopeLogo'
 
 export default function SetupLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden bg-slate-50">
-      <div className="pointer-events-none absolute -left-40 top-20 size-96 rounded-full bg-teal-200/30 blur-3xl" />
-      <div className="pointer-events-none absolute -right-40 bottom-0 size-[28rem] rounded-full bg-indigo-200/35 blur-3xl" />
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#fdf9ee]">
+      {/* ランディング・ログインと同じ浮遊装飾 */}
+      <span className="anim-puka pointer-events-none absolute hidden w-[90px] h-[90px] rounded-full top-[14%] right-[6%] opacity-60 sm:block" style={{ background: '#ffc300' }} aria-hidden />
+      <span className="anim-puka pointer-events-none absolute hidden w-[46px] h-[46px] rounded-full bottom-[24%] right-[14%] opacity-70 sm:block" style={{ background: '#23aabe', animationDelay: '-1.6s' }} aria-hidden />
+      <span className="anim-puka pointer-events-none absolute hidden w-[32px] h-[32px] rounded-full top-[40%] left-[5%] opacity-70 sm:block" style={{ background: '#7dbb01', animationDelay: '-2.4s' }} aria-hidden />
+
       {/* トップバー：ロゴ + ログインリンク */}
-      <header className="relative z-10 flex h-16 shrink-0 items-center border-b border-white/70 bg-white/70 px-6 backdrop-blur-xl sm:px-10">
+      <header className="relative z-10 flex h-16 shrink-0 items-center border-b border-[#f3e6c2] bg-white/80 px-5 backdrop-blur sm:px-10">
         <RoScopeLogo size="sm" />
         <div className="ml-auto">
           <Link href="/login"
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-indigo-200 hover:text-indigo-600">
+            className="font-maru inline-flex min-h-[40px] items-center rounded-full border-2 border-gray-200 bg-white px-4 text-sm font-bold text-[#001e5a] transition-colors hover:border-[#ffc300]">
             ログインはこちら
           </Link>
         </div>

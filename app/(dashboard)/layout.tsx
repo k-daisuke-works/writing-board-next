@@ -9,9 +9,11 @@ import { RoScopeLogo } from '@/app/components/RoScopeLogo'
 
 async function getUnreadCounts(organizationKey: number, userKey: number, departmentId: number) {
   const supabase = await createOrgClient(organizationKey)
+  // DM は participant 限定 RLS のため userKey クレーム付きクライアントで数える（自分のペア分だけが見える）
+  const dmClient = await createOrgClient(organizationKey, { userKey })
   const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString()
 
-  const [boardResult, teamResult] = await Promise.all([
+  const [boardResult, teamResult, dmResult] = await Promise.all([
     supabase.from('writing_data').select('writing_id')
       .eq('organization_key', organizationKey).eq('post_type', 'board')
       .gte('writing_time', sevenDaysAgo),
@@ -20,13 +22,19 @@ async function getUnreadCounts(organizationKey: number, userKey: number, departm
           .eq('organization_key', organizationKey).eq('post_type', 'team')
           .eq('department_id', departmentId).gte('writing_time', sevenDaysAgo)
       : Promise.resolve({ data: [] as { writing_id: number }[] }),
+    dmClient.from('dm_messages')
+      .select('message_id', { count: 'exact', head: true })
+      .eq('organization_key', organizationKey)
+      .neq('sender_key', userKey)
+      .is('read_at', null),
   ])
 
   const boardIds = (boardResult.data ?? []).map(p => p.writing_id)
   const teamIds  = (teamResult.data  ?? []).map(p => p.writing_id)
   const allIds   = [...boardIds, ...teamIds]
+  const dm       = dmResult.count ?? 0
 
-  if (allIds.length === 0) return { board: 0, team: 0 }
+  if (allIds.length === 0) return { board: 0, team: 0, dm }
 
   const { data: reads } = await supabase
     .from('post_reads').select('post_id')
@@ -37,6 +45,7 @@ async function getUnreadCounts(organizationKey: number, userKey: number, departm
   return {
     board: boardIds.filter(id => !readSet.has(id)).length,
     team:  teamIds.filter(id => !readSet.has(id)).length,
+    dm,
   }
 }
 
@@ -45,7 +54,7 @@ async function NavWithUnread({ organizationKey, userKey, departmentId }: {
   organizationKey: number; userKey: number; departmentId: number
 }) {
   const unread = await getUnreadCounts(organizationKey, userKey, departmentId)
-  return <NavLinks unreadBoard={unread.board} unreadTeam={unread.team} />
+  return <NavLinks unreadBoard={unread.board} unreadTeam={unread.team} unreadDm={unread.dm} />
 }
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -63,7 +72,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
           <div className="w-px h-5 bg-gray-200 hidden sm:block" />
 
-          <Suspense fallback={<NavLinks unreadBoard={0} unreadTeam={0} />}>
+          <Suspense fallback={<NavLinks unreadBoard={0} unreadTeam={0} unreadDm={0} />}>
             <NavWithUnread
               organizationKey={session.organizationKey}
               userKey={session.userKey}

@@ -4,9 +4,10 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { registerUser } from '@/actions/admin'
 import Link from 'next/link'
-import { Users, ArrowLeft, CheckCircle, AlertCircle, Info } from 'lucide-react'
+import { ArrowLeft, CheckCircle, AlertCircle, Info } from 'lucide-react'
 import { SetupStepper } from '../../SetupStepper'
 import { SetupSubmitButton } from '../../SetupSubmitButton'
+import { setupCard, setupHeading, setupInput, setupLabel } from '../../setup-ui'
 
 export default async function UserRegisterPage({
   searchParams,
@@ -49,47 +50,37 @@ export default async function UserRegisterPage({
     ? `/user/register?token=${params.token}`
     : '/user/register'
 
-  const inputCls = "w-full border border-gray-200 rounded-md px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
-  const labelCls = "block text-sm font-medium text-gray-700 mb-1.5"
-
   return (
-    <div className="anim-fade-in w-full max-w-lg rounded-3xl border border-white/80 bg-white/85 p-6 shadow-xl shadow-slate-200/60 backdrop-blur sm:p-8">
+    <div className={`${setupCard} max-w-lg`}>
       {isInitial && <SetupStepper current={3} />}
 
       <div className="mb-6">
-        {isInitial ? (
-          <>
-            <p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-indigo-600">Final step</p>
-            <h1 className="mb-1.5 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">管理者アカウントを作成</h1>
-            <p className="text-sm text-slate-500">このIDとパスワードが最初のログイン情報になります</p>
-          </>
-        ) : (
-          <>
-            <Link href="/admin" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition-colors mb-3 w-fit">
-              <ArrowLeft className="w-4 h-4" />管理設定に戻る
-            </Link>
-            <div className="flex items-center gap-2.5">
-              <Users className="w-5 h-5 text-gray-400" strokeWidth={1.75} />
-              <h1 className="text-xl font-semibold text-gray-900">ユーザー登録</h1>
-            </div>
-            <p className="text-sm text-gray-400 mt-0.5">新しいメンバーをチームに追加します</p>
-          </>
+        {!isInitial && (
+          <Link href="/admin" className="mb-3 flex w-fit items-center gap-1.5 text-sm text-gray-500 transition-colors hover:text-[#001e5a]">
+            <ArrowLeft className="w-4 h-4" />管理設定に戻る
+          </Link>
         )}
+        <h1 className={`${setupHeading} mb-1.5`}>
+          {isInitial ? '管理者アカウントを作成' : 'ユーザー登録'}
+        </h1>
+        <p className="text-sm text-gray-500">
+          {isInitial ? 'このIDとパスワードが最初のログイン情報になります' : '新しいメンバーをチームに追加します'}
+        </p>
       </div>
 
       {isInitial && (
-        <div className="mb-5 flex items-start gap-2 bg-blue-50 border border-blue-200 text-blue-700 rounded-md px-4 py-3 text-sm">
+        <div className="mb-5 flex items-start gap-2 rounded-xl border border-[#f3d9ad] bg-[#fff4d1] px-4 py-3 text-sm text-[#5c4a00]">
           <Info className="w-4 h-4 shrink-0 mt-0.5" />
           <span>最初のユーザーは自動的に管理者になります</span>
         </div>
       )}
       {success && (
-        <div className="mb-5 flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 rounded-md px-4 py-3 text-sm">
+        <div className="mb-5 flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
           <CheckCircle className="w-4 h-4 shrink-0" />ユーザーを登録しました。
         </div>
       )}
       {errorMsg && (
-        <div className="mb-5 flex items-start gap-2 bg-red-50 border border-red-200 text-red-600 rounded-md px-4 py-3 text-sm">
+        <div className="mb-5 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
           <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />{errorMsg}
         </div>
       )}
@@ -110,18 +101,19 @@ export default async function UserRegisterPage({
       }} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className={labelCls}>ユーザーID <span className="text-red-500">*</span></label>
-            <input type="text" name="userId" required placeholder="例: USER001" className={inputCls} />
+            <label className={setupLabel}>ユーザーID <span className="text-red-500">*</span></label>
+            <input type="text" name="userId" required placeholder="例: USER001" lang="en"
+              autoComplete="off" autoCorrect="off" autoCapitalize="off" className={setupInput} />
           </div>
           <div>
-            <label className={labelCls}>ユーザー名 <span className="text-red-500">*</span></label>
-            <input type="text" name="userName" required placeholder="例: 山田太郎" className={inputCls} />
+            <label className={setupLabel}>ユーザー名 <span className="text-red-500">*</span></label>
+            <input type="text" name="userName" required placeholder="例: 山田太郎" autoComplete="off" className={setupInput} />
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className={labelCls}>部署</label>
-            <select name="departmentId" className={inputCls}>
+            <label className={setupLabel}>部署</label>
+            <select name="departmentId" className={setupInput}>
               <option value="">選択…</option>
               {departments?.map((d) => (
                 <option key={d.department_id} value={d.department_id}>{d.department_name}</option>
@@ -129,8 +121,8 @@ export default async function UserRegisterPage({
             </select>
           </div>
           <div>
-            <label className={labelCls}>職種</label>
-            <select name="jobId" className={inputCls}>
+            <label className={setupLabel}>職種</label>
+            <select name="jobId" className={setupInput}>
               <option value="">選択…</option>
               {jobs?.map((j) => (
                 <option key={j.job_id} value={j.job_id}>{j.job_name}</option>
@@ -139,13 +131,13 @@ export default async function UserRegisterPage({
           </div>
         </div>
         <div>
-          <label className={labelCls}>パスワード <span className="text-red-500">*</span></label>
-          <input type="password" name="password" required minLength={8} placeholder="8文字以上" className={inputCls} />
+          <label className={setupLabel}>パスワード <span className="text-red-500">*</span></label>
+          <input type="password" name="password" required minLength={8} placeholder="8文字以上" autoComplete="new-password" className={setupInput} />
         </div>
         {!isInitial && (
           <div>
-            <label className={labelCls}>権限</label>
-            <select name="role" defaultValue="member" className={inputCls}>
+            <label className={setupLabel}>権限</label>
+            <select name="role" defaultValue="member" className={setupInput}>
               {session?.role === 'admin' && (
                 <option value="admin">管理者</option>
               )}
@@ -155,7 +147,7 @@ export default async function UserRegisterPage({
           </div>
         )}
         <label className="flex items-start gap-2.5 text-xs text-gray-600 leading-relaxed cursor-pointer pt-1">
-          <input type="checkbox" name="consent" value="agreed" required className="mt-0.5 w-5 h-5 shrink-0 accent-blue-600" />
+          <input type="checkbox" name="consent" value="agreed" required className="mt-0.5 w-5 h-5 shrink-0 accent-[#001e5a]" />
           <span>
             {isInitial
               ? <>

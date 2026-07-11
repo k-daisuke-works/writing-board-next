@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react'
+import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { getSession, verifySetupToken } from '@/lib/session'
 import { createServiceClient } from '@/lib/supabase/server'
 import { SetupStepper } from '../../SetupStepper'
@@ -30,20 +30,14 @@ export default async function DepartmentJobRegisterPage({
       {isInitial && <SetupStepper current={2} />}
 
       {!isInitial && (
-        <Link href="/admin" className="mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition hover:text-indigo-600">
+        <Link href="/admin" className="mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 transition-colors hover:text-[#001e5a]">
           <ArrowLeft className="size-4" />管理設定に戻る
         </Link>
       )}
 
-      <div className="mb-7 flex items-start gap-4">
-        <div className="hidden size-12 place-items-center rounded-2xl bg-gradient-to-br from-teal-500 to-indigo-600 text-white shadow-lg shadow-indigo-200 sm:grid">
-          <Sparkles className="size-5" />
-        </div>
-        <div>
-          <p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-indigo-600">Organization setup</p>
-          <h1 className="text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">部署と職種を整えましょう</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-500">よく使うものから追加してください。登録内容はすぐ下に反映され、あとから管理画面で変更できます。</p>
-        </div>
+      <div className="mb-7">
+        <h1 className="font-maru text-2xl font-extrabold text-[#001e5a]">部署と職種を登録</h1>
+        <p className="mt-2 text-sm leading-6 text-gray-500">よく使うものから追加してください。登録内容はすぐ下に反映され、あとから管理画面で変更できます。</p>
       </div>
 
       <SetupCollectionClient
@@ -53,9 +47,10 @@ export default async function DepartmentJobRegisterPage({
       />
 
       {isInitial && (
-        <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:flex sm:items-center sm:justify-between">
-          <p className="px-2 text-xs text-slate-500">未登録のままでも次へ進めます</p>
-          <Link href={`/user/register?token=${token}`} className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-500 to-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-md shadow-indigo-200 transition hover:-translate-y-0.5 hover:shadow-lg sm:mt-0">
+        <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-3 shadow-sm sm:flex sm:items-center sm:justify-between">
+          <p className="px-2 text-xs text-gray-500">未登録のままでも次へ進めます</p>
+          <Link href={`/user/register?token=${token}`}
+            className="font-maru mt-2 flex min-h-[48px] items-center justify-center gap-2 rounded-full bg-[#001e5a] px-6 py-3 text-sm font-bold text-white shadow-[0_5px_0_#001240] transition-transform hover:-translate-y-0.5 hover:scale-[1.02] active:scale-95 sm:mt-0">
             管理者ユーザーの登録へ<ArrowRight className="size-4" />
           </Link>
         </div>

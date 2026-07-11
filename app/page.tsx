@@ -164,7 +164,7 @@ export default function LandingPage() {
               </p>
             </Reveal>
             <Reveal delay={240}>
-              <div className="flex flex-wrap gap-3.5">
+              <div className="flex flex-wrap items-center gap-3.5">
                 <Link
                   href="/login"
                   className="font-maru inline-flex items-center justify-center gap-2 min-h-[48px] text-[15px] font-bold text-white px-7 rounded-full transition-transform hover:-translate-y-0.5 hover:scale-[1.03] active:scale-95"
@@ -181,6 +181,15 @@ export default function LandingPage() {
                   触って体験する
                 </a>
               </div>
+            </Reveal>
+            <Reveal delay={300}>
+              <p className="mt-4 text-sm font-medium" style={{ color: '#5c4a00' }}>
+                団体アカウントがまだの方は{' '}
+                <Link href="/register" className="font-maru font-bold underline underline-offset-2" style={{ color: NAVY }}>
+                  団体の新規登録
+                </Link>
+                {' '}から
+              </p>
             </Reveal>
           </div>
           <div className="flex-1 min-w-[280px] relative z-[5] py-3 pb-7">

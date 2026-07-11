@@ -2,27 +2,28 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutGrid, MessageSquare, Calendar, Newspaper, Search, FolderOpen } from 'lucide-react'
+import { LayoutGrid, MessageSquare, MessagesSquare, Calendar, Newspaper, Search, FolderOpen } from 'lucide-react'
 
-type Props = { unreadBoard: number; unreadTeam: number }
+type Props = { unreadBoard: number; unreadTeam: number; unreadDm: number }
 
 const LINKS = [
   { href: '/home', match: '/home', Icon: LayoutGrid, label: 'ホーム', mobile: true, badge: 'team' as const },
   { href: '/posts', match: '/posts', Icon: MessageSquare, label: '全体掲示板', mobile: true, badge: 'board' as const },
+  { href: '/messages', match: '/messages', Icon: MessagesSquare, label: 'メッセージ', mobile: true, badge: 'dm' as const },
   { href: '/schedule/calendar', match: '/schedule', Icon: Calendar, label: 'スケジュール', mobile: true, badge: null },
   { href: '/documents', match: '/documents', Icon: FolderOpen, label: '資料庫', mobile: false, badge: null },
   { href: '/welfare', match: '/welfare', Icon: Newspaper, label: '福祉情報', mobile: false, badge: null },
   { href: '/search', match: '/search', Icon: Search, label: '検索', mobile: false, badge: null },
 ]
 
-export default function NavLinks({ unreadBoard, unreadTeam }: Props) {
+export default function NavLinks({ unreadBoard, unreadTeam, unreadDm }: Props) {
   const pathname = usePathname()
 
   return (
     <nav className="flex min-w-0 flex-1 items-center justify-center gap-0.5 sm:justify-start sm:gap-1" aria-label="メインナビゲーション">
       {LINKS.map(({ href, match, Icon, label, mobile, badge }) => {
         const active = pathname === match || pathname.startsWith(`${match}/`)
-        const count = badge === 'team' ? unreadTeam : badge === 'board' ? unreadBoard : 0
+        const count = badge === 'team' ? unreadTeam : badge === 'board' ? unreadBoard : badge === 'dm' ? unreadDm : 0
         return (
           <Link
             key={href}
