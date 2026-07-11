@@ -16,8 +16,10 @@
 
 import { readdirSync, readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const ROOT = new URL('..', import.meta.url).pathname
+// URL.pathname は Windows で '/C:/...' を返しパス結合が壊れるため fileURLToPath を使う
+const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const SCAN_DIRS = ['actions', 'app', 'lib']
 
 const EXEMPT_TABLES = new Set([

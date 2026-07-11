@@ -66,7 +66,20 @@ DB・Storage・Vercel 関数（hnd1）とも東京リージョンへ移行済み
 2. **レート制限の永続化**: `actions/auth.ts` のログインレート制限はプロセス内 Map。Vercel でインスタンスが分かれると効果が薄れる。Upstash Redis（Vercel Marketplace で導入可）+ `@upstash/ratelimit` へ移行
 3. **パスワード履歴**: 過去N世代の再利用禁止（`password_history` テーブル追加）
 4. ~~依存脆弱性の自動監視~~ → **解消済み（2026-07-10）**: `.github/dependabot.yml` 追加（npm / github-actions 週次）
-5. **バックアップ確認**: Supabase の自動バックアップ設定の有効化状態を確認し、SECURITY.md に記載
+5. ~~バックアップ確認~~ → **確認・対策済み（2026-07-11）**: 無料プランは自動バックアップ対象外（`pitr_enabled: false`・復元ポイントゼロ）と確認。下記「バックアップと復元」の日次JSONバックアップを導入
+
+## バックアップと復元（2026-07-11 導入）
+
+- **日次 3:30 JST** に `/api/cron/backup` が DB関数 `export_all_data()`（service role 専用・migration `20260711_backup_export.sql`）で全テーブルをJSON化し、同プロジェクトの非公開バケット `backups` に `db/backup-YYYY-MM-DD.json` として保存（**14日分保持・国内保管を維持**）
+- **復元手順**: ダッシュボード → Storage → `backups` から該当日のJSONをダウンロード → SQL Editor で対象テーブルへ戻す:
+  ```sql
+  -- 例: writing_data の全行復元（部分復元は WHERE で絞る）
+  insert into writing_data
+  select * from jsonb_populate_recordset(null::writing_data, '<JSONの tables.writing_data の配列>'::jsonb)
+  on conflict do nothing;
+  ```
+- **対象外**: Storage のファイル実体（images/videos/avatars/pdfs）。誤削除リスクが低くサイズが大きいため対象外の判断。必要になったら別途検討
+- 実利用でデータが増えたら Supabase Pro（自動バックアップ・PITR）への移行を検討
 
 ## 優先度3: 品質改善バックログ（余力があれば）
 
