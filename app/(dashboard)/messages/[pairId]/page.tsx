@@ -70,11 +70,11 @@ export default async function DmThreadPage({ params }: { params: Promise<{ pairI
         <Link href="/messages" aria-label="メッセージ一覧に戻る" className="grid min-h-11 min-w-11 place-items-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-blue-600">
           <ArrowLeft className="h-4 w-4" />
         </Link>
-        <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full border border-gray-200 bg-violet-100">
+        <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full border border-gray-200 bg-blue-100">
           {otherAvatar ? (
             <img src={otherAvatar} alt="" className="h-full w-full object-cover" />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-xs font-bold text-violet-600">
+            <div className="flex h-full w-full items-center justify-center text-xs font-bold text-blue-600">
               {otherName.slice(0, 1)}
             </div>
           )}
@@ -100,11 +100,11 @@ export default async function DmThreadPage({ params }: { params: Promise<{ pairI
             return (
               <div key={m.message_id} className={`flex items-end gap-2 ${mine ? 'justify-end' : 'justify-start'}`}>
                 {!mine && (
-                  <div className="h-7 w-7 shrink-0 self-end overflow-hidden rounded-full border border-gray-200 bg-violet-100">
+                  <div className="h-7 w-7 shrink-0 self-end overflow-hidden rounded-full border border-gray-200 bg-blue-100">
                     {otherAvatar ? (
                       <img src={otherAvatar} alt="" className="h-full w-full object-cover" />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center text-[10px] font-bold text-violet-600">
+                      <div className="flex h-full w-full items-center justify-center text-[10px] font-bold text-blue-600">
                         {otherName.slice(0, 1)}
                       </div>
                     )}

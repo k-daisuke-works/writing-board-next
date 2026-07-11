@@ -14,13 +14,13 @@ function Avatar({ user, size = 44 }: { user?: OtherUser; size?: number }) {
   const name = user?.user_name ?? '?'
   return (
     <div
-      className="shrink-0 overflow-hidden rounded-full border border-gray-200 bg-violet-100"
+      className="shrink-0 overflow-hidden rounded-full border border-gray-200 bg-blue-100"
       style={{ width: size, height: size }}
     >
       {user?.avatar_url ? (
         <img src={user.avatar_url} alt="" className="h-full w-full object-cover" />
       ) : (
-        <div className="flex h-full w-full items-center justify-center text-sm font-bold text-violet-600">
+        <div className="flex h-full w-full items-center justify-center text-sm font-bold text-blue-600">
           {name.slice(0, 1)}
         </div>
       )}
@@ -84,8 +84,6 @@ export default async function MessagesPage() {
     const tb = lastMsg[b.pair_id]?.created_at ?? b.responded_at ?? b.created_at
     return new Date(tb).getTime() - new Date(ta).getTime()
   })
-
-  const isEmpty = accepted.length === 0 && incoming.length === 0 && outgoing.length === 0
 
   return (
     <div className="anim-fade-in max-w-2xl">
