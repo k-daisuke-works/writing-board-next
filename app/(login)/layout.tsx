@@ -27,7 +27,7 @@ export default function LoginLayout({ children }: { children: React.ReactNode })
           </p>
         </div>
         <div className="relative flex flex-wrap gap-2">
-          {['リアルタイム更新', 'PDF添付対応', 'マルチ班対応'].map(t => (
+          {['新着がすぐ届く', 'PDF添付対応', 'マルチ班対応'].map(t => (
             <span key={t} className="font-maru text-xs font-bold bg-white rounded-full px-4 py-1.5" style={{ color: '#001e5a' }}>
               {t}
             </span>

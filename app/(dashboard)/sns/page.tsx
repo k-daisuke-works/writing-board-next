@@ -33,7 +33,6 @@ export default async function SnsPage() {
           <Camera className="w-5 h-5 text-pink-600" />
           {account?.account_name ? `${account.account_name} の発信` : '会のInstagram'}
         </h1>
-        <p className="mt-1 text-sm text-gray-500">会の公式Instagramの投稿を表示しています</p>
       </div>
 
       {!account ? (
@@ -48,7 +47,7 @@ export default async function SnsPage() {
         </div>
       ) : posts.length === 0 ? (
         <div className="rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
-          投稿の取得待ちです。しばらくしてからもう一度開いてください（1日2回自動更新されます）
+投稿の取得待ちです。しばらくしてからもう一度開いてください。
         </div>
       ) : (
         <>

@@ -56,7 +56,7 @@ export default async function WelfarePage({
       {/* ヘッダー */}
       <div className="flex items-start justify-between mb-5 gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">福祉最新情報</h1>
+          <h1 className="text-xl font-semibold text-gray-900">福祉情報</h1>
           <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-2">
             {totalCount}件
             {lastFetched && (
@@ -98,8 +98,8 @@ export default async function WelfarePage({
       {totalCount === 0 ? (
         <div className="text-center py-20 bg-white rounded-lg border border-gray-200">
           <Newspaper className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-sm text-gray-400 mb-1">まだデータがありません</p>
-          <p className="text-xs text-gray-400">cron が実行されると記事が表示されます</p>
+          <p className="text-sm text-gray-400 mb-1">まだ記事がありません</p>
+          <p className="text-xs text-gray-400">新しい記事が入り次第ここに表示されます</p>
         </div>
       ) : activeSource ? (
         // 特定ソースフィルター時はフラットリスト
