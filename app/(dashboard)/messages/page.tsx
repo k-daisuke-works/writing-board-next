@@ -59,7 +59,8 @@ export default async function MessagesPage() {
 
   const accepted = pairs.filter((p) => p.status === 'accepted')
   const incoming = pairs.filter((p) => p.status === 'pending' && p.requested_by !== me)
-  const outgoing = pairs.filter((p) => p.status === 'pending' && p.requested_by === me)
+  // ブロックの秘匿: ブロックされた側（=requested_by が自分の blocked）には承認待ちと同じ表示を出す
+  const outgoing = pairs.filter((p) => p.requested_by === me && (p.status === 'pending' || p.status === 'blocked'))
 
   // 承認済みスレッドの最終メッセージ・自分宛未読件数を1クエリ＋JS集計で
   const acceptedIds = accepted.map((p) => p.pair_id)

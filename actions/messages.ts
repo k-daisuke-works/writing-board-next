@@ -53,9 +53,17 @@ export async function requestDm(formData: FormData) {
     const pair = existing as Pick<DmPair, 'pair_id' | 'status' | 'requested_by'>
     if (pair.status === 'accepted') return { error: 'すでにメッセージをやり取りできます。' }
     if (pair.status === 'pending')  return { error: 'リクエストは承認待ちです。' }
-    // blocked は相手に悟らせない（pending と同じ文言にしない・詳細も返さない）
-    if (pair.status === 'blocked')  return { error: '現在この相手にはリクエストできません。' }
-    // declined → 再申請（申請者が入れ替わる場合もあるため requested_by を更新）
+    if (pair.status === 'blocked') {
+      // ブロックの秘匿: ブロックされた側（=requested_by。block遷移はrespondDm経由のみのため不変）には
+      // 何もせず成功を返し、UI上は承認待ちと見分けが付かないようにする
+      if (pair.requested_by === session.userKey) {
+        revalidatePath('/messages')
+        revalidatePath(`/member/${targetUserKey}`)
+        return { success: true }
+      }
+      // ブロックした本人からの再リクエスト＝ブロック解除して申請し直す（唯一の解除経路）
+    }
+    // declined / 自分が解除する blocked → 再申請（申請者が入れ替わる場合もあるため requested_by を更新）
     const { error } = await supabase
       .from('dm_pairs')
       .update({ status: 'pending', requested_by: session.userKey, responded_at: null })
@@ -103,8 +111,11 @@ export async function respondDm(formData: FormData) {
     .eq('organization_key', session.organizationKey)
     .single()
   if (!pair) return { error: 'リクエストが見つかりません。' }
-  if ((pair as DmPair).requested_by === session.userKey) return { error: '自分のリクエストには応答できません。' }
-  if ((pair as DmPair).status !== 'pending') return { error: 'このリクエストはすでに応答済みです。' }
+  // RLSに加えたアプリ層の参加者本人確認（SUPABASE_JWT_SECRET未設定のフォールバック環境でも防御を維持）
+  const p = pair as DmPair
+  if (p.user_a !== session.userKey && p.user_b !== session.userKey) return { error: 'リクエストが見つかりません。' }
+  if (p.requested_by === session.userKey) return { error: '自分のリクエストには応答できません。' }
+  if (p.status !== 'pending') return { error: 'このリクエストはすでに応答済みです。' }
 
   const status = action === 'accept' ? 'accepted' : action === 'decline' ? 'declined' : 'blocked'
   const { error } = await supabase
@@ -144,7 +155,11 @@ export async function sendDm(formData: FormData) {
     .eq('pair_id', pairId)
     .eq('organization_key', session.organizationKey)
     .single()
-  if (!pair || (pair as DmPair).status !== 'accepted') return { error: 'この相手にはまだ送信できません。' }
+  if (!pair) return { error: 'この相手にはまだ送信できません。' }
+  // RLSに加えたアプリ層の参加者本人確認（フォールバック環境でも防御を維持）
+  const pr = pair as DmPair
+  if (pr.user_a !== session.userKey && pr.user_b !== session.userKey) return { error: 'この相手にはまだ送信できません。' }
+  if (pr.status !== 'accepted') return { error: 'この相手にはまだ送信できません。' }
 
   const { error } = await supabase.from('dm_messages').insert({
     organization_key: session.organizationKey,
@@ -174,6 +189,17 @@ export async function markDmRead(formData: FormData) {
   if (!Number.isInteger(pairId) || pairId <= 0) return { error: '不正なリクエストです。' }
 
   const supabase = await dmClient(session.organizationKey, session.userKey)
+
+  // RLSに加えたアプリ層の参加者本人確認（フォールバック環境でも防御を維持）
+  const { data: pair } = await supabase
+    .from('dm_pairs')
+    .select('user_a, user_b')
+    .eq('pair_id', pairId)
+    .eq('organization_key', session.organizationKey)
+    .maybeSingle()
+  if (!pair || (pair.user_a !== session.userKey && pair.user_b !== session.userKey))
+    return { error: '不正なリクエストです。' }
+
   await supabase
     .from('dm_messages')
     .update({ read_at: new Date().toISOString() })
@@ -202,12 +228,15 @@ export async function discloseDmThread(formData: FormData) {
 
   const { data: pair } = await supabase
     .from('dm_pairs')
-    .select('pair_id, disclosed_at')
+    .select('pair_id, disclosed_at, user_a, user_b')
     .eq('pair_id', pairId)
     .eq('organization_key', session.organizationKey)
     .single()
   if (!pair) return { error: 'スレッドが見つかりません。' }
-  if ((pair as DmPair).disclosed_at) return { error: 'このスレッドはすでに報告済みです。' }
+  // RLSに加えたアプリ層の参加者本人確認（開示は当事者同意が前提のため特に厳格に）
+  const pd = pair as DmPair
+  if (pd.user_a !== session.userKey && pd.user_b !== session.userKey) return { error: 'スレッドが見つかりません。' }
+  if (pd.disclosed_at) return { error: 'このスレッドはすでに報告済みです。' }
 
   const { error } = await supabase
     .from('dm_pairs')

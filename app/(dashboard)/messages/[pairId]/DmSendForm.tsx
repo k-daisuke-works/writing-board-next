@@ -34,6 +34,7 @@ export default function DmSendForm({ pairId }: { pairId: number }) {
 
   return (
     <div className="sticky bottom-0 z-30 -mx-3 border-t border-gray-200 bg-white px-3 py-2.5 safe-pb sm:-mx-6 sm:px-6">
+      <p className="mb-1 text-[10px] leading-tight text-gray-400">相談援助の対象者を特定できる情報の送信は避けてください</p>
       {error && <p className="mb-1.5 text-xs text-red-600">{error}</p>}
       <form onSubmit={submit} className="flex items-end gap-2">
         <textarea

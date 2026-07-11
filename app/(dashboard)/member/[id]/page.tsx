@@ -86,13 +86,15 @@ export default async function MemberHistoryPage({
     const dmClient = await createOrgClient(session.organizationKey, { userKey: session.userKey })
     const { data: pair } = await dmClient
       .from('dm_pairs')
-      .select('pair_id, status')
+      .select('pair_id, status, requested_by')
       .eq('organization_key', session.organizationKey)
       .eq('user_a', ua)
       .eq('user_b', ub)
       .maybeSingle()
     if (pair?.status === 'accepted') dmState = { kind: 'accepted', pairId: pair.pair_id }
     else if (pair?.status === 'pending') dmState = { kind: 'pending' }
+    // ブロックの秘匿: ブロックされた側（=requested_by）には承認待ちと同じ表示にする
+    else if (pair?.status === 'blocked' && pair.requested_by === session.userKey) dmState = { kind: 'pending' }
   }
 
   const canEdit = session.userKey === userId || session.adminFlag
