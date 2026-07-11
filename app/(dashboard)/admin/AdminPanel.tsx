@@ -22,7 +22,7 @@ import {
   ArrowLeft, Users, Building2, Briefcase, UserCog, Briefcase as BriefcaseIcon,
   Plus, Pencil, Trash2, Check, X, Loader2, KeyRound,
   Shield, Clock, HardDrive, Users2, Lock, Settings,
-  BanIcon, CheckCircle2,
+  BanIcon, CheckCircle2, Search,
 } from 'lucide-react'
 
 type Props = {
@@ -160,6 +160,7 @@ export default function AdminPanel({
   const [resetPwModal, setResetPwModal] = useState<ResetPwState>({ open: false })
   const [resetPwInput, setResetPwInput] = useState('')
   const [toast, setToast]            = useState<{ msg: string; ok: boolean } | null>(null)
+  const [userQuery, setUserQuery]    = useState('')
   const router = useRouter()
 
   // 各マスタの編集中 ID
@@ -191,6 +192,16 @@ export default function AdminPanel({
     setToast({ msg, ok })
     setTimeout(() => setToast(null), 3000)
   }
+
+  // ユーザー一覧の絞り込み（名前・ID・部署名）
+  const uq = userQuery.trim().toLowerCase()
+  const filteredUsers = uq
+    ? users.filter(u =>
+        u.user_name.toLowerCase().includes(uq) ||
+        u.user_id.toLowerCase().includes(uq) ||
+        ((u.department as { department_name?: string } | null)?.department_name ?? '').toLowerCase().includes(uq)
+      )
+    : users
 
   // ── ユーザー削除 ────────────────────────────────────────────
   function handleDeleteUser(userKey: number, name: string) {
@@ -435,9 +446,25 @@ export default function AdminPanel({
             </button>
           </div>
 
+          {/* 検索（10名以上で表示） */}
+          {users.length >= 10 && (
+            <div className="border-b border-gray-100 px-4 py-2.5">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={userQuery}
+                  onChange={e => setUserQuery(e.target.value)}
+                  placeholder="名前・ID・部署で絞り込み"
+                  className="w-full min-h-[40px] rounded-md border border-gray-300 bg-white pl-9 pr-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+          )}
+
           {/* モバイル */}
           <div className="sm:hidden divide-y divide-gray-100">
-            {users.map(user => (
+            {filteredUsers.map(user => (
               <div key={user.user_key} className={`flex items-center gap-3 px-4 py-3 ${!user.is_active ? 'opacity-50' : ''}`}>
                 <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
                   {user.user_name.slice(0, 1)}
@@ -480,7 +507,11 @@ export default function AdminPanel({
                 </div>
               </div>
             ))}
-            {users.length === 0 && <p className="px-4 py-8 text-center text-sm text-gray-400">ユーザーがいません</p>}
+            {filteredUsers.length === 0 && (
+              <p className="px-4 py-8 text-center text-sm text-gray-400">
+                {users.length === 0 ? 'ユーザーがいません' : '該当するユーザーがいません'}
+              </p>
+            )}
           </div>
 
           {/* デスクトップ */}
@@ -491,7 +522,7 @@ export default function AdminPanel({
               ))}</tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {users.map(user => (
+              {filteredUsers.map(user => (
                 <tr key={user.user_key} className={`hover:bg-gray-50/70 transition-colors ${!user.is_active ? 'opacity-50' : ''}`}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
@@ -541,7 +572,7 @@ export default function AdminPanel({
                   </td>
                 </tr>
               ))}
-              {users.length === 0 && <tr><td colSpan={6} className="px-5 py-8 text-center text-sm text-gray-400">ユーザーがいません</td></tr>}
+              {filteredUsers.length === 0 && <tr><td colSpan={6} className="px-5 py-8 text-center text-sm text-gray-400">{users.length === 0 ? 'ユーザーがいません' : '該当するユーザーがいません'}</td></tr>}
             </tbody>
           </table>
         </section>
