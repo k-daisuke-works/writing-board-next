@@ -144,21 +144,9 @@ export default function HomeView({
       <MarkReadOnMount postIds={allPostIds} />
       <RealtimeSocial channel={session.realtimeChannel} />
 
-      <div className="flex items-start justify-between gap-2 sm:gap-4">
-        <div className="min-w-0 flex-1">
-          <h1 className="text-lg font-semibold leading-snug text-gray-900 sm:text-xl">
-            おはようございます、{session.userName}さん
-          </h1>
-          <p className="mt-1 truncate text-sm text-gray-500">
-            {session.organizationName}
-            {session.departmentName && ` · ${session.departmentName}`}
-            {session.jobName && ` · ${session.jobName}`}
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          <PushNotificationButton />
-          <HomeMenuDropdown role={session.role} userKey={session.userKey} hasInstagram={hasInstagram} />
-        </div>
+      <div className="flex shrink-0 items-center justify-end gap-1.5 sm:gap-2">
+        <PushNotificationButton />
+        <HomeMenuDropdown role={session.role} userKey={session.userKey} hasInstagram={hasInstagram} />
       </div>
 
       {importantPosts.length > 0 && (
