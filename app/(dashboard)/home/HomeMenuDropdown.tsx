@@ -23,7 +23,7 @@ export default function HomeMenuDropdown({ role, userKey, hasInstagram = false }
     <div ref={ref} className="relative shrink-0">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-md text-sm text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors select-none"
+        className="flex min-h-[44px] items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-md text-sm text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors select-none"
       >
         {open ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
         <span className="hidden sm:inline">メニュー</span>

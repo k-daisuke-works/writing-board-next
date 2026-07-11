@@ -80,7 +80,7 @@ export default function PostReactions({ postId, reactions, myUserKey, myUserName
           key={emoji}
           onClick={() => handleToggle(emoji)}
           title={users.join('、')}
-          className={`pressable flex items-center gap-1 px-2.5 py-1 min-h-[30px] rounded-full text-xs border transition-colors ${
+          className={`pressable flex items-center gap-1 px-2.5 py-1 min-h-[34px] rounded-full text-xs border transition-colors ${
             mine
               ? 'bg-blue-50 border-blue-300 text-blue-700 shadow-sm shadow-blue-100'
               : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
@@ -100,7 +100,7 @@ export default function PostReactions({ postId, reactions, myUserKey, myUserName
         <button
           onClick={() => setPickerOpen(v => !v)}
           aria-label="リアクションを追加"
-          className={`pressable w-[30px] h-[30px] flex items-center justify-center rounded-full border transition-all ${
+          className={`pressable w-[34px] h-[34px] flex items-center justify-center rounded-full border transition-all ${
             pickerOpen
               ? 'border-blue-300 bg-blue-50 text-blue-500'
               : 'border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-600'

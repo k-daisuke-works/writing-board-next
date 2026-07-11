@@ -40,7 +40,13 @@ export default async function SearchPage({
 
       {query && (
         <p className="text-sm text-gray-500 mt-4 mb-3">
-          「<span className="font-medium text-gray-800">{query}</span>」の検索結果：{results.length}件
+          「<span className="font-medium text-gray-800">{query}</span>」の検索結果：
+          {results.length >= 50 ? '上位50件' : `${results.length}件`}
+          {results.length >= 50 && (
+            <span className="block text-xs text-gray-400 mt-0.5">
+              該当が多いため上位50件を表示しています。キーワードを追加すると絞り込めます。
+            </span>
+          )}
         </p>
       )}
 
